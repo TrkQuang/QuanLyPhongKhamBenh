@@ -8,5 +8,4 @@ Chứa các lớp mô tả dữ liệu như:
 - HoaDon
 - ...
 
-
 Mỗi lớp chỉ gồm thuộc tính và getter/setter, không xử lý nghiệp vụ, không viết SQL.
