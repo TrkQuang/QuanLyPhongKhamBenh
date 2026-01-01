@@ -1,3 +1,3 @@
 package phongkham.model;
 
-public class BenhNhan {}
+public class UserRole {}

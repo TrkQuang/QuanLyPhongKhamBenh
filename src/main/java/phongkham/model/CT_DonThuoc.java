@@ -1,5 +1,3 @@
-package main.java.phongkham.model;
+package phongkham.model;
 
-public class CT_DonThuoc {
-    
-}
+public class CT_DonThuoc {}

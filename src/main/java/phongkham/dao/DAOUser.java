@@ -1,5 +1,3 @@
-package main.java.phongkham.dao;
+package phongkham.dao;
 
-public class DAOUser {
-    
-}
+public class DAOUser {}

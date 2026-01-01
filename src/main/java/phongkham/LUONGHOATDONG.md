@@ -10,12 +10,12 @@ Service
 ↓
 DAO
 ↓
-MySQL
+MySQL ( DATABASE )
 
 ---
 
 Mô hình 3 lớp trong đồ án gồm:
 
-Lớp giao diện: package view, controller
+Lớp giao diện: package ui, controller
 Lớp nghiệp vụ: package service
 Lớp truy cập dữ liệu: package dao, db, model

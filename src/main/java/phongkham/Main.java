@@ -1,5 +1,3 @@
-package main.java.phongkham;
+package phongkham;
 
-public class Main {
-    
-}
+public class Main {}

@@ -1,4 +1,4 @@
-package main.java.phongkham.dao;
+package phongkham.dao;
 
 import java.util.ArrayList;
 

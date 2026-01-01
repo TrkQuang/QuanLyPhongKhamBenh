@@ -1,3 +1,3 @@
 package phongkham.service;
 
-public class ServiceUser {}
+public class ServiceRole {}

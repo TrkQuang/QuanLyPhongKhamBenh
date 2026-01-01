@@ -1,5 +1,3 @@
-package main.java.phongkham.controller;
+package phongkham.controller;
 
-public class ControllerLichKham {
-    
-}
+public class ControllerLichKham {}

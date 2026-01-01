@@ -1,5 +1,3 @@
-package main.java.phongkham.service;
+package phongkham.service;
 
-public class ServiceBenhNhan {
-    
-}
+public class ServiceBenhNhan {}

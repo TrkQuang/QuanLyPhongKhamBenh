@@ -1,3 +1,3 @@
 package phongkham.dao;
 
-public class DAOKhoa {}
+public class DAORole {}
