@@ -1,123 +1,100 @@
-# ĐỒ ÁN JAVA: QUẢN LÝ PHÒNG KHÁM BỆNH
+# Quản Lý Phòng Khám Bệnh (Java)
 
-## 1. Thông tin dự án
-- **Tên đồ án:** Quản Lý Phòng Khám Bệnh  
-- **Ngôn ngữ lập trình:** Java  
-- **Thư viện:** Swing, JDBC, MySQL Connector/J  
-- **Cơ sở dữ liệu:** MySQL  
-- **Mô hình kiến trúc:** 3 lớp (MVC đơn giản)
+Dự án Java quản lý phòng khám theo mô hình phân lớp (GUI → BUS → DAO → DB), sử dụng JDBC + MySQL.
 
----
+## Công nghệ
 
-## 2. Mục tiêu
-Xây dựng một hệ thống quản lý phòng khám bệnh cơ bản, cho phép:
-- Quản lý bệnh nhân (thêm, sửa, xóa, tìm kiếm)
-- Quản lý bác sĩ
-- Quản lý lịch khám
-- Quản lý hóa đơn  
-- Đảm bảo phân tách rõ ràng **giao diện – nghiệp vụ – dữ liệu** theo mô hình 3 lớp
+- **Java**
+- **MySQL** + **JDBC** (MySQL Connector/J)
+- **UI**: Swing + FlatLaf (theme)
+- **Xuất file**: Apache POI (Excel), iText (PDF)
 
-## 3. Cấu trúc thư mục
-QuanLyPhongKham/
-│
-├── lib/ # Thư viện ngoài
-│ └── mysql-connector-j.jar
-│
+Thư viện nằm trong thư mục `lib/`:
+
+- `mysql-connector-j-9.5.0.jar`
+- `flatlaf-3.7.jar`
+- `poi-5.2.3.jar`, `poi-ooxml-5.2.3.jar`
+- `itextpdf-5.5.13.4.jar`
+
+## Kiến trúc (3 lớp)
+
+- **GUI** (`phongkham.GUI`): giao diện (Frame/Dialog/Panel), bắt sự kiện, validate cơ bản.
+- **BUS** (`phongkham.BUS`): xử lý nghiệp vụ, điều phối luồng, không viết SQL.
+- **DAO** (`phongkham.DAO`): truy cập dữ liệu (CRUD) qua JDBC.
+- **DB** (`phongkham.DB`): quản lý kết nối DB.
+- **DTO** (`phongkham.DTO`): đối tượng truyền dữ liệu giữa các tầng.
+
+Luồng chuẩn:
+
+- `GUI` → `BUS` → `DAO` → `DB`
+
+## Cấu trúc thư mục
+
+```
+QuanLyPhongKhamBenh/
+├── database/
+│   └── qlpk_db.sql              # script tạo CSDL
+├── lib/                         # các file .jar
 ├── src/main/java/phongkham/
-│ ├── db/ # Kết nối database
-│ │ └── DBConnection.java
-│ │
-│ ├── model/ # Lớp dữ liệu
-│ │ ├── BenhNhan.java
-│ │ ├── BacSi.java
-│ │ ├── PhongKham.java
-│ │ ├── LichKham.java
-│ │ └── HoaDon.java
-│ │
-│ ├── dao/ # Truy cập dữ liệu
-│ │ ├── BenhNhanDAO.java
-│ │ ├── BacSiDAO.java
-│ │ ├── LichKhamDAO.java
-│ │ └── HoaDonDAO.java
-│ │
-│ ├── service/ # Xử lý nghiệp vụ
-│ │ ├── BenhNhanService.java
-│ │ ├── BacSiService.java
-│ │ ├── LichKhamService.java
-│ │ └── HoaDonService.java
-│ │
-│ ├── controller/ # Điều khiển
-│ │ ├── BenhNhanController.java
-│ │ ├── BacSiController.java
-│ │ ├── LichKhamController.java
-│ │ └── HoaDonController.java
-│ │
-│ ├── view/ # Giao diện Swing
-│ │ ├── FrmDangNhap.java
-│ │ ├── FrmMain.java
-│ │ ├── FrmBenhNhan.java
-│ │ ├── FrmBacSi.java
-│ │ ├── FrmLichKham.java
-│ │ └── FrmHoaDon.java
-│ │
-│ └── Main.java # Lớp khởi chạy chương trình
-│
-├── database/ # File SQL tạo database
-│ └── phongkham.sql
-│
-└── README.md
+│   ├── GUI/                     # giao diện
+│   ├── BUS/                     # nghiệp vụ
+│   ├── DAO/                     # truy cập dữ liệu
+│   ├── DB/                      # kết nối DB
+│   ├── DTO/                     # DTO
+│   └── Main.java                # entry point
+└── .vscode/ (tuỳ máy)
+```
 
----
+Tài liệu chi tiết theo từng tầng:
 
-## 4. Mô hình 3 lớp
-1. **Presentation Layer (View + Controller)**
-   - Hiển thị giao diện Swing
-   - Nhận thao tác từ người dùng
-   - Gửi yêu cầu xuống lớp nghiệp vụ
+- GUI: `src/main/java/phongkham/GUI/Readme.md`
+- BUS: `src/main/java/phongkham/BUS/Readme.md`
+- DAO: `src/main/java/phongkham/DAO/Readme.md`
+- DB: `src/main/java/phongkham/DB/Readme.md`
+- DTO: `src/main/java/phongkham/DTO/Readme.md`
 
-2. **Business Logic Layer (Service)**
-   - Xử lý nghiệp vụ, kiểm tra dữ liệu
-   - Không trực tiếp thao tác database
-   - Là trung gian giữa Controller và DAO
+## Cài đặt & chạy
 
-3. **Data Access Layer (DAO + DB + Model)**
-   - Kết nối database MySQL
-   - Thực hiện SQL (SELECT, INSERT, UPDATE, DELETE)
-   - Map dữ liệu từ database về đối tượng Java
----
+### 1) Tạo database
 
-## 5. Luồng hoạt động hệ thống
-Người dùng
-↓
-UI (Swing) + Controller
-↓
-Service (xử lý nghiệp vụ)
-↓
-DAO + Database
----
+1. Cài MySQL (hoặc dùng MySQL remote nếu có).
+2. Tạo schema và bảng bằng script:
+   - `database/qlpk_db.sql`
 
-## 6. Hướng dẫn cài đặt & chạy
-1. **Chuẩn bị cơ sở dữ liệu**
-   - Tạo database bằng file `database/phongkham.sql`
-   - Cập nhật thông tin user/password trong `DBConnection.java`
+### 2) Cấu hình kết nối DB
 
-2. **Chạy chương trình**
-   - Mở project trong IDE (Eclipse, IntelliJ, NetBeans)
-   - Thêm thư viện `mysql-connector-j.jar` vào Build Path
-   - Chạy `Main.java`
+Chỉnh trong `src/main/java/phongkham/DB/DBConnection.java`:
 
-3. **Giao diện**
-   - Form đăng nhập
-   - Form chính: quản lý Bệnh nhân, Bác sĩ, Lịch khám, Hóa đơn
-   - Chức năng CRUD đầy đủ
+- `URL` (jdbc url)
+- `USER`
+- `PASS`
 
----
+> Lưu ý: không khuyến nghị hard-code mật khẩu trong code khi làm dự án thật.
 
-## 7. Ghi chú
-- Công nghệ dùng: Java Swing, Java JDBC, MySQL/SQl Server, Java GUI, Figma, ..
-- Công nghệ teamwork: Github, Messengers
-- Tuân thủ **MVC / 3 lớp**  
-- Tách rõ **View – Service – DAO**  
-- Dễ mở rộng: thêm module mới (thuốc, phòng khám…)  
+### 3) Add thư viện (JAR)
 
----
+Thêm các file trong `lib/` vào classpath/build path của IDE.
+
+- IntelliJ: File → Project Structure → Modules → Dependencies → `+` JARs
+- Eclipse: Build Path → Add External Archives...
+- NetBeans: Libraries → Add JAR/Folder...
+
+### 4) Chạy chương trình
+
+Chạy class `phongkham.Main`.
+
+> Hiện tại `Main.java` đang là khung trống; khi thêm GUI, `Main` sẽ là nơi khởi tạo và hiển thị màn hình chính.
+
+## Gợi ý đóng góp / phát triển tiếp
+
+- Hoàn thiện `GUI/` (tạo các màn hình, điều hướng)
+- Implement các lớp `DAO` (hiện có nhiều file khung)
+- Implement logic trong các lớp `BUS`
+- Tách cấu hình DB ra file `.properties` hoặc biến môi trường
+
+## Ghi chú bảo mật
+
+Trong `DBConnection.java` hiện có thông tin kết nối DB. Nếu repo public, nên:
+
+- Xoá credential khỏi code
+- Dùng file cấu hình không commit hoặc biến môi trường

@@ -1,4 +1,4 @@
-package phongkham.db;
+package phongkham.DB;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
