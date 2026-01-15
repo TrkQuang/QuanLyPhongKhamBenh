@@ -1,3 +1,5 @@
 package phongkham.DTO;
 
-public class DonThuocDTO {}
+public class DonThuocDTO {
+    
+}

@@ -1,76 +1,90 @@
+# DTO (Data Transfer Object)
+
+## Ví dụ ngắn (một file DTO trông thường sẽ như vầy)
+
+> Mục tiêu: DTO là “gói dữ liệu” dùng để truyền giữa GUI ↔ BUS ↔ DAO. DTO không chứa SQL và cũng không chứa nghiệp vụ phức tạp.
+
 ```java
 package phongkham.DTO;
 
-// Ví dụ DTO (Data Transfer Object)
-public class BacSiDTO {
-  private int maBacSi;
-  private String hoTen;
-  private String sdt;
+public class ThuocDTO {
+    private String maThuoc;
+    private String tenThuoc;
+    private int soLuongTon;
 
-  public BacSiDTO() {}
+    public ThuocDTO() {}
 
-  public BacSiDTO(int maBacSi, String hoTen, String sdt) {
-    this.maBacSi = maBacSi;
-    this.hoTen = hoTen;
-    this.sdt = sdt;
-  }
+    public ThuocDTO(String maThuoc, String tenThuoc, int soLuongTon) {
+        this.maThuoc = maThuoc;
+        this.tenThuoc = tenThuoc;
+        this.soLuongTon = soLuongTon;
+    }
 
-  public int getMaBacSi() {
-    return maBacSi;
-  }
+    public String getMaThuoc() {
+        return maThuoc;
+    }
 
-  public void setMaBacSi(int maBacSi) {
-    this.maBacSi = maBacSi;
-  }
+    public void setMaThuoc(String maThuoc) {
+        this.maThuoc = maThuoc;
+    }
 
-  public String getHoTen() {
-    return hoTen;
-  }
+    public String getTenThuoc() {
+        return tenThuoc;
+    }
 
-  public void setHoTen(String hoTen) {
-    this.hoTen = hoTen;
-  }
+    public void setTenThuoc(String tenThuoc) {
+        this.tenThuoc = tenThuoc;
+    }
 
-  public String getSdt() {
-    return sdt;
-  }
+    public int getSoLuongTon() {
+        return soLuongTon;
+    }
 
-  public void setSdt(String sdt) {
-    this.sdt = sdt;
-  }
+    public void setSoLuongTon(int soLuongTon) {
+        this.soLuongTon = soLuongTon;
+    }
 }
 ```
 
-# DTO (Data Transfer Object)
+---
 
-Thư mục `phongkham/DTO` chứa các lớp **DTO** dùng để **đóng gói dữ liệu** khi truyền qua lại giữa các tầng của ứng dụng (GUI/BUS/DAO).
+## DTO là gì?
 
-## Mục tiêu
+`DTO` (Data Transfer Object) là tầng mô hình dữ liệu đơn giản, dùng để:
 
-- Chuẩn hoá dữ liệu trao đổi giữa các tầng, tránh phụ thuộc trực tiếp vào DB.
-- Dễ validate/format dữ liệu trước khi hiển thị lên GUI.
-- Dễ mở rộng khi thêm field mà không ảnh hưởng quá nhiều phần còn lại.
+- Biểu diễn dữ liệu của 1 “thực thể” (Bác sĩ, Thuốc, Phiếu khám, …)
+- Truyền dữ liệu qua lại giữa các tầng `GUI` ↔ `BUS` ↔ `DAO`
+- Giúp code rõ ràng hơn thay vì truyền nhiều tham số rời rạc
 
 ## Quy ước đặt tên
 
-- Mỗi đối tượng nghiệp vụ có 1 DTO tương ứng: `BacSiDTO`, `BenhNhanDTO`, `HoaDonDTO`, ...
-- Tên file và tên `public class` phải trùng nhau (theo Java convention).
-- Package chuẩn: `package phongkham.DTO;`
+- Lớp: `*DTO` (vd: `ThuocDTO`, `BacSiDTO`, `CTPhieuNhapDTO`…)
+- Thường sẽ đi theo bộ 3: `XDTO` ↔ `XDAO` ↔ `XBUS`
 
-## Cách dùng (luồng khuyến nghị)
+## DTO nên chứa gì?
 
-- GUI nhận input → tạo DTO → gọi `BUS`.
-- `BUS` xử lý nghiệp vụ → gọi `DAO` để đọc/ghi dữ liệu.
-- `DAO` trả dữ liệu về dưới dạng DTO (hoặc list DTO).
+- Fields (private)
+- Constructor rỗng + constructor đầy đủ (tuỳ nhu cầu)
+- Getter/Setter
+- (Tuỳ chọn) `toString()` để debug/log
 
-Luồng:
+## DTO KHÔNG nên chứa gì?
 
-- `GUI` → `BUS` → `DAO` → `DB`
+- SQL / thao tác DB (để `DAO`)
+- Logic nghiệp vụ phức tạp (để `BUS`)
+- Code UI (để `GUI`)
 
-## Gợi ý nội dung DTO
+## Gợi ý cách map giữa DAO và DTO
 
-- Field nên bám theo dữ liệu cần hiển thị / trao đổi (không nhất thiết giống 100% bảng DB).
-- Có constructor rỗng + constructor đầy đủ (tuỳ nhu cầu).
-- Có getter/setter.
+- Ở `DAO`: đọc `ResultSet` → set vào DTO
+- Ở `DAO`: khi insert/update: lấy DTO → set vào `PreparedStatement`
 
-Nếu bạn muốn, mình có thể chuẩn hoá các DTO hiện tại (thêm field/getter/setter theo schema trong `database/qlpk_db.sql`).
+Ví dụ mapping (pseudo):
+
+- `ThuocDTO t = new ThuocDTO();`
+- `t.setMaThuoc(rs.getString("ma_thuoc"));`
+- `t.setTenThuoc(rs.getString("ten_thuoc"));`
+
+## Trạng thái hiện tại của thư mục
+
+Nếu nhiều file `*DTO.java` đang trống (`{}`), đó là khung (scaffold). Khi bạn bắt đầu implement CRUD ở `DAO/BUS`, bạn nên bổ sung fields + getter/setter cho DTO tương ứng để mapping dữ liệu dễ và đúng.

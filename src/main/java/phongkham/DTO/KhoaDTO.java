@@ -1,3 +1,5 @@
 package phongkham.DTO;
 
-public class KhoaDTO {}
+public class KhoaDTO {
+    
+}

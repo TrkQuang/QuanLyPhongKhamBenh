@@ -1,5 +1,5 @@
 package phongkham.DTO;
 
-public class BacSiDTO {
+public class ThuocDTO {
     
 }
