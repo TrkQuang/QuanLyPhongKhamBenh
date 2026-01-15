@@ -42,7 +42,7 @@
 
 ## 👥 PHÂN CHIA THÀNH VIÊN (DỰA TRÊN DATABASE SCHEMA)
 
-### 🧑‍💻 **THÀNH VIÊN 1** (4 module - 19.05%)
+### 🧑‍💻 **QUANG HỮU** (4 module - 19.05%)
 
 **Chuyên trách**: User & Lịch làm việc bác sĩ
 
@@ -62,7 +62,7 @@
 
 ---
 
-### 🧑‍💻 **THÀNH VIÊN 2** (4 module - 19.05%)
+### 🧑‍💻 **KỲ QUANG** (4 module - 19.05%)
 
 **Chuyên trách**: Luồng khám bệnh chính & Roles
 
@@ -82,7 +82,7 @@
 
 ---
 
-### 🧑‍💻 **THÀNH VIÊN 3** (4 module - 19.05%)
+### 🧑‍💻 **BẢO TRÍ** (4 module - 19.05%)
 
 **Chuyên trách**: Đơn thuốc & Permissions
 
@@ -102,7 +102,7 @@
 
 ---
 
-### 🧑‍💻 **THÀNH VIÊN 4** (3 module - 14.29%)
+### 🧑‍💻 **NHƯ QUỲNH** (3 module - 14.29%)
 
 **Chuyên trách**: Quản lý thuốc và nhập kho
 
@@ -120,7 +120,7 @@
 
 ---
 
-### 🧑‍💻 **THÀNH VIÊN 5** (3 module - 14.29%)
+### 🧑‍💻 **THÀNH NHÂN** (3 module - 14.29%)
 
 **Chuyên trách**: Quan hệ nhiều-nhiều & Thanh toán
 
@@ -138,7 +138,7 @@
 
 ---
 
-### 🧑‍💻 **THÀNH VIÊN 6** (3 module - 14.29%)
+### 🧑‍💻 **MINH TRIẾT** (3 module - 14.29%)
 
 **Chuyên trách**: Hóa đơn bán thuốc và bảng quan hệ phân quyền
 
@@ -158,15 +158,15 @@
 
 ## 📊 THỐNG KÊ CÔNG VIỆC ( DỰ KIẾN )
 
-| Thành viên   | Số module | % Công việc | Vai trò chính                              | Module phân quyền  | Độ phức tạp  |
-| ------------ | --------- | ----------- | ------------------------------------------ | ------------------ | ------------ |
-| Thành viên 1 | 4         | 19.05%      | Users + Bác sĩ + Khoa + Lịch làm việc      | Users              | High         |
-| Thành viên 2 | 4         | 19.05%      | Roles + Luồng khám chính (CORE)            | Roles              | **HIGHEST**  |
-| Thành viên 3 | 4         | 19.05%      | Permissions + Đơn thuốc + Gói dịch vụ      | Permissions        | High         |
-| Thành viên 4 | 3         | 14.29%      | Thuốc + Nhà cung cấp + Phiếu nhập          | -                  | Medium       |
-| Thành viên 5 | 3         | 14.29%      | UserRoles + Thanh toán + Chi tiết nhập     | UserRoles          | Medium-High  |
-| Thành viên 6 | 3         | 14.29%      | RolePermissions + Hóa đơn thuốc            | RolePermissions    | Medium-High  |
-| **TỔNG**     | **21**    | **100%**    | **Mỗi người có 1 module Auth + Nghiệp vụ** | **5 Auth modules** | **Balanced** |
+| Thành viên | Số module | % Công việc | Vai trò chính                              | Module phân quyền  | Độ phức tạp  |
+| ---------- | --------- | ----------- | ------------------------------------------ | ------------------ | ------------ |
+| Quang Hữu  | 4         | 19.05%      | Users + Bác sĩ + Khoa + Lịch làm việc      | Users              | High         |
+| Kỳ Quang   | 4         | 19.05%      | Roles + Luồng khám chính (CORE)            | Roles              | **HIGHEST**  |
+| Bảo Trí    | 4         | 19.05%      | Permissions + Đơn thuốc + Gói dịch vụ      | Permissions        | High         |
+| Như Quỳnh  | 3         | 14.29%      | Thuốc + Nhà cung cấp + Phiếu nhập          | -                  | Medium       |
+| Thành Nhân | 3         | 14.29%      | UserRoles + Thanh toán + Chi tiết nhập     | UserRoles          | Medium-High  |
+| Minh Triết | 3         | 14.29%      | RolePermissions + Hóa đơn thuốc            | RolePermissions    | Medium-High  |
+| **TỔNG**   | **21**    | **100%**    | **Mỗi người có 1 module Auth + Nghiệp vụ** | **5 Auth modules** | **Balanced** |
 
 ---
 
@@ -185,41 +185,41 @@
 
 ### ✅ **Chuyên môn hóa theo Business Logic**
 
-- **Thành viên 1**: Hệ thống bác sĩ (BacSi → Khoa ← LichLamViec)
-- **Thành viên 2**: **CORE WORKFLOW** (LichKham → PhieuKham → HoSoBenhAn)
-- **Thành viên 3**: Đơn thuốc (GoiDichVu → DonThuoc → CTDonThuoc)
-- **Thành viên 4**: Thuốc & Thanh toán (NhaCungCap → Thuoc, HoaDonKham)
-- **Thành viên 5**: Nhập kho (PhieuNhap → CTPhieuNhap) + Tech Lead
-- **Thành viên 6**: Bán thuốc (HoaDonThuoc → CTHDThuoc) + UI Lead
+- **Quang Hữu**: Hệ thống bác sĩ (BacSi → Khoa ← LichLamViec)
+- **Kỳ Quang**: **CORE WORKFLOW** (LichKham → PhieuKham → HoSoBenhAn)
+- **Bảo Trí**: Đơn thuốc (GoiDichVu → DonThuoc → CTDonThuoc)
+- **Như Quỳnh**: Thuốc & Thanh toán (NhaCungCap → Thuoc, HoaDonKham)
+- **Thành Nhân**: Nhập kho (PhieuNhap → CTPhieuNhap) + Tech Lead
+- **Minh Triết**: Bán thuốc (HoaDonThuoc → CTHDThuoc) + UI Lead
 
 ### ✅ **Phụ thuộc module tối thiểu theo FK**
 
-- **Workflow chính**: LichKham → PhieuKham → HoSoBenhAn (cùng Thành viên 2)
-- **Đơn thuốc**: DonThuoc → CTDonThuoc (cùng Thành viên 3)
-- **Nhập kho**: PhieuNhap → CTPhieuNhap (cùng Thành viên 5)
-- **Bán thuốc**: HoaDonThuoc → CTHDThuoc (cùng Thành viên 6)
+- **Workflow chính**: LichKham → PhieuKham → HoSoBenhAn (cùng Kỳ Quang)
+- **Đơn thuốc**: DonThuoc → CTDonThuoc (cùng Bảo Trí)
+- **Nhập kho**: PhieuNhap → CTPhieuNhap (cùng Thành Nhân)
+- **Bán thuốc**: HoaDonThuoc → CTHDThuoc (cùng Minh Triết)
 - **Master-Detail khác**: Các thành viên khác xử lý FK đơn giản
 
 ## 🔗 MỐI QUAN HỆ QUAN TRỌNG TRONG DATABASE
 
 ### 🎯 **CORE ENTITIES (Cần chú ý đặc biệt)**:
 
-1. **HoSoBenhAn** (Thành viên 2) - **TRUNG TÂM HỆ THỐNG**
-2. **BacSi** (Thành viên 1) - Authentication & Authorization
-3. **Thuoc** (Thành viên 4) - Master data cho hầu hết workflow
+1. **HoSoBenhAn** (Kỳ Quang) - **TRUNG TÂM HỆ THỐNG**
+2. **BacSi** (Quang Hữu) - Authentication & Authorization
+3. **Thuoc** (Như Quỳnh) - Master data cho hầu hết workflow
 
 ### 🔄 **WORKFLOW DEPENDENCIES**:
 
 ```
-Guest → LichKham (TV2) → PhieuKham (TV2) → HoSoBenhAn (TV2)
+Guest → LichKham (KQ) → PhieuKham (KQ) → HoSoBenhAn (KQ)
                                                     ↓
-                                              DonThuoc (TV3)
+                                              DonThuoc (BT)
                                                     ↓
-                                            CTDonThuoc (TV3)
+                                            CTDonThuoc (BT)
                                                     ↓
-                               HoaDonThuoc (TV6) ←───────┐
+                               HoaDonThuoc (MT) ←───────┐
                                      ↓                     │
-                               CTHDThuoc (TV6)           Thuoc (TV4)
+                               CTHDThuoc (MT)           Thuoc (NQ)
 ```
 
 ### 🚨 **NULLABLE FOREIGN KEYS CẦN ĐặC BIỆT XỬ LÝ**:
@@ -288,14 +288,14 @@ Guest → LichKham (TV2) → PhieuKham (TV2) → HoSoBenhAn (TV2)
 
 ### 🤝 **Nhóm hỗ trợ chéo**:
 
-- **Nhóm A** (Thành viên 1, 2): Quản lý bác sĩ & khám bệnh
-- **Nhóm B** (Thành viên 3, 4): Quản lý thuốc & kho
-- **Nhóm C** (Thành viên 5, 6): Thanh toán & tích hợp
+- **Nhóm A** (Quang Hữu, Kỳ Quang): Quản lý bác sĩ & khám bệnh
+- **Nhóm B** (Bảo Trí, Như Quỳnh): Quản lý thuốc & kho
+- **Nhóm C** (Thành Nhân, Minh Triết): Thanh toán & tích hợp
 
 ### 📋 **Cân bằng công việc**:
 
-- **4 thành viên** (1,2,3,5) làm **3 module** = 75% tổng công việc
-- **2 thành viên** (4,6) làm **2 module** = 25% tổng công việc
+- **3 thành viên** (Quang Hữu, Kỳ Quang, Bảo Trí) làm **4 module** = 57.15% tổng công việc
+- **3 thành viên** (Như Quỳnh, Thành Nhân, Minh Triết) làm **3 module** = 42.85% tổng công việc
 - Tất cả đều tham gia đều các tầng DTO-DAO-BUS-GUI
 
 ---
@@ -325,10 +325,10 @@ Guest → LichKham (TV2) → PhieuKham (TV2) → HoSoBenhAn (TV2)
 
 ### 🔄 **COORDINATION POINTS**:
 
-- **Thành viên 2** (HoSoBenhAn) cần hoàn thành trước cho các thành viên khác test
-- **Thành viên 4** (Thuoc) cần hoàn thành sớm vì nhiều module khác phụ thuộc
-- **Thành viên 5** (Technical Lead) hỗ trợ giải quyết FK conflicts
-- **Thành viên 6** (UI Lead) thiết kế UI pattern cho nullable FK
+- **Kỳ Quang** (HoSoBenhAn) cần hoàn thành trước cho các thành viên khác test
+- **Như Quỳnh** (Thuoc) cần hoàn thành sớm vì nhiều module khác phụ thuộc
+- **Thành Nhân** (Technical Lead) hỗ trợ giải quyết FK conflicts
+- **Minh Triết** (UI Lead) thiết kế UI pattern cho nullable FK
 
 ---
 
@@ -342,17 +342,17 @@ Guest → LichKham (TV2) → PhieuKham (TV2) → HoSoBenhAn (TV2)
 
 ### 🔗 **DEPENDENCIES PHÂN QUYỀN MỚI**:
 
-1. **Users** (TV1) → **UserRoles** (TV5) → **Roles** (TV1)
-2. **Roles** (TV1) → **RolePermissions** (TV6) → **Permissions** (TV2)
-3. **BacSi** (TV1) tích hợp **Users** cho authentication
-4. **Many-to-many UI patterns** (TV5, TV6) với leadership roles
+1. **Users** (QH) → **UserRoles** (TN) → **Roles** (QH)
+2. **Roles** (QH) → **RolePermissions** (MT) → **Permissions** (KQ)
+3. **BacSi** (QH) tích hợp **Users** cho authentication
+4. **Many-to-many UI patterns** (TN, MT) với leadership roles
 
 ### 🎯 **ƯU TIÊN THỨ TỰ PHÁT TRIỂN**:
 
-1. **Users + Roles** (TV1) - Authentication cơ bản
-2. **Permissions** (TV2) - Authorization framework
-3. **BacSi integration** (TV1) - Link business với auth
-4. **UserRoles + RolePermissions** (TV5, TV6) - Many-to-many
+1. **Users + Roles** (QH) - Authentication cơ bản
+2. **Permissions** (KQ) - Authorization framework
+3. **BacSi integration** (QH) - Link business với auth
+4. **UserRoles + RolePermissions** (TN, MT) - Many-to-many
 5. **Các module nghiệp vụ khác** - Business logic
 
 ---

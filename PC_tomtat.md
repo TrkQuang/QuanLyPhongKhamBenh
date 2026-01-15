@@ -9,7 +9,7 @@
 
 ## 👥 PHÂN CÔNG CHI TIẾT
 
-### 🔐👤 **THÀNH VIÊN 1** - User + Hệ thống Bác sĩ
+### 🔐👤 **QUANG HỮU** - User + Hệ thống Bác sĩ
 
 **🎯 Tích hợp Authentication với Nghiệp vụ Bác sĩ**
 
@@ -22,7 +22,7 @@
 
 ---
 
-### 🏥⭐ **THÀNH VIÊN 2** - Roles + Core Workflo
+### 🏥⭐ **KỲ QUANG** - Roles + Core Workflo
 
 **🎯 TRUNG TÂM HỆ THỐNG - Workflow khám bệnh chính**
 
@@ -35,7 +35,7 @@
 
 ---
 
-### 💊 **THÀNH VIÊN 3** - Permissions + Đơn thuốc
+### 💊 **BẢO TRÍ** - Permissions + Đơn thuốc
 
 **🎯 Quyền hạn + Quản lý đơn thuốc hoàn chỉnh**
 
@@ -48,7 +48,7 @@
 
 ---
 
-### 🏪 **THÀNH VIÊN 4** - Quản lý Thuốc + Nhập kho
+### 🏪 **NHƯ QUỲNH** - Quản lý Thuốc + Nhập kho
 
 **🎯 Chuyên sâu nghiệp vụ kho thuốc**
 
@@ -60,7 +60,7 @@
 
 ---
 
-### 💰 **THÀNH VIÊN 5** - UserRoles + Thanh toán
+### 💰 **THÀNH NHÂN** - UserRoles + Thanh toán
 
 **🎯 Many-to-many + Thanh toán + Chi tiết nhập**
 
@@ -72,7 +72,7 @@
 
 ---
 
-### 🎨 **THÀNH VIÊN 6** - RolePermissions + Bán thuốc
+### 🎨 **MINH TRIẾT** - RolePermissions + Bán thuốc
 
 **🎯 Many-to-many + Hóa đơn bán thuốc**
 
@@ -89,37 +89,37 @@
 ```
 Guest/Khách hàng
       ↓
-[TV2] LichKham → Đặt lịch hẹn khám
+[KQ] LichKham → Đặt lịch hẹn khám
       ↓
-[TV2] PhieuKham → Khám bệnh, chẩn đoán
+[KQ] PhieuKham → Khám bệnh, chẩn đoán
       ↓
-[TV2] HoSoBenhAn ⭐ → Lưu hồ sơ bệnh án (CORE)
+[KQ] HoSoBenhAn ⭐ → Lưu hồ sơ bệnh án (CORE)
       ↓
-[TV3] DonThuoc → Bác sĩ kê đơn
+[BT] DonThuoc → Bác sĩ kê đơn
       ↓
-[TV3] CTDonThuoc → Chi tiết từng thuốc
+[BT] CTDonThuoc → Chi tiết từng thuốc
       ↓
-[TV6] HoaDonThuoc → Thanh toán mua thuốc
+[MT] HoaDonThuoc → Thanh toán mua thuốc
       ↓
-[TV6] CTHDThuoc → Chi tiết hóa đơn
+[MT] CTHDThuoc → Chi tiết hóa đơn
 
 Luồng phụ:
-[TV5] HoaDonKham → Thanh toán tiền khám
+[TN] HoaDonKham → Thanh toán tiền khám
 ```
 
 ---
 
 ## 📊 THỐNG KÊ WORKLOAD
 
-| Thành viên | Module | % Công việc | Chuyên môn                        | Module Auth        | Độ khó       |
-| ---------- | ------ | ----------- | --------------------------------- | ------------------ | ------------ |
-| **TV1**    | 4      | 19.05%      | 🔐 User + Hệ thống Bác sĩ         | Users              | ⭐⭐⭐⭐     |
-| **TV2**    | 4      | 19.05%      | 🏥⭐ Roles + Core Workflow        | Roles              | ⭐⭐⭐⭐⭐   |
-| **TV3**    | 4      | 19.05%      | 💊 Permissions + Đơn thuốc        | Permissions        | ⭐⭐⭐⭐     |
-| **TV4**    | 3      | 14.29%      | 🏪 Thuốc + Nhập kho               | -                  | ⭐⭐⭐       |
-| **TV5**    | 3      | 14.29%      | 💰 UserRoles + Thanh toán         | UserRoles          | ⭐⭐⭐       |
-| **TV6**    | 3      | 14.29%      | 🎨 RolePermissions + Bán thuốc    | RolePermissions    | ⭐⭐⭐       |
-| **TỔNG**   | **21** | **100%**    | **5/6 người có Auth + Nghiệp vụ** | **5 Auth modules** | **⭐⭐⭐⭐** |
+| Thành viên     | Module | % Công việc | Chuyên môn                        | Module Auth        | Độ khó       |
+| -------------- | ------ | ----------- | --------------------------------- | ------------------ | ------------ |
+| **Quang Hữu**  | 4      | 19.05%      | 🔐 User + Hệ thống Bác sĩ         | Users              | ⭐⭐⭐⭐     |
+| **Kỳ Quang**   | 4      | 19.05%      | 🏥⭐ Roles + Core Workflow        | Roles              | ⭐⭐⭐⭐⭐   |
+| **Bảo Trí**    | 4      | 19.05%      | 💊 Permissions + Đơn thuốc        | Permissions        | ⭐⭐⭐⭐     |
+| **Như Quỳnh**  | 3      | 14.29%      | 🏪 Thuốc + Nhập kho               | -                  | ⭐⭐⭐       |
+| **Thành Nhân** | 3      | 14.29%      | 💰 UserRoles + Thanh toán         | UserRoles          | ⭐⭐⭐       |
+| **Minh Triết** | 3      | 14.29%      | 🎨 RolePermissions + Bán thuốc    | RolePermissions    | ⭐⭐⭐       |
+| **TỔNG**       | **21** | **100%**    | **5/6 người có Auth + Nghiệp vụ** | **5 Auth modules** | **⭐⭐⭐⭐** |
 
 ---
 
@@ -127,15 +127,15 @@ Luồng phụ:
 
 **GIAI ĐOẠN 1 - Foundation** (Tuần 1-2)
 
-1. **TV1**: Users, BacSi, Khoa → Nền tảng authentication + entities cơ bản
-2. **TV4**: NhaCungCap, Thuoc → Master data cho các module khác
-3. **TV2**: Roles → Phân quyền cơ bản
+1. **Quang Hữu**: Users, BacSi, Khoa → Nền tảng authentication + entities cơ bản
+2. **Như Quỳnh**: NhaCungCap, Thuoc → Master data cho các module khác
+3. **Kỳ Quang**: Roles → Phân quyền cơ bản
 
-**GIAI ĐOẠN 2 - Core Business** (Tuần 3-4) 4. **TV1**: LichLamViec → Lịch bác sĩ (phụ thuộc BacSi) 5. **TV2**: LichKham, PhieuKham, HoSoBenhAn → Core workflow 6. **TV3**: Permissions, GoiDichVu → Quyền hạn + gói dịch vụ
+**GIAI ĐOẠN 2 - Core Business** (Tuần 3-4) 4. **Quang Hữu**: LichLamViec → Lịch bác sĩ (phụ thuộc BacSi) 5. **Kỳ Quang**: LichKham, PhieuKham, HoSoBenhAn → Core workflow 6. **Bảo Trí**: Permissions, GoiDichVu → Quyền hạn + gói dịch vụ
 
-**GIAI ĐOẠN 3 - Details & Relations** (Tuần 5-6) 7. **TV3**: DonThuoc, CTDonThuoc → Đơn thuốc (phụ thuộc HoSoBenhAn + Thuoc) 8. **TV4**: PhieuNhap → Nhập kho (phụ thuộc NhaCungCap) 9. **TV5**: UserRoles, HoaDonKham → Many-to-many + Thanh toán khám 10. **TV5**: CTPhieuNhap → Chi tiết nhập (phụ thuộc PhieuNhap + Thuoc)
+**GIAI ĐOẠN 3 - Details & Relations** (Tuần 5-6) 7. **Bảo Trí**: DonThuoc, CTDonThuoc → Đơn thuốc (phụ thuộc HoSoBenhAn + Thuoc) 8. **Như Quỳnh**: PhieuNhap → Nhập kho (phụ thuộc NhaCungCap) 9. **Thành Nhân**: UserRoles, HoaDonKham → Many-to-many + Thanh toán khám 10. **Thành Nhân**: CTPhieuNhap → Chi tiết nhập (phụ thuộc PhieuNhap + Thuoc)
 
-**GIAI ĐOẠN 4 - Advanced Features** (Tuần 7-8) 11. **TV6**: RolePermissions → Many-to-many auth (phụ thuộc Roles + Permissions) 12. **TV6**: HoaDonThuoc, CTHDThuoc → Bán thuốc (phụ thuộc DonThuoc - nullable)
+**GIAI ĐOẠN 4 - Advanced Features** (Tuần 7-8) 11. **Minh Triết**: RolePermissions → Many-to-many auth (phụ thuộc Roles + Permissions) 12. **Minh Triết**: HoaDonThuoc, CTHDThuoc → Bán thuốc (phụ thuộc DonThuoc - nullable)
 
 ---
 
@@ -143,25 +143,25 @@ Luồng phụ:
 
 **Dependencies chính**:
 
-- **TV1 → TV2**: BacSi, Khoa → LichKham, HoSoBenhAn
-- **TV1 ↔ TV2 ↔ TV3**: Users ↔ Roles ↔ Permissions (Tam giác phân quyền)
-- **TV1 ↔ TV5**: Users + Roles → UserRoles (many-to-many)
-- **TV2 ↔ TV3 ↔ TV6**: Roles + Permissions → RolePermissions (many-to-many)
-- **TV2 → TV3**: HoSoBenhAn → DonThuoc
-- **TV3 → TV6**: DonThuoc → HoaDonThuoc (nullable FK)
-- **TV4 → All**: Thuoc → (CTDonThuoc, CTPhieuNhap, CTHDThuoc)
+- **Quang Hữu → Kỳ Quang**: BacSi, Khoa → LichKham, HoSoBenhAn
+- **Quang Hữu ↔ Kỳ Quang ↔ Bảo Trí**: Users ↔ Roles ↔ Permissions (Tam giác phân quyền)
+- **Quang Hữu ↔ Thành Nhân**: Users + Roles → UserRoles (many-to-many)
+- **Kỳ Quang ↔ Bảo Trí ↔ Minh Triết**: Roles + Permissions → RolePermissions (many-to-many)
+- **Kỳ Quang → Bảo Trí**: HoSoBenhAn → DonThuoc
+- **Bảo Trí → Minh Triết**: DonThuoc → HoaDonThuoc (nullable FK)
+- **Như Quỳnh → All**: Thuoc → (CTDonThuoc, CTPhieuNhap, CTHDThuoc)
 
 **Họp sync**:
 
-- **Sprint 1**: TV1 + TV2 + TV4 (Foundation team)
-- **Sprint 2**: TV2 + TV3 (Core workflow team)
-- **Sprint 3**: TV3 + TV5 + TV6 (Details & Relations team)
+- **Sprint 1**: Quang Hữu + Kỳ Quang + Như Quỳnh (Foundation team)
+- **Sprint 2**: Kỳ Quang + Bảo Trí (Core workflow team)
+- **Sprint 3**: Bảo Trí + Thành Nhân + Minh Triết (Details & Relations team)
 
 --
 
 ### ⚠️ **LƯU Ý:**
 
-⚠️ **TV2 workload cao nhất**: Core workflow + HoSoBenhAn trung tâm → Cần hỗ trợ  
-⚠️ **Dependencies phức tạp**: Thuoc (TV4) bị nhiều module phụ thuộc → Ưu tiên sớm  
-⚠️ **Many-to-many relationships**: TV5, TV6 cần hiểu rõ quan hệ nhiều-nhiều  
-⚠️ **Nullable FK**: TV6 cần xử lý HoaDonThuoc.DonThuoc (có thể NULL)
+⚠️ **Kỳ Quang workload cao nhất**: Core workflow + HoSoBenhAn trung tâm → Cần hỗ trợ  
+⚠️ **Dependencies phức tạp**: Thuoc (Như Quỳnh) bị nhiều module phụ thuộc → Ưu tiên sớm  
+⚠️ **Many-to-many relationships**: Thành Nhân, Minh Triết cần hiểu rõ quan hệ nhiều-nhiều  
+⚠️ **Nullable FK**: Minh Triết cần xử lý HoaDonThuoc.DonThuoc (có thể NULL)
