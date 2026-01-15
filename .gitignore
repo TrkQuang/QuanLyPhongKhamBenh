@@ -1,0 +1,27 @@
+# Java build outputs
+/out/
+/bin/
+/target/
+/build/
+
+# Compiled class files
+*.class
+
+# Logs
+*.log
+
+# IDE settings
+/.idea/
+*.iml
+/.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Maven/Gradle (if added later)
+/.mvn/
+/.gradle/
+
+# Local DB credentials (keep secrets out of git)
+/Connection/dbconfig.txt
