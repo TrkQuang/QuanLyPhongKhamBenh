@@ -1,3 +1,3 @@
-package phongkham.DAO;
+package phongkham.dao;
 
 public class HoaDonThuocDAO {}

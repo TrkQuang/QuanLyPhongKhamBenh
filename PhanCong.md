@@ -1,247 +1,358 @@
-# PHÂN CÔNG CÔNG VIỆC - HỆ THỐNG QUẢN LÝ PHÒNG KHÁM (21 MODULE)
+# PHÂN CÔNG CÔNG VIỆC - HỆ THỐNG QUẢN LÝ PHÒNG KHÁM BỆNH
 
-## 🎯 THÔNG TIN TỔNG QUAN
+## 🎯 THÔNG TIN CHUNG
 
-- **Team size**: 6 thành viên
-- **Tổng module**: 21 module (16 nghiệp vụ + 5 phân quyền)
-- **Phân chia**: Mỗi người làm **đầy đủ 4 tầng** (DTO-DAO-BUS-GUI)
-- **Mô hình**: Desktop Application - LAN - Internal Database Server
+- **Số thành viên team**: 6 người
+- **Tổng số module**: 21 module (16 cũ + 5 phân quyền)
+- **Phân chia công việc**: Mỗi thành viên làm **đầy đủ 3 tầng (Gui bus dao )** (DTO-DAO-BUS-GUI) cho các module được giao
+- **Phân chia mới**: 3 người x 4 module + 3 người x 3 module = 21 module
 
----
+## 📋 DANH SÁCH CÁC MODULE THEO DATABASE SCHEMA
 
-## 📋 DANH SÁCH MODULE THEO DATABASE SCHEMA
+**📊 Dựa trên Database Diagram thực tế (21 module):**
 
 ### 🏥 **MODULE NGHIỆP VỤ CHÍNH (16 module)**
 
-1. **BacSi** - Quản lý bác sĩ (liên kết Users)
+1. **BacSi** - Quản lý bác sĩ (có FK đến Khoa)
 2. **Khoa** - Khoa khám bệnh
-3. **LichLamViec** - Lịch làm việc bác sĩ
-4. **LichKham** - Lịch hẹn khám (từ Guest)
-5. **PhieuKham** - Phiếu khám bệnh
-6. **HoSoBenhAn** - **[CORE]** Hồ sơ bệnh án (thay BenhNhan)
-7. **DonThuoc** - Đơn thuốc bác sĩ kê
-8. **CTDonThuoc** - Chi tiết đơn thuốc
-9. **GoiDichVu** - Gói dịch vụ khám
-10. **Thuoc** - Danh mục thuốc
-11. **NhaCungCap** - Nhà cung cấp thuốc
-12. **PhieuNhap** - Phiếu nhập kho thuốc
-13. **CTPhieuNhap** - Chi tiết phiếu nhập
-14. **HoaDonThuoc** - Hóa đơn bán thuốc (MaDonThuoc nullable)
-15. **CTHDThuoc** - Chi tiết hóa đơn thuốc
-16. **HoaDonKham** - Hóa đơn khám bệnh
+3. **LichLamViec** - Lịch làm việc bác sĩ (FK đến BacSi)
+4. **LichKham** - Lịch hẹn khám (FK đến BacSi, Khoa)
+5. **PhieuKham** - Phiếu khám bệnh (FK đến LichKham, GoiDichVu)
+6. **HoSoBenhAn** - Hồ sơ bệnh án **[CORE]** (FK đến PhieuKham, BacSi)
+7. **DonThuoc** - Đơn thuốc (FK đến HoSoBenhAn)
+8. **CTDonThuoc** - Chi tiết đơn thuốc (FK đến DonThuoc, Thuoc)
+9. **Thuoc** - Danh mục thuốc (FK đến NhaCungCap)
+10. **NhaCungCap** - Nhà cung cấp thuốc
+11. **PhieuNhap** - Phiếu nhập thuốc (FK đến NhaCungCap)
+12. **CTPhieuNhap** - Chi tiết phiếu nhập (FK đến PhieuNhap, Thuoc)
+13. **HoaDonThuoc** - Hóa đơn bán thuốc (FK đến DonThuoc - nullable)
+14. **CTHDThuoc** - Chi tiết hóa đơn thuốc (FK đến HoaDonThuoc, Thuoc)
+15. **HoaDonKham** - Hóa đơn khám bệnh (FK đến PhieuKham)
+16. **GoiDichVu** - Gói dịch vụ khám
 
-### 🔐 **MODULE PHÂN QUYỀN (5 module)**
+### 🔐 **MODULE PHÂN QUYỀN MỚI (5 module)**
 
-17. **Users** - Tài khoản người dùng (username, password, email, status)
-18. **Roles** - Vai trò/chức vụ (Bác sĩ, Nhà thuốc, Admin)
-19. **Permissions** - Quyền hạn cụ thể
-20. **UserRoles** - Many-to-many: User ↔ Role
-21. **RolePermissions** - Many-to-many: Role ↔ Permission
-
----
-
-## 👥 PHÂN CHIA TEAM (CÂN BẰNG WORKLOAD)
-
-### 🔐 **THÀNH VIÊN 1** - Authentication System (4 module - 19.05%)
-
-**Chuyên trách**: Hệ thống đăng nhập và phân quyền
-
-| Module          | Loại    | Mối quan hệ                  | Mô tả              |
-| --------------- | ------- | ---------------------------- | ------------------ |
-| **Users**       | Core    | ↔ UserRoles                  | Tài khoản hệ thống |
-| **Roles**       | Core    | ↔ UserRoles, RolePermissions | Vai trò người dùng |
-| **Permissions** | Medium  | ↔ RolePermissions            | Quyền hạn chi tiết |
-| **UserRoles**   | Complex | Many-to-many bridge          | Gán role cho user  |
-
-**Workflow**: Guest (không cần auth) → Bác sĩ/Nhà thuốc (cần đăng nhập)
+17. **Users** - Người dùng hệ thống (username, password, email, status)
+18. **Roles** - Vai trò/chức vụ (role_name, description)
+19. **Permissions** - Quyền hạn (permission_key, description)
+20. **UserRoles** - Phân quyền user-role (FK đến Users, Roles)
+21. **RolePermissions** - Phân quyền role-permission (FK đến Roles, Permissions)
 
 ---
 
-### 👨‍⚕️ **THÀNH VIÊN 2** - Doctor Management (4 module - 19.05%)
+## 👥 PHÂN CHIA THÀNH VIÊN (DỰA TRÊN DATABASE SCHEMA)
 
-**Chuyên trách**: Quản lý bác sĩ và khoa phòng
+### 🧑‍💻 **THÀNH VIÊN 1** (4 module - 19.05%)
 
-| Module              | Loại    | Mối quan hệ         | Mô tả                      |
-| ------------------- | ------- | ------------------- | -------------------------- |
-| **BacSi**           | Core    | → Khoa, Users       | Hồ sơ bác sĩ               |
-| **Khoa**            | Core    | ← BacSi             | Khoa chuyên môn            |
-| **LichLamViec**     | Medium  | → BacSi             | Lịch trực của bác sĩ       |
-| **RolePermissions** | Complex | Many-to-many bridge | Phân quyền role-permission |
+**Chuyên trách**: User & Lịch làm việc bác sĩ
 
-**Workflow**: BacSi tạo lịch làm việc → xác nhận lịch khám → khám bệnh
+| Module          | Mức độ | Mối quan hệ       | Mô tả                               |
+| --------------- | ------ | ----------------- | ----------------------------------- |
+| **Users**       | Core   | ← UserRoles       | Người dùng hệ thống, authentication |
+| **BacSi**       | Core   | → Khoa (FK)       | Thông tin bác sĩ, liên kết Users    |
+| **LichLamViec** | Medium | → BacSi (FK)      | Lịch làm việc bác sĩ theo ca        |
+| **Khoa**        | Core   | ← BacSi, LichKham | Khoa khám bệnh, chuyên khoa         |
 
----
+**Công việc cần làm**:
 
-### 🏥 **THÀNH VIÊN 3** - Medical Workflow (3 module - 14.29%)
-
-**Chuyên trách**: Luồng khám bệnh cốt lõi
-
-| Module         | Loại     | Mối quan hệ           | Mô tả                         |
-| -------------- | -------- | --------------------- | ----------------------------- |
-| **LichKham**   | Core     | → BacSi, Khoa         | Lịch hẹn từ Guest             |
-| **PhieuKham**  | Core     | → LichKham, GoiDichVu | Phiếu khám bệnh               |
-| **HoSoBenhAn** | **CORE** | → PhieuKham, BacSi    | **TRUNG TÂM** - Thay BenhNhan |
-
-**Workflow**: Guest đặt lịch → Bác sĩ khám → Tạo hồ sơ bệnh án
+- `UsersDTO.java` - `UsersDAO.java` - `UsersBUS.java` - `UsersGUI.java`
+- `BacSiDTO.java` - `BacSiDAO.java` - `BacSiBUS.java` - `BacSiGUI.java`
+- `LichLamViecDTO.java` - `LichLamViecDAO.java` - `LichLamViecBUS.java` - `LichLamViecGUI.java`
+- `KhoaDTO.java` - `KhoaDAO.java` - `KhoaBUS.java` - `KhoaGUI.java`
 
 ---
 
-### 💊 **THÀNH VIÊN 4** - Medicine & Prescription (4 module - 19.05%)
+### 🧑‍💻 **THÀNH VIÊN 2** (4 module - 19.05%)
 
-**Chuyên trách**: Thuốc và đơn thuốc
+**Chuyên trách**: Luồng khám bệnh chính & Roles
 
-| Module         | Loại   | Mối quan hệ       | Mô tả               |
-| -------------- | ------ | ----------------- | ------------------- |
-| **Thuoc**      | Core   | → NhaCungCap      | Master data thuốc   |
-| **DonThuoc**   | Core   | → HoSoBenhAn      | Đơn thuốc bác sĩ kê |
-| **CTDonThuoc** | Medium | → DonThuoc, Thuoc | Chi tiết từng thuốc |
-| **GoiDichVu**  | Medium | ← PhieuKham       | Combo dịch vụ khám  |
+| Module         | Mức độ | Mối quan hệ                  | Mô tả                          |
+| -------------- | ------ | ---------------------------- | ------------------------------ |
+| **Roles**      | Core   | ← UserRoles, RolePermissions | Vai trò/chức vụ trong hệ thống |
+| **LichKham**   | Core   | → BacSi, Khoa (FK)           | Lịch hẹn khám từ Guest         |
+| **PhieuKham**  | Core   | → LichKham, GoiDichVu (FK)   | Phiếu khám bệnh, kết quả       |
+| **HoSoBenhAn** | Core   | → PhieuKham, BacSi (FK)      | **TRUNG TÂM** - Hồ sơ bệnh án  |
 
-**Workflow**: Bác sĩ kê đơn → Chi tiết thuốc → Guest mua thuốc
+**Công việc cần làm**:
 
----
-
-### 🏪 **THÀNH VIÊN 5** - Inventory Management (3 module - 14.29%)
-
-**Chuyên trách**: Kho thuốc và nhập hàng
-
-| Module          | Loại   | Mối quan hệ        | Mô tả             |
-| --------------- | ------ | ------------------ | ----------------- |
-| **NhaCungCap**  | Medium | ← Thuoc, PhieuNhap | Nhà cung cấp      |
-| **PhieuNhap**   | Core   | → NhaCungCap       | Phiếu nhập kho    |
-| **CTPhieuNhap** | Medium | → PhieuNhap, Thuoc | Chi tiết nhập kho |
-
-**Workflow**: Nhập thuốc từ NCC → Cập nhật tồn kho → Quản lý inventory
+- `RolesDTO.java` - `RolesDAO.java` - `RolesBUS.java` - `RolesGUI.java`
+- `LichKhamDTO.java` - `LichKhamDAO.java` - `LichKhamBUS.java` - `LichKhamGUI.java`
+- `PhieuKhamDTO.java` - `PhieuKhamDAO.java` - `PhieuKhamBUS.java` - `PhieuKhamGUI.java`
+- `HoSoBenhAnDTO.java` - `HoSoBenhAnDAO.java` - `HoSoBenhAnBUS.java` - `HoSoBenhAnGUI.java`
 
 ---
 
-### 💰 **THÀNH VIÊN 6** - Sales & Payment (3 module - 14.29%)
+### 🧑‍💻 **THÀNH VIÊN 3** (4 module - 19.05%)
 
-**Chuyên trách**: Bán thuốc và thanh toán
+**Chuyên trách**: Đơn thuốc & Permissions
 
-| Module          | Loại   | Mối quan hệ           | Mô tả                   |
-| --------------- | ------ | --------------------- | ----------------------- |
-| **HoaDonThuoc** | Core   | → DonThuoc (nullable) | Bán thuốc có/không đơn  |
-| **CTHDThuoc**   | Medium | → HoaDonThuoc, Thuoc  | Chi tiết hóa đơn thuốc  |
-| **HoaDonKham**  | Medium | → PhieuKham           | Hóa đơn thanh toán khám |
+| Module          | Mức độ | Mối quan hệ            | Mô tả                         |
+| --------------- | ------ | ---------------------- | ----------------------------- |
+| **Permissions** | Medium | ← RolePermissions      | Quyền hạn hệ thống            |
+| **GoiDichVu**   | Medium | ← PhieuKham            | Gói dịch vụ khám, combo       |
+| **DonThuoc**    | Core   | → HoSoBenhAn (FK)      | Đơn thuốc bác sĩ kê           |
+| **CTDonThuoc**  | Medium | → DonThuoc, Thuoc (FK) | Chi tiết từng thuốc trong đơn |
 
-**Workflow**: Nhà thuốc bán thuốc → Lập hóa đơn → Trừ tồn kho
+**Công việc cần làm**:
 
----
-
-## 📊 THỐNG KÊ PHÂN CHIA
-
-| Thành viên | Số module | % Workload | Chuyên môn           | Độ phức tạp             |
-| ---------- | --------- | ---------- | -------------------- | ----------------------- |
-| **TV1**    | 4         | 19.05%     | 🔐 Authentication    | Many-to-many + Auth     |
-| **TV2**    | 4         | 19.05%     | 👨‍⚕️ Doctor Management | Core entities           |
-| **TV3**    | 3         | 14.29%     | 🏥 Medical Workflow  | **CORE SYSTEM**         |
-| **TV4**    | 4         | 19.05%     | 💊 Medicine System   | Business logic          |
-| **TV5**    | 3         | 14.29%     | 🏪 Inventory         | Data management         |
-| **TV6**    | 3         | 14.29%     | 💰 Sales & Payment   | Financial + nullable FK |
-| **TỔNG**   | **21**    | **100%**   | **Balanced**         | **Optimized**           |
+- `PermissionsDTO.java` - `PermissionsDAO.java` - `PermissionsBUS.java` - `PermissionsGUI.java`
+- `GoiDichVuDTO.java` - `GoiDichVuDAO.java` - `GoiDichVuBUS.java` - `GoiDichVuGUI.java`
+- `DonThuocDTO.java` - `DonThuocDAO.java` - `DonThuocBUS.java` - `DonThuocGUI.java`
+- `CTDonThuocDTO.java` - `CTDonThuocDAO.java` - `CTDonThuocBUS.java` - `CTDonThuocGUI.java`
 
 ---
 
-## 🔗 LUỒNG NGHIỆP VỤ VÀ DEPENDENCIES
+### 🧑‍💻 **THÀNH VIÊN 4** (3 module - 14.29%)
 
-### 🎯 **CORE WORKFLOW (Ưu tiên cao nhất)**
+**Chuyên trách**: Quản lý thuốc và nhập kho
+
+| Module         | Mức độ | Mối quan hệ        | Mô tả                     |
+| -------------- | ------ | ------------------ | ------------------------- |
+| **NhaCungCap** | Medium | ← Thuoc, PhieuNhap | Nhà cung cấp thuốc        |
+| **Thuoc**      | Core   | → NhaCungCap (FK)  | Danh mục thuốc, thông tin |
+| **PhieuNhap**  | Core   | → NhaCungCap (FK)  | Phiếu nhập thuốc từ NCC   |
+
+**Công việc cần làm**:
+
+- `NhaCungCapDTO.java` - `NhaCungCapDAO.java` - `NhaCungCapBUS.java` - `NhaCungCapGUI.java`
+- `ThuocDTO.java` - `ThuocDAO.java` - `ThuocBUS.java` - `ThuocGUI.java`
+- `PhieuNhapDTO.java` - `PhieuNhapDAO.java` - `PhieuNhapBUS.java` - `PhieuNhapGUI.java`
+
+---
+
+### 🧑‍💻 **THÀNH VIÊN 5** (3 module - 14.29%)
+
+**Chuyên trách**: Quan hệ nhiều-nhiều & Thanh toán
+
+| Module          | Mức độ | Mối quan hệ             | Mô tả                                 |
+| --------------- | ------ | ----------------------- | ------------------------------------- |
+| **UserRoles**   | Medium | → Users, Roles (FK)     | Bảng quan hệ user-role (many-to-many) |
+| **HoaDonKham**  | Medium | → PhieuKham (FK)        | Hóa đơn thanh toán khám               |
+| **CTPhieuNhap** | Medium | → PhieuNhap, Thuoc (FK) | Chi tiết thuốc trong phiếu nhập       |
+
+**Công việc cần làm**:
+
+- `UserRolesDTO.java` - `UserRolesDAO.java` - `UserRolesBUS.java` - `UserRolesGUI.java`
+- `HoaDonKhamDTO.java` - `HoaDonKhamDAO.java` - `HoaDonKhamBUS.java` - `HoaDonKhamGUI.java`
+- `CTPhieuNhapDTO.java` - `CTPhieuNhapDAO.java` - `CTPhieuNhapBUS.java` - `CTPhieuNhapGUI.java`
+
+---
+
+### 🧑‍💻 **THÀNH VIÊN 6** (3 module - 14.29%)
+
+**Chuyên trách**: Hóa đơn bán thuốc và bảng quan hệ phân quyền
+
+| Module              | Mức độ | Mối quan hệ                | Mô tả                                       |
+| ------------------- | ------ | -------------------------- | ------------------------------------------- |
+| **RolePermissions** | Medium | → Roles, Permissions (FK)  | Bảng quan hệ role-permission (many-to-many) |
+| **HoaDonThuoc**     | Core   | → DonThuoc (FK - nullable) | Hóa đơn bán thuốc (có/không đơn)            |
+| **CTHDThuoc**       | Medium | → HoaDonThuoc, Thuoc (FK)  | Chi tiết thuốc trong hóa đơn                |
+
+**Công việc cần làm**:
+
+- `RolePermissionsDTO.java` - `RolePermissionsDAO.java` - `RolePermissionsBUS.java` - `RolePermissionsGUI.java`
+- `HoaDonThuocDTO.java` - `HoaDonThuocDAO.java` - `HoaDonThuocBUS.java` - `HoaDonThuocGUI.java`
+- `CTHDThuocDTO.java` - `CTHDThuocDAO.java` - `CTHDThuocBUS.java` - `CTHDThuocGUI.java`
+
+---
+
+## 📊 THỐNG KÊ CÔNG VIỆC ( DỰ KIẾN )
+
+| Thành viên   | Số module | % Công việc | Vai trò chính                              | Module phân quyền  | Độ phức tạp  |
+| ------------ | --------- | ----------- | ------------------------------------------ | ------------------ | ------------ |
+| Thành viên 1 | 4         | 19.05%      | Users + Bác sĩ + Khoa + Lịch làm việc      | Users              | High         |
+| Thành viên 2 | 4         | 19.05%      | Roles + Luồng khám chính (CORE)            | Roles              | **HIGHEST**  |
+| Thành viên 3 | 4         | 19.05%      | Permissions + Đơn thuốc + Gói dịch vụ      | Permissions        | High         |
+| Thành viên 4 | 3         | 14.29%      | Thuốc + Nhà cung cấp + Phiếu nhập          | -                  | Medium       |
+| Thành viên 5 | 3         | 14.29%      | UserRoles + Thanh toán + Chi tiết nhập     | UserRoles          | Medium-High  |
+| Thành viên 6 | 3         | 14.29%      | RolePermissions + Hóa đơn thuốc            | RolePermissions    | Medium-High  |
+| **TỔNG**     | **21**    | **100%**    | **Mỗi người có 1 module Auth + Nghiệp vụ** | **5 Auth modules** | **Balanced** |
+
+---
+
+## 🎯 NGUYÊN TẮC PHÂN CÔNG
+
+### ✅ **Tích hợp Phân quyền vào Nghiệp vụ**
+
+- **5 trong 6 thành viên** đều có 1 module phân quyền + các module nghiệp vụ liên quan
+- **Không tách biệt**: Mỗi người hiểu cả authentication lẫn business logic
+- **Thành viên 4**: Chuyên sâu nghiệp vụ thuốc (không phân quyền)
+
+### ✅ **Cân bằng workload theo Logic nghiệp vụ**
+
+- **4 người**: 3 module (18.75%) - Handle complex relationships
+- **2 người**: 2 module (12.5%) + Leadership roles
+
+### ✅ **Chuyên môn hóa theo Business Logic**
+
+- **Thành viên 1**: Hệ thống bác sĩ (BacSi → Khoa ← LichLamViec)
+- **Thành viên 2**: **CORE WORKFLOW** (LichKham → PhieuKham → HoSoBenhAn)
+- **Thành viên 3**: Đơn thuốc (GoiDichVu → DonThuoc → CTDonThuoc)
+- **Thành viên 4**: Thuốc & Thanh toán (NhaCungCap → Thuoc, HoaDonKham)
+- **Thành viên 5**: Nhập kho (PhieuNhap → CTPhieuNhap) + Tech Lead
+- **Thành viên 6**: Bán thuốc (HoaDonThuoc → CTHDThuoc) + UI Lead
+
+### ✅ **Phụ thuộc module tối thiểu theo FK**
+
+- **Workflow chính**: LichKham → PhieuKham → HoSoBenhAn (cùng Thành viên 2)
+- **Đơn thuốc**: DonThuoc → CTDonThuoc (cùng Thành viên 3)
+- **Nhập kho**: PhieuNhap → CTPhieuNhap (cùng Thành viên 5)
+- **Bán thuốc**: HoaDonThuoc → CTHDThuoc (cùng Thành viên 6)
+- **Master-Detail khác**: Các thành viên khác xử lý FK đơn giản
+
+## 🔗 MỐI QUAN HỆ QUAN TRỌNG TRONG DATABASE
+
+### 🎯 **CORE ENTITIES (Cần chú ý đặc biệt)**:
+
+1. **HoSoBenhAn** (Thành viên 2) - **TRUNG TÂM HỆ THỐNG**
+2. **BacSi** (Thành viên 1) - Authentication & Authorization
+3. **Thuoc** (Thành viên 4) - Master data cho hầu hết workflow
+
+### 🔄 **WORKFLOW DEPENDENCIES**:
 
 ```
-Guest (không auth) → LichKham (TV3) → PhieuKham (TV3) → HoSoBenhAn (TV3)
-                                                              ↓
-                                                         DonThuoc (TV4)
-                                                              ↓
-                                                     HoaDonThuoc (TV6)
+Guest → LichKham (TV2) → PhieuKham (TV2) → HoSoBenhAn (TV2)
+                                                    ↓
+                                              DonThuoc (TV3)
+                                                    ↓
+                                            CTDonThuoc (TV3)
+                                                    ↓
+                               HoaDonThuoc (TV6) ←───────┐
+                                     ↓                     │
+                               CTHDThuoc (TV6)           Thuoc (TV4)
 ```
 
-### 🔐 **AUTHENTICATION FLOW**
+### 🚨 **NULLABLE FOREIGN KEYS CẦN ĐặC BIỆT XỬ LÝ**:
 
-```
-BacSi/NhaThuoc → Users (TV1) → UserRoles (TV1) → Roles (TV1)
-                                                       ↓
-                                              RolePermissions (TV2) → Permissions (TV1)
-```
-
-### 📦 **INVENTORY FLOW**
-
-```
-NhaCungCap (TV5) → PhieuNhap (TV5) → CTPhieuNhap (TV5) → Thuoc (TV4)
-                                                              ↓
-                                                    CTDonThuoc (TV4)
-                                                              ↓
-                                                     CTHDThuoc (TV6)
-```
+- **HoaDonThuoc.MaDonThuoc** - Cho phép NULL (mua thuốc tự do)
+- **PhieuKham.MaGoiDichVu** - Cho phép NULL (khám lẻ)
 
 ---
 
-## 🚀 TIMELINE PHÁT TRIỂN (10 TUẦN)
+## 📝 CHI TIẾT CÔNG VIỆC MỖI THÀNH VIÊN
 
-### **GIAI ĐOẠN 1 (Tuần 1-2): DTO Layer**
+### 🔧 **Tất cả thành viên đều làm 4 tầng**:
 
-- Tất cả thành viên: Thiết kế DTO cho module của mình
-- **Focus**: Data structure, relationships, validation rules
+1. **DTO** (Data Transfer Object)
 
-### **GIAI ĐOẠN 2 (Tuần 3-4): DAO Layer**
+   - Định nghĩa thuộc tính, constructor, getter/setter
+   - Validation cơ bản (nếu cần)
 
-- **Ưu tiên**: TV1 (Users, Roles) → TV3 (HoSoBenhAn) → TV4 (Thuoc)
-- Setup database connections, CRUD operations
+2. **DAO** (Data Access Object)
 
-### **GIAI ĐOẠN 3 (Tuần 5-6): BUS Layer**
+   - Kết nối database, CRUD operations
+   - PreparedStatement, handle SQLException
 
-- **Business logic**: Authentication (TV1), Medical workflow (TV3)
-- **Many-to-many logic**: UserRoles (TV1), RolePermissions (TV2)
+3. **BUS** (Business Logic)
 
-### **GIAI ĐOẠN 4 (Tuần 7-8): GUI Layer**
+   - Xử lý nghiệp vụ, validation phức tạp
+   - Gọi DAO, trả kết quả cho GUI
 
-- **Guest workflows**: Kiosk interfaces cho đặt lịch, mua thuốc
-- **Staff workflows**: Bác sĩ và Nhà thuốc interfaces
-
-### **GIAI ĐOẠN 5 (Tuần 9-10): Integration & Testing**
-
-- **End-to-end testing**: Toàn bộ luồng nghiệp vụ
-- **User acceptance testing**: 3 nhóm người dùng (Guest, Bác sĩ, Nhà thuốc)
+4. **GUI** (Graphical User Interface)
+   - Thiết kế giao diện Swing/JavaFX
+   - Kết nối với BUS, xử lý sự kiện
 
 ---
 
-## ⚠️ LƯU Ý QUAN TRỌNG
+## 🚀 LỘ TRÌNH THỰC HIỆN
 
-### 🎯 **CORE PRINCIPLES**
+### **GIAI ĐOẠN 1 (Tuần 1-2): Phát triển tầng DTO**
 
-1. **HoSoBenhAn là trung tâm** - KHÔNG có BenhNhan entity
-2. **Guest không cần authentication** - Chỉ Bác sĩ và Nhà thuốc cần đăng nhập
-3. **HoaDonThuoc.MaDonThuoc nullable** - Cho phép mua thuốc tự do
-4. **Desktop app trên LAN** - Không phải web application
+- Tất cả thành viên hoàn thành DTO cho module của mình
+- Review chéo, thống nhất chuẩn code
 
-### 🔄 **COORDINATION POINTS**
+### **GIAI ĐOẠN 2 (Tuần 3-4): Phát triển tầng DAO**
 
-- **TV3** (HoSoBenhAn) hoàn thành trước → các module khác test
-- **TV1** (Authentication) hoàn thành sớm → TV2 tích hợp Users với BacSi
-- **TV4** (Thuoc) hoàn thành sớm → TV5, TV6 phụ thuộc
-- **Weekly sync meetings** để đồng bộ progress
+- Hoàn thành DAO, test kết nối database
+- Thống nhất schema database cuối cùng
 
-### 🔧 **TECHNICAL STACK**
+### **GIAI ĐOẠN 3 (Tuần 5-6): Phát triển tầng BUS**
 
-- **Database**: MySQL/PostgreSQL với connection pooling
-- **GUI**: Java Swing/JavaFX cho desktop app
-- **Architecture**: Layered (DTO-DAO-BUS-GUI)
-- **Authentication**: Role-based access control (RBAC)
+- Hoàn thành logic nghiệp vụ
+- Test tích hợp DTO-DAO-BUS
+
+### **GIAI ĐOẠN 4 (Tuần 7-8): Phát triển tầng GUI**
+
+- Thiết kế giao diện, kết nối BUS
+- Test chức năng end-to-end
+
+### **GIAI ĐOẠN 5 (Tuần 9): Tích hợp & Test tổng thể**
+
+- Tích hợp tất cả module
+- Test workflow nghiệp vụ
+- Bug fixing, hoàn thiện
 
 ---
 
-## 📝 DELIVERABLES MỖI THÀNH VIÊN
+## 📞 PHÂN CÔNG LIÊN LẠC & HỖ TRỢ
 
-### **Mỗi module cần hoàn thành:**
+### 🤝 **Nhóm hỗ trợ chéo**:
 
-- ✅ **DTO**: Data model với validation
-- ✅ **DAO**: CRUD operations + specific queries
-- ✅ **BUS**: Business logic + workflow rules
-- ✅ **GUI**: User interface + event handlers
+- **Nhóm A** (Thành viên 1, 2): Quản lý bác sĩ & khám bệnh
+- **Nhóm B** (Thành viên 3, 4): Quản lý thuốc & kho
+- **Nhóm C** (Thành viên 5, 6): Thanh toán & tích hợp
 
-### **Shared responsibilities:**
+### 📋 **Cân bằng công việc**:
 
-- **TV1**: Authentication framework cho toàn hệ thống
-- **TV3**: Core workflow cho medical processes
-- **Documentation**: Mỗi người document module của mình
+- **4 thành viên** (1,2,3,5) làm **3 module** = 75% tổng công việc
+- **2 thành viên** (4,6) làm **2 module** = 25% tổng công việc
+- Tất cả đều tham gia đều các tầng DTO-DAO-BUS-GUI
+
+---
+
+## ⚠️ LƯU Ý QUAN TRỌNG (DỰA TRÊN DATABASE SCHEMA)
+
+### 🐎 **DATABASE CONSTRAINTS**:
+
+1. **HoSoBenhAn** (Thành viên 2) là **CORE TABLE** - ưu tiên cao nhất
+2. **Foreign Key Dependencies**: Phải hoàn thành table cha trước table con
+3. **Nullable FK**: `HoaDonThuoc.MaDonThuoc`, `PhieuKham.MaGoiDichVu`
+4. **Cascade Operations**: Cần xử lý delete/update cascade
+
+### 📊 **WORKFLOW BUSINESS LOGIC**:
+
+1. **Không có thực thể BenhNhan** - Tất cả qua HoSoBenhAn
+2. **Guest workflow**: LichKham → PhieuKham → HoSoBenhAn → DonThuoc
+3. **Nhà thuốc workflow**: HoaDonThuoc có thể không liên kết DonThuoc
+4. **Inventory management**: CTPhieuNhap → Thuoc stock, CTHDThuoc → Thuoc stock
+
+### 🔧 **TECHNICAL REQUIREMENTS**:
+
+1. **Database connection**: Sử dụng `phongkham.DB.DBConnection`
+2. **Transaction handling**: Đặc biệt quan trọng cho Master-Detail operations
+3. **Error handling**: Validate FK constraints trước khi insert/update
+4. **Data integrity**: Check references trước khi delete
+
+### 🔄 **COORDINATION POINTS**:
+
+- **Thành viên 2** (HoSoBenhAn) cần hoàn thành trước cho các thành viên khác test
+- **Thành viên 4** (Thuoc) cần hoàn thành sớm vì nhiều module khác phụ thuộc
+- **Thành viên 5** (Technical Lead) hỗ trợ giải quyết FK conflicts
+- **Thành viên 6** (UI Lead) thiết kế UI pattern cho nullable FK
+
+---
+
+## 🔐 **CẬP NHẬT MỚI: HỆ THỐNG PHÂN QUYỀN**
+
+### 📊 **TỔNG KẾT PHÂN CHIA MỚI (21 MODULE)**:
+
+- **3 thành viên** x 4 module = 12 module (19.05% mỗi người)
+- **3 thành viên** x 3 module = 9 module (14.29% mỗi người)
+- **Tổng**: 21 module = 100%
+
+### 🔗 **DEPENDENCIES PHÂN QUYỀN MỚI**:
+
+1. **Users** (TV1) → **UserRoles** (TV5) → **Roles** (TV1)
+2. **Roles** (TV1) → **RolePermissions** (TV6) → **Permissions** (TV2)
+3. **BacSi** (TV1) tích hợp **Users** cho authentication
+4. **Many-to-many UI patterns** (TV5, TV6) với leadership roles
+
+### 🎯 **ƯU TIÊN THỨ TỰ PHÁT TRIỂN**:
+
+1. **Users + Roles** (TV1) - Authentication cơ bản
+2. **Permissions** (TV2) - Authorization framework
+3. **BacSi integration** (TV1) - Link business với auth
+4. **UserRoles + RolePermissions** (TV5, TV6) - Many-to-many
+5. **Các module nghiệp vụ khác** - Business logic
 
 ---

@@ -1,70 +1,167 @@
 # 📋 TÓM TẮT PHÂN CÔNG - HỆ THỐNG QUẢN LÝ PHÒNG KHÁM
 
-> **6 thành viên** | **21 mô-đun** | **10 tuần** | **Ứng dụng Desktop**
+## 🎯 TỔNG QUAN
+
+**6 thành viên làm 21 module** - mỗi người làm đầy đủ **3 tầng**: DAO + BUS + GUI  
+**Phân chia**: 3 người × 4 module (19%) + 3 người × 3 module (14%) = **Cân bằng tối ưu**
 
 ---
 
-## 👥 PHÂN CHIA NHÓM
+## 👥 PHÂN CÔNG CHI TIẾT
 
-| TV    | Mô-đun | Tên Mô-đun                                  | Chuyên Môn                 |
-| ----- | ------ | ------------------------------------------- | -------------------------- |
-| **1** | 4      | TaiKhoan, VaiTro, Quyen, TaiKhoanVaiTro     | 🔐 **Hệ thống Xác thực**   |
-| **2** | 4      | BacSi, Khoa, LichLamViec, VaiTroQuyen       | 👨‍⚕️ **Quản lý Bác sĩ**      |
-| **3** | 3      | LichKham, PhieuKham, HoSoBenhAn             | 🏥 **Quy trình Khám bệnh** |
-| **4** | 4      | Thuoc, DonThuoc, ChiTietDonThuoc, GoiDichVu | 💊 **Quản lý Thuốc**       |
-| **5** | 3      | NhaCungCap, PhieuNhap, ChiTietPhieuNhap     | 🏪 **Quản lý Kho**         |
-| **6** | 3      | HoaDonThuoc, ChiTietHoaDonThuoc, HoaDonKham | 💰 **Thanh toán**          |
+### 🔐👤 **THÀNH VIÊN 1** - User + Hệ thống Bác sĩ
+
+**🎯 Tích hợp Authentication với Nghiệp vụ Bác sĩ**
+
+- **Users** 🔐 - Tài khoản hệ thống, authentication
+- **BacSi** 👨‍⚕️ - Thông tin bác sĩ, liên kết với Users
+- **LichLamViec** 📅 - Lịch làm việc bác sĩ theo ca
+- **Khoa** 🏥 - Khoa khám bệnh, chuyên môn
+
+**💡 Vai trò**: Quản lý toàn bộ hệ thống bác sĩ từ authentication đến phân khoa
 
 ---
 
-## ⚡ QUY TRÌNH CHÍNH
+### 🏥⭐ **THÀNH VIÊN 2** - Roles + Core Workflo
+
+**🎯 TRUNG TÂM HỆ THỐNG - Workflow khám bệnh chính**
+
+- **Roles** 👥 - Vai trò/chức vụ trong hệ thống
+- **LichKham** 📆 - Lịch hẹn khám từ khách hàng
+- **PhieuKham** 📋 - Phiếu khám bệnh, kết quả khám
+- **HoSoBenhAn** ⭐ - **CORE** - Hồ sơ bệnh án (trung tâm hệ thống)
+
+**💡 Vai trò**: Luồng khám bệnh từ đặt lịch → khám → hồ sơ bệnh án
+
+---
+
+### 💊 **THÀNH VIÊN 3** - Permissions + Đơn thuốc
+
+**🎯 Quyền hạn + Quản lý đơn thuốc hoàn chỉnh**
+
+- **Permissions** 🔑 - Quyền hạn trong hệ thống
+- **GoiDichVu** 📦 - Gói dịch vụ khám, combo
+- **DonThuoc** 💊 - Đơn thuốc bác sĩ kê
+- **CTDonThuoc** 📝 - Chi tiết từng thuốc trong đơn
+
+**💡 Vai trò**: Quản lý quyền hạn và luồng đơn thuốc từ kê đơn đến chi tiết
+
+---
+
+### 🏪 **THÀNH VIÊN 4** - Quản lý Thuốc + Nhập kho
+
+**🎯 Chuyên sâu nghiệp vụ kho thuốc**
+
+- **NhaCungCap** 🏭 - Nhà cung cấp thuốc
+- **Thuoc** 💊 - Danh mục thuốc, master data
+- **PhieuNhap** 📥 - Phiếu nhập thuốc từ NCC
+
+**💡 Vai trò**: Master data thuốc cho toàn hệ thống, quản lý nhập kho
+
+---
+
+### 💰 **THÀNH VIÊN 5** - UserRoles + Thanh toán
+
+**🎯 Many-to-many + Thanh toán + Chi tiết nhập**
+
+- **UserRoles** 🔗 - Bảng quan hệ user-role (many-to-many)
+- **HoaDonKham** 💵 - Hóa đơn thanh toán khám bệnh
+- **CTPhieuNhap** 📋 - Chi tiết thuốc trong phiếu nhập
+
+**💡 Vai trò**: Tech Lead - Xử lý quan hệ phức tạp + thanh toán
+
+---
+
+### 🎨 **THÀNH VIÊN 6** - RolePermissions + Bán thuốc
+
+**🎯 Many-to-many + Hóa đơn bán thuốc**
+
+- **RolePermissions** 🔗 - Bảng quan hệ role-permission (many-to-many)
+- **HoaDonThuoc** 💰 - Hóa đơn bán thuốc (có/không đơn - nullable FK)
+- **CTHDThuoc** 📝 - Chi tiết thuốc trong hóa đơn
+
+**💡 Vai trò**: UI Lead - Thiết kế giao diện + xử lý nullable FK
+
+---
+
+## 🔄 WORKFLOW CHÍNH
 
 ```
-Khách đặt lịch → Bác sĩ khám → Kê đơn thuốc → Bán thuốc → Thanh toán
-      (TV3)         (TV3)         (TV4)         (TV6)        (TV6)
+Guest/Khách hàng
+      ↓
+[TV2] LichKham → Đặt lịch hẹn khám
+      ↓
+[TV2] PhieuKham → Khám bệnh, chẩn đoán
+      ↓
+[TV2] HoSoBenhAn ⭐ → Lưu hồ sơ bệnh án (CORE)
+      ↓
+[TV3] DonThuoc → Bác sĩ kê đơn
+      ↓
+[TV3] CTDonThuoc → Chi tiết từng thuốc
+      ↓
+[TV6] HoaDonThuoc → Thanh toán mua thuốc
+      ↓
+[TV6] CTHDThuoc → Chi tiết hóa đơn
+
+Luồng phụ:
+[TV5] HoaDonKham → Thanh toán tiền khám
 ```
 
-## 🔐 NHÓM NGƯỜI DÙNG
+---
 
-- **Khách**: Đặt lịch, mua thuốc _(không cần đăng nhập)_
-- **Bác sĩ**: Khám bệnh, kê đơn _(cần đăng nhập)_
-- **Nhà thuốc**: Bán thuốc, nhập kho _(cần đăng nhập)_
+## 📊 THỐNG KÊ WORKLOAD
+
+| Thành viên | Module | % Công việc | Chuyên môn                        | Module Auth        | Độ khó       |
+| ---------- | ------ | ----------- | --------------------------------- | ------------------ | ------------ |
+| **TV1**    | 4      | 19.05%      | 🔐 User + Hệ thống Bác sĩ         | Users              | ⭐⭐⭐⭐     |
+| **TV2**    | 4      | 19.05%      | 🏥⭐ Roles + Core Workflow        | Roles              | ⭐⭐⭐⭐⭐   |
+| **TV3**    | 4      | 19.05%      | 💊 Permissions + Đơn thuốc        | Permissions        | ⭐⭐⭐⭐     |
+| **TV4**    | 3      | 14.29%      | 🏪 Thuốc + Nhập kho               | -                  | ⭐⭐⭐       |
+| **TV5**    | 3      | 14.29%      | 💰 UserRoles + Thanh toán         | UserRoles          | ⭐⭐⭐       |
+| **TV6**    | 3      | 14.29%      | 🎨 RolePermissions + Bán thuốc    | RolePermissions    | ⭐⭐⭐       |
+| **TỔNG**   | **21** | **100%**    | **5/6 người có Auth + Nghiệp vụ** | **5 Auth modules** | **⭐⭐⭐⭐** |
 
 ---
 
-## 📅 LỊCH TRÌNH (10 TUẦN)
+### 🚀 **THỨ TỰ LÀM VIỆC KHUYẾN NGHỊ**
 
-| Tuần     | Nhiệm vụ     | Trọng tâm                |
-| -------- | ------------ | ------------------------ |
-| **1-2**  | **Tầng DTO** | Thiết kế mô hình dữ liệu |
-| **3-4**  | **Tầng DAO** | Thao tác cơ sở dữ liệu   |
-| **5-6**  | **Tầng BUS** | Logic nghiệp vụ          |
-| **7-8**  | **Tầng GUI** | Giao diện người dùng     |
-| **9-10** | **Kiểm thử** | Kiểm thử tích hợp        |
+**GIAI ĐOẠN 1 - Foundation** (Tuần 1-2)
 
----
+1. **TV1**: Users, BacSi, Khoa → Nền tảng authentication + entities cơ bản
+2. **TV4**: NhaCungCap, Thuoc → Master data cho các module khác
+3. **TV2**: Roles → Phân quyền cơ bản
 
-## 🎯 THỨ TỰ ƯU TIÊN
+**GIAI ĐOẠN 2 - Core Business** (Tuần 3-4) 4. **TV1**: LichLamViec → Lịch bác sĩ (phụ thuộc BacSi) 5. **TV2**: LichKham, PhieuKham, HoSoBenhAn → Core workflow 6. **TV3**: Permissions, GoiDichVu → Quyền hạn + gói dịch vụ
 
-1. **TV1** (Xác thực) → hoàn thành sớm nhất
-2. **TV3** (Quy trình cốt lõi) → HoSoBenhAn là trung tâm
-3. **TV4** (Thuốc) → các mô-đun khác phụ thuộc
-4. **TV5, TV6** → thực hiện sau khi có Thuốc
+**GIAI ĐOẠN 3 - Details & Relations** (Tuần 5-6) 7. **TV3**: DonThuoc, CTDonThuoc → Đơn thuốc (phụ thuộc HoSoBenhAn + Thuoc) 8. **TV4**: PhieuNhap → Nhập kho (phụ thuộc NhaCungCap) 9. **TV5**: UserRoles, HoaDonKham → Many-to-many + Thanh toán khám 10. **TV5**: CTPhieuNhap → Chi tiết nhập (phụ thuộc PhieuNhap + Thuoc)
+
+**GIAI ĐOẠN 4 - Advanced Features** (Tuần 7-8) 11. **TV6**: RolePermissions → Many-to-many auth (phụ thuộc Roles + Permissions) 12. **TV6**: HoaDonThuoc, CTHDThuoc → Bán thuốc (phụ thuộc DonThuoc - nullable)
 
 ---
 
-## 🔧 CÔNG NGHỆ SỬ DỤNG
+### 🤝 **PHỐI HỢP QUAN TRỌNG**
 
-- **Cơ sở dữ liệu**: MySQL/PostgreSQL
-- **Giao diện**: Java Swing/JavaFX
-- **Kiến trúc**: DTO → DAO → BUS → GUI
-- **Mạng**: Ứng dụng Desktop trên mạng LAN
+**Dependencies chính**:
 
----
+- **TV1 → TV2**: BacSi, Khoa → LichKham, HoSoBenhAn
+- **TV1 ↔ TV2 ↔ TV3**: Users ↔ Roles ↔ Permissions (Tam giác phân quyền)
+- **TV1 ↔ TV5**: Users + Roles → UserRoles (many-to-many)
+- **TV2 ↔ TV3 ↔ TV6**: Roles + Permissions → RolePermissions (many-to-many)
+- **TV2 → TV3**: HoSoBenhAn → DonThuoc
+- **TV3 → TV6**: DonThuoc → HoaDonThuoc (nullable FK)
+- **TV4 → All**: Thuoc → (CTDonThuoc, CTPhieuNhap, CTHDThuoc)
 
-## ⚠️ LƯU Ý QUAN TRỌNG
+**Họp sync**:
 
-- **HoaDonThuoc có thể null** → cho phép mua thuốc tự do
-- **Mỗi người làm đủ 4 tầng** cho mô-đun của mìn
+- **Sprint 1**: TV1 + TV2 + TV4 (Foundation team)
+- **Sprint 2**: TV2 + TV3 (Core workflow team)
+- **Sprint 3**: TV3 + TV5 + TV6 (Details & Relations team)
 
----
+--
+
+### ⚠️ **LƯU Ý:**
+
+⚠️ **TV2 workload cao nhất**: Core workflow + HoSoBenhAn trung tâm → Cần hỗ trợ  
+⚠️ **Dependencies phức tạp**: Thuoc (TV4) bị nhiều module phụ thuộc → Ưu tiên sớm  
+⚠️ **Many-to-many relationships**: TV5, TV6 cần hiểu rõ quan hệ nhiều-nhiều  
+⚠️ **Nullable FK**: TV6 cần xử lý HoaDonThuoc.DonThuoc (có thể NULL)

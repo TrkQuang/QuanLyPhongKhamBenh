@@ -1,4 +1,4 @@
-package phongkham.DB;
+package phongkham.db;
 
 public class TESTConnection {
 
