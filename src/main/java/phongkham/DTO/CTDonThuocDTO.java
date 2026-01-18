@@ -37,7 +37,8 @@ public class CTDonThuocDTO {
     public void setMaCTDT(String MaCTDT) {this.MaCTDT=MaCTDT;}
     public void setMaDonThuoc(String MaDonThuoc) {this.MaDonThuoc=MaDonThuoc;}
     public void setMaThuoc(String MaThuoc) {this.MaThuoc=MaThuoc;}
-    public void setSoLuong( String SoLuong) {this.SoLuong=Soluong;}
+    public void setSoLuong( int SoLuong) {this.SoLuong=Soluong;}
     public void setLieuDung( String LieuDung) {this.LieuDung=LieuDung;}
+    public void setCachDung( String CachDung) {this.CachDung=CachDung;}
 }
 
