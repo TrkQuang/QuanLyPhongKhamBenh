@@ -19,12 +19,12 @@ public class CTDonThuocDTO {
     }
 
     public CTDonThuocDTO ( String MaCTDT,String MaDonThuoc,  String MaThuoc, int SoLuong, String LieuDung, String CachDung ) {
-        This.MaCTDT=MaCTDT;
-        This.MaDonThuoc = MaDonThuoc;
-        This.MaThuoc = MaThuoc;
-        This.Soluong = Soluong;
-        This.LieuDung = LieuDung;
-        This.CachDung=CachDung;
+        this.MaCTDT=MaCTDT;
+        this.MaDonThuoc = MaDonThuoc;
+        this.MaThuoc = MaThuoc;
+        this.Soluong = Soluong;
+        this.LieuDung = LieuDung;
+        this.CachDung=CachDung;
     }
 
     public String gettMaCTDT() {return MaCTDT;}
