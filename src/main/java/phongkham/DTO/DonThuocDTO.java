@@ -14,10 +14,10 @@ public class DonThuocDTO {
     }
 
     public DonThuocDTO ( String MaDonThuoc, String MaHoSo, String NgayKeDon, String GhiChu) {
-        This.MaDonThuoc = MaDonThuoc;
-        This.MaHoSo = MaHoSo;
-        This.NgayKeDon = NgayKeDon;
-        This.GhiChu = GhiChu;
+        this.MaDonThuoc = MaDonThuoc;
+        this.MaHoSo = MaHoSo;
+        this.NgayKeDon = NgayKeDon;
+        this.GhiChu = GhiChu;
     }
 
     public String getMaDonThuoc() {return MaDonThuoc;}
