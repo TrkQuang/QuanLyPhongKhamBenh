@@ -6,7 +6,7 @@ public class DonThuocDTO {
     private String NgayKeDon;
     private String GhiChu;
     
-    public DonThuocDTO {
+    public DonThuocDTO() {
         MaDonThuoc =" ";
         MaHoSo =" ";
         NgayKeDon =" ";
