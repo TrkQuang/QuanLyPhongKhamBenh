@@ -9,7 +9,7 @@ public class CTDonThuocDTO {
     private String LieuDung;
     private String CachDung;
     
-    public CTDonThuocDTO {
+    public CTDonThuocDTO () {
         MaCTDT =" ";
         MaDonThuoc =" ";
         MaThuoc =" ";
