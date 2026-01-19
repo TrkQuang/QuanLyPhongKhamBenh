@@ -2,7 +2,7 @@ package phongkham.DTO;
 
 public class CTDonThuocDTO {
 
-    private String MaCTDT;
+    private String MaCTDonThuoc;
     private String MaDonThuoc;
     private String MaThuoc;
     private int SoLuong ;
@@ -10,7 +10,7 @@ public class CTDonThuocDTO {
     private String CachDung;
     
     public CTDonThuocDTO () {
-        MaCTDT ="";
+        MaCTDonThuoc ="";
         MaDonThuoc ="";
         MaThuoc ="";
         SoLuong =0;
@@ -19,7 +19,7 @@ public class CTDonThuocDTO {
     }
 
     public CTDonThuocDTO ( String MaCTDT,String MaDonThuoc,  String MaThuoc, int SoLuong, String LieuDung, String CachDung ) {
-        this.MaCTDT=MaCTDT;
+        this.MaCTDonThuoc=MaCTDonThuoc;
         this.MaDonThuoc = MaDonThuoc;
         this.MaThuoc = MaThuoc;
         this.Soluong = Soluong;
@@ -27,14 +27,14 @@ public class CTDonThuocDTO {
         this.CachDung=CachDung;
     }
 
-    public String gettMaCTDT() {return MaCTDT;}
+    public String gettMaCTDonThuoc() {return MaCTDonThuoc;}
     public String getMaDonThuoc() {return MaDonThuoc;}
     public String getMaThuoc() {return MaThuoc;}
     public String getSoluong() {return SoLuong;}
     public String getLieuDung() {return LieuDung;}
     public String getCachDung() {return CachDung;}
 
-    public void setMaCTDT(String MaCTDT) {this.MaCTDT=MaCTDT;}
+    public void setMaCTDonThuoc(String MaCTDonTthuoc) {this.MaCTDonThuoc=MaCTDonThuoc;}
     public void setMaDonThuoc(String MaDonThuoc) {this.MaDonThuoc=MaDonThuoc;}
     public void setMaThuoc(String MaThuoc) {this.MaThuoc=MaThuoc;}
     public void setSoLuong( int SoLuong) {this.SoLuong=Soluong;}
