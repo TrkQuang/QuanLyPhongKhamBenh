@@ -67,7 +67,7 @@ public class ThuocDAO {
             ps.setString(2, t.getDonViTinh());
             ps.setFloat(3, t.getDonGiaBan());
             ps.setInt(4, t.getSoLuongTon());
-              ps.setString(5, t.getMaThuoc());
+            ps.setString(5, t.getMaThuoc());
 
             return ps.executeUpdate() > 0 ;
         }catch(SQLException e){
