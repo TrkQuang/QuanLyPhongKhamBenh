@@ -10,12 +10,12 @@ public class CTDonThuocDTO {
     private String CachDung;
     
     public CTDonThuocDTO () {
-        MaCTDT =" ";
-        MaDonThuoc =" ";
-        MaThuoc =" ";
-        SoLuong ="0";
-        LieuDung =" ";
-        CachDung =" ";
+        MaCTDT ="";
+        MaDonThuoc ="";
+        MaThuoc ="";
+        SoLuong =0;
+        LieuDung ="";
+        CachDung ="";
     }
 
     public CTDonThuocDTO ( String MaCTDT,String MaDonThuoc,  String MaThuoc, int SoLuong, String LieuDung, String CachDung ) {
