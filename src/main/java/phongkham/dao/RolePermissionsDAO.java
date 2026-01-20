@@ -1,7 +1,7 @@
-package phongkham.DAO;
+package phongkham.dao;
 
 import phongkham.DTO.RolePermissionsDTO;
-import phongkham.DB.DBConnection;
+import phongkham.db.DBConnection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;

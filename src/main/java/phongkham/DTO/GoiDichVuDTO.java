@@ -23,7 +23,7 @@ public class GoiDichVuDTO {
         this.MoTa=MoTa;
     }
 
-    public String getMaGoi() {return Magoi;}
+    public String getMaGoi() {return MaGoi;}
     public String getTenGoi() {return TenGoi;}
     public String getGiaDichVu() {return GiaDichVu;}
     public String getThoiGianKham() {return ThoiGianKham;}

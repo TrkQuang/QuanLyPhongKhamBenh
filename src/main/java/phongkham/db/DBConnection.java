@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class DBConnection {
 
   private static final String URL =
-    "jdbc:mysql://tramway.proxy.rlwy.net:57864/qlpk_db";
+    "jdbc:mysql://tramway.proxy.rlwy.net:57864/PhongKham";
   private static final String USER = "root";
   private static final String PASS = "RSfJaDbgzwfGdkHBtEGwLPhFyXVemcGZ";
 

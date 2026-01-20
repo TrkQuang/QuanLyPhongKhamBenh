@@ -19,10 +19,10 @@ public class CTDonThuocDTO {
     }
 
     public CTDonThuocDTO ( String MaCTDT,String MaDonThuoc,  String MaThuoc, int SoLuong, String LieuDung, String CachDung ) {
-        this.MaCTDonThuoc=MaCTDonThuoc;
+        this.MaCTDonThuoc=MaCTDT;
         this.MaDonThuoc = MaDonThuoc;
         this.MaThuoc = MaThuoc;
-        this.Soluong = Soluong;
+        this.SoLuong = SoLuong;
         this.LieuDung = LieuDung;
         this.CachDung=CachDung;
     }
@@ -30,14 +30,14 @@ public class CTDonThuocDTO {
     public String gettMaCTDonThuoc() {return MaCTDonThuoc;}
     public String getMaDonThuoc() {return MaDonThuoc;}
     public String getMaThuoc() {return MaThuoc;}
-    public String getSoluong() {return SoLuong;}
+    public int getSoluong() {return SoLuong;}
     public String getLieuDung() {return LieuDung;}
     public String getCachDung() {return CachDung;}
 
-    public void setMaCTDonThuoc(String MaCTDonTthuoc) {this.MaCTDonThuoc=MaCTDonThuoc;}
+    public void setMaCTDonThuoc(String MaCTDonThuoc) {this.MaCTDonThuoc=MaCTDonThuoc;}
     public void setMaDonThuoc(String MaDonThuoc) {this.MaDonThuoc=MaDonThuoc;}
     public void setMaThuoc(String MaThuoc) {this.MaThuoc=MaThuoc;}
-    public void setSoLuong( int SoLuong) {this.SoLuong=Soluong;}
+    public void setSoLuong( int SoLuong) {this.SoLuong=SoLuong;}
     public void setLieuDung( String LieuDung) {this.LieuDung=LieuDung;}
     public void setCachDung( String CachDung) {this.CachDung=CachDung;}
 }

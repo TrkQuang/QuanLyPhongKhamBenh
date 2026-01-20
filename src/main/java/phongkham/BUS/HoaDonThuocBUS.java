@@ -1,7 +1,7 @@
 package phongkham.BUS;
 
 import phongkham.DTO.HoaDonThuocDTO;
-import phongkham.DAO.HoaDonThuocDAO;
+import phongkham.dao.HoaDonThuocDAO;
 import java.time.LocalDateTime;
 import java.util.List;
 

@@ -1,7 +1,7 @@
-package phongkham.DAO;
+package phongkham.dao;
 
 import phongkham.DTO.HoaDonThuocDTO;
-import phongkham.DB.DBConnection;
+import phongkham.db.DBConnection;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;

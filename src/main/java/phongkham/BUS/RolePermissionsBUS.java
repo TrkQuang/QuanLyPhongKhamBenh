@@ -1,7 +1,7 @@
 package phongkham.BUS;
 
 import phongkham.DTO.RolePermissionsDTO;
-import phongkham.DAO.RolePermissionsDAO;
+import phongkham.dao.RolePermissionsDAO;
 import java.util.List;
 
 public class RolePermissionsBUS {
