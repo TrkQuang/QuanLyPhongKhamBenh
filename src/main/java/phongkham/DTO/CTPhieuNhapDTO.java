@@ -1,37 +1,38 @@
 package phongkham.DTO;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 public class CTPhieuNhapDTO {
-    private String MaCTPhieuNhap;
+    private String MaCTPN;
     private String MaPhieuNhap;
     private String MaThuoc;
-    private int SoLuong;
-    private float DonGiaNhap;
+    private int SoLuongNhap;
+    private BigDecimal DonGiaNhap = BigDecimal.ZERO;
+    private LocalDateTime HanSuDung;
 
     public CTPhieuNhapDTO(){
-        this.MaCTPhieuNhap = "";
-        this.MaPhieuNhap = "";
-        this.MaThuoc = "";
-        this.SoLuong = 0;
-        this.DonGiaNhap = 0;
     }
 
-    public CTPhieuNhapDTO(String MaCTPhieuNhap, String MaPhieuNhap,
-                        String MaThuoc, int SoLuong, float DonGiaNhap){
-        this.MaCTPhieuNhap = MaCTPhieuNhap;
+    public CTPhieuNhapDTO(String MaCTPN, String MaPhieuNhap,
+                        String MaThuoc, int SoLuongNhap, 
+                        BigDecimal DonGiaNhap, LocalDateTime HanSuDung){
+        this.MaCTPN = MaCTPN;
         this.MaPhieuNhap = MaPhieuNhap;
         this.MaThuoc = MaThuoc;
-        this.SoLuong = SoLuong;
-        this.DonGiaNhap = DonGiaNhap;                
+        this.SoLuongNhap = SoLuongNhap;
+        this.DonGiaNhap = DonGiaNhap;  
+        this.HanSuDung = HanSuDung;              
     }
 
-    public String getMaCTPhieuNhap(){ return this.MaCTPhieuNhap;}
+    public String getMaCTPN(){ return this.MaCTPN;}
     public String getMaPhieuNhap(){ return this.MaPhieuNhap;}
     public String getMaThuoc(){ return this.MaThuoc;}
-    public int getSoLuong(){ return this.SoLuong;}
-    public float getDonGianNhap(){ return this.DonGiaNhap;}
+    public int getSoLuongNhap(){ return this.SoLuongNhap;}
+    public BigDecimal getDonGiaNhap(){ return this.DonGiaNhap;}
+    public LocalDateTime getHanSuDung(){ return this.HanSuDung;}
 
-    public void setMaCTPhieuNhap(String MaCTPhieuNhap){
-        this.MaCTPhieuNhap = MaCTPhieuNhap;
+    public void setMaCTPN(String MaCTPN){
+        this.MaCTPN = MaCTPN;
     }
     
     public void SetMaPhieuNhap(String MaPhieuNhap){
@@ -42,12 +43,16 @@ public class CTPhieuNhapDTO {
         this.MaThuoc = MaThuoc;
     }
 
-    public void setSoLuong(int SoLuong){
-        this.SoLuong = SoLuong;
+    public void setSoLuong(int SoLuongNhap){
+        this.SoLuongNhap = SoLuongNhap;
     }
 
-    public void setDonGiaNhap(float DonGiaNhap){
+    public void setDonGiaNhap(BigDecimal DonGiaNhap){
         this.DonGiaNhap = DonGiaNhap;
+    }
+    
+    public void setHanSuDung(LocalDateTime HanSuDung){
+        this.HanSuDung = HanSuDung;
     }
 
 }

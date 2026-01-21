@@ -1,53 +1,57 @@
 package phongkham.DTO;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 public class HoaDonKhamDTO {
-    private String MaHoaDonKham;
+    private String MaHDKham;
     private String MaPhieuKham;
-    private float TongTien;
+    private String MaGoi;
     private LocalDateTime NgayThanhToan;
-    private String TrangThai;
+    private BigDecimal TongTien = BigDecimal.ZERO;
+    private String HinhThucThanhToan;
 
     public HoaDonKhamDTO(){
-        this.MaHoaDonKham = "";
-        this.MaPhieuKham = "";
-        this.TongTien = 0;
-        this.NgayThanhToan = null;
-        this.TrangThai = "";
     }
 
-    public HoaDonKhamDTO(String MaHoaDonKham, String MaPhieuKham, 
-                        float TongTien, LocalDateTime NgayThanhToan, String TrangThai){
-        this.MaHoaDonKham = MaHoaDonKham;
+    public HoaDonKhamDTO(String MaHDKham, String MaPhieuKham, String MaGoi, LocalDateTime NgayThanhToan,
+                        BigDecimal TongTien, String HinhThucThanhToan){
+        this.MaHDKham = MaHDKham;
         this.MaPhieuKham = MaPhieuKham;
-        this.TongTien = TongTien;
+        this.MaGoi = MaGoi;
         this.NgayThanhToan = NgayThanhToan;
-        this.TrangThai = TrangThai;
+        this.TongTien = TongTien;
+        this.HinhThucThanhToan = HinhThucThanhToan;
     }
 
-    public String getMaHoaDonKham(){ return MaHoaDonKham;}
-    public String getMaPhieuKham(){ return MaPhieuKham;}
-    public float getTongTien(){ return TongTien;}
-    public LocalDateTime getNgayThanhToan(){ return NgayThanhToan;}
-    public String getTrangThai(){ return TrangThai;}
+    public String getMaHDKham(){ return this.MaHDKham;}
+    public String getMaPhieuKham(){ return this.MaPhieuKham;}
+    public String getMaGoi(){ return this.MaGoi;}
+    public LocalDateTime getNgayThanhToan(){ return this.NgayThanhToan;}
+    public BigDecimal getTongTien(){ return this.TongTien;}
+    public String getHinhThucThanhToan(){ return this.HinhThucThanhToan;}
 
-    public void setMaHoaDonKham(String MaHoaDonKham){
-        this.MaHoaDonKham = MaHoaDonKham;
+    public void setMaHoaDonKham(String MaHDKham){
+        this.MaHDKham = MaHDKham;
     }
 
     public void setMaPhieuKham(String MaPhieuKham){
         this.MaPhieuKham = MaPhieuKham;
     }
 
-    public void setTongTien(float TongTien){
-        this.TongTien = TongTien;
+    public void setMaGoi(String MaGoi){
+        this.MaGoi = MaGoi;
     }
 
-    public void setNgayThanhToan(LocalDateTime NgayThanhToan){
+     public void setNgayThanhToan(LocalDateTime NgayThanhToan){
         this.NgayThanhToan = NgayThanhToan;
     }
 
-    public void setTrangThai(String TrangThai){
-        this.TrangThai = TrangThai;
+    public void setTongTien(BigDecimal TongTien){
+        this.TongTien = TongTien;
+    }
+
+   
+    public void setHinhThucThanhToan(String HinhThucThanhToan){
+        this.HinhThucThanhToan = HinhThucThanhToan;
     }
 
 }

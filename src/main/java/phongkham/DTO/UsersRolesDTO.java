@@ -11,6 +11,11 @@ public class UsersRolesDTO {
         this.user_id = us.getSTT();
     }
 
+    public UsersRolesDTO(int user_id, int role_id){
+        this.role_id = user_id;
+        this.user_id = role_id;
+    }
+
     public int getRole_ID(){ return this.role_id;}
     public int getUser_ID(){ return this.user_id;}
    
