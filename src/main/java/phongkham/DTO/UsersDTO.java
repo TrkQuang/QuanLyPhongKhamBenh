@@ -1,19 +1,19 @@
 package phongkham.DTO;
 
 public class UsersDTO {
-    private String UserID;
+    private int UserID;
     private String Username;
     private String Password;
     private String Email;
 
     public UsersDTO() {
-        UserID = "";
+        UserID = 0;
         Username = "";
         Password = "";
         Email = "";
     }
 
-    public UsersDTO(String UserID, String Username, String Password, String Email) {
+    public UsersDTO(int UserID, String Username, String Password, String Email) {
         this.UserID = UserID;
         this.Username = Username;
         this.Password = Password;
@@ -27,7 +27,7 @@ public class UsersDTO {
         this.Email = u.Email;
     }
 
-    public String getUserID() {
+    public int getUserID() {
         return UserID;
     }
 
@@ -43,7 +43,7 @@ public class UsersDTO {
         return Email;
     }
 
-    public void setUserID(String UserID) {
+    public void setUserID(int UserID) {
         this.UserID = UserID;
     }
 

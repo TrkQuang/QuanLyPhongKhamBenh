@@ -5,22 +5,19 @@ public class LichLamViecDTO {
     private String MaBacSi;
     private String NgayLam;
     private String CaLam;
-    private String GhiChu;
 
     public LichLamViecDTO() {
         MaLichLam = "";
         MaBacSi = "";
         NgayLam = "";
         CaLam = "";
-        GhiChu = "";
     }
 
-    public LichLamViecDTO(String MaLichLam, String MaBacSi, String NgayLam, String CaLam, String GhiChu) {
+    public LichLamViecDTO(String MaLichLam, String MaBacSi, String NgayLam, String CaLam) {
         this.MaLichLam = MaLichLam;
         this.MaBacSi = MaBacSi;
         this.NgayLam = NgayLam;
         this.CaLam = CaLam;
-        this.GhiChu = GhiChu;
     }
 
     public LichLamViecDTO(LichLamViecDTO llv) {
@@ -28,7 +25,6 @@ public class LichLamViecDTO {
         this.MaBacSi = llv.MaBacSi;
         this.NgayLam = llv.NgayLam;
         this.CaLam = llv.CaLam;
-        this.GhiChu = llv.GhiChu;
     }
 
     public String getMaLichLam() {
@@ -47,10 +43,6 @@ public class LichLamViecDTO {
         return CaLam;
     }
 
-    public String getGhiChu() {
-        return GhiChu;
-    }
-
     public void setMaLichLam(String MaLichLam) {
         this.MaLichLam = MaLichLam;
     }
@@ -65,10 +57,6 @@ public class LichLamViecDTO {
 
     public void setCaLam(String CaLam) {
         this.CaLam = CaLam;
-    }
-
-    public void setGhiChu(String GhiChu) {
-        this.GhiChu = GhiChu;
     }
 
 }

@@ -1,7 +1,5 @@
 package phongkham.DTO;
 
-import java.security.PrivateKey;
-
 public class BacSiDTO {
     private String MaBacSi;
     private String HoTen;
