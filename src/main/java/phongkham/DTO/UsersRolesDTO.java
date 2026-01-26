@@ -1,30 +1,30 @@
 package phongkham.DTO;
 
 public class UsersRolesDTO {
-    private int user_id;
-    private int role_id;
+    private String user_id;
+    private String role_id;
 
     public UsersRolesDTO(){}
 
     public UsersRolesDTO(RolesDTO rl, UsersDTO us){
         this.role_id = rl.getSTT();
-        this.user_id = us.getSTT();
+        this.user_id = us.getUserID();
     }
 
-    public UsersRolesDTO(int user_id, int role_id){
+    public UsersRolesDTO(String user_id, String role_id){
         this.role_id = user_id;
-        this.user_id = role_id;
+        this.user_id = user_id;
     }
 
-    public int getRole_ID(){ return this.role_id;}
-    public int getUser_ID(){ return this.user_id;}
+    public String getRole_ID(){ return this.role_id;}
+    public String getUser_ID(){ return this.user_id;}
    
 
-    public void setRole_ID(int role_id){ 
+    public void setRole_ID(String role_id){ 
         this.role_id = role_id; 
     }
 
-    public void setUser_ID(int user_id){
+    public void setUser_ID(String user_id){
          this.user_id = user_id; 
     }
 
@@ -33,7 +33,7 @@ public class UsersRolesDTO {
     }
 
     public void setUser_ID(UsersDTO us){
-        this.user_id = us.getSTT();
+        this.user_id = us.getUserID();
     }
 
 
