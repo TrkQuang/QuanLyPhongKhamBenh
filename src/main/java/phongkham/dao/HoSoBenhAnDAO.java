@@ -8,7 +8,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 
 import phongkham.DTO.HoSoBenhAnDTO;
-import phongkham.db.DBConnection;
+import phongkham.db.DBConnection; 
 
 public class HoSoBenhAnDAO {
 

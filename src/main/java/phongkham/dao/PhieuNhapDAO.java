@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.Statement; 
 import java.util.ArrayList;
 
 import phongkham.DTO.PhieuNhapDTO;
@@ -23,9 +23,10 @@ public class PhieuNhapDAO {
             while(rs.next()){
                 PhieuNhapDTO pn = new PhieuNhapDTO();
                 pn.setMaPhieuNhap(rs.getString("MaPhieuNhap"));
-                pn.setNgayNhap(rs.getString("NgayNhap"));
+                pn.setMaNhaCungCap(rs.getString("MaNhaCungCap"));
+                pn.setNgayNhap(rs.getString("NgayGiao"));
                 pn.setNguoiGiao(rs.getString("NguoiGiao"));
-                pn.setTongTienNhap(rs.getInt("TongTienNhap"));
+                pn.setTongTienNhap(rs.getFloat("TongTienNhap"));
 
                 ds.add(pn);
             }
@@ -36,15 +37,16 @@ public class PhieuNhapDAO {
     }
 
     public boolean insertPhieuNhap(PhieuNhapDTO pn){
-        String sql = "INSERT INTO PhieuNhap VALUES (?,?,?,?)";
+        String sql = "INSERT INTO PhieuNhap VALUES (?,?,?,?,?)";
         try(
             Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
         ){
             ps.setString(1, pn.getMaPhieuNhap());
-            ps.setString(2, pn.getNgayNhap());
-            ps.setString(3, pn.getNguoiGiao());
-            ps.setFloat(4, pn.getTongTienNhap());
+            ps.setString(2, pn.getMaNhaCungCap());
+            ps.setString(3, pn.getNgayNhap());
+            ps.setString(4, pn.getNguoiGiao());
+            ps.setFloat(5, pn.getTongTienNhap());
 
             return ps.executeUpdate() > 0;
         }catch(SQLException e){
@@ -54,15 +56,16 @@ public class PhieuNhapDAO {
     }
 
     public boolean updatePhieuNhap(PhieuNhapDTO pn){
-        String sql = "UPDATE PhieuNhap SET NgayNhap=?, NguoiGiao=?, TongTienNhap=? WHERE MaPhieuNhap=?";
+        String sql = "UPDATE PhieuNhap SET MaNhaCungCap=?, NgayNhap=?, NguoiGiao=?, TongTienNhap=? WHERE MaPhieuNhap=?";
         try(
             Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
         ){
-            ps.setString(1, pn.getNgayNhap());
-            ps.setString(2, pn.getNguoiGiao());
-            ps.setFloat(3, pn.getTongTienNhap());
-            ps.setString(4, pn.getMaPhieuNhap());
+            ps.setString(1, pn.getMaNhaCungCap());
+            ps.setString(2, pn.getNgayNhap());
+            ps.setString(3, pn.getNguoiGiao());
+            ps.setFloat(4, pn.getTongTienNhap());
+            ps.setString(5, pn.getMaPhieuNhap());
 
             return ps.executeUpdate() > 0;
         }catch(SQLException e){

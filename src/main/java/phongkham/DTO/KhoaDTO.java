@@ -1,8 +1,5 @@
 package phongkham.DTO;
 
-import com.itextpdf.text.pdf.PdfStructTreeController.returnType;
-import com.itextpdf.text.pdf.security.MakeSignature;
-
 public class KhoaDTO {
     private String MaKhoa;
     private String TenKhoa;

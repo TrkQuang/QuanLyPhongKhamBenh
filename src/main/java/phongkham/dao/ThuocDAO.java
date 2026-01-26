@@ -1,6 +1,6 @@
 package phongkham.dao;
 
-import java.sql.Connection;
+import java.sql.Connection; 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -25,6 +25,7 @@ public class ThuocDAO {
             while(rs.next()){
                 ThuocDTO t = new ThuocDTO();
                 t.setMaThuoc(rs.getString("MaThuoc"));
+                t.setTenThuoc(rs.getString("TenThuoc"));
                 t.setHoatChat(rs.getString("HoatChat"));
                 t.setDonViTinh(rs.getString("DonViTinh"));
                 t.setDonGiaBan(rs.getFloat("DonGiaBan"));
@@ -39,16 +40,17 @@ public class ThuocDAO {
     }
 
     public boolean insertThuoc(ThuocDTO t){
-        String sql = "INSERT INTO Thuoc VALUES (?,?,?,?,?)";
+        String sql = "INSERT INTO Thuoc VALUES (?,?,?,?,?,?)";
         try(
             Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
         ){
             ps.setString(1, t.getMaThuoc());
-            ps.setString(2, t.getHoatChat());
-            ps.setString(3, t.getDonViTinh());
-            ps.setFloat(4, t.getDonGiaBan());
-            ps.setInt(5, t.getSoLuongTon());
+            ps.setString(2, t.getTenThuoc());
+            ps.setString(3, t.getHoatChat());
+            ps.setString(4, t.getDonViTinh());
+            ps.setFloat(5, t.getDonGiaBan());
+            ps.setInt(6, t.getSoLuongTon());
 
             return ps.executeUpdate() > 0 ;
         }catch(SQLException e){
@@ -58,16 +60,17 @@ public class ThuocDAO {
     }
 
     public boolean updateThuoc(ThuocDTO t){
-        String sql = "UPDATE Thuoc SET HoatChat=?, DonViTinh=?, DonGiaBan=?, SoLuongTon=? WHERE MaThuoc=?";
+        String sql = "UPDATE Thuoc SET TenThuoc=?, HoatChat=?, DonViTinh=?, DonGiaBan=?, SoLuongTon=? WHERE MaThuoc=?";
         try(
             Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
         ){
-            ps.setString(1, t.getHoatChat());
-            ps.setString(2, t.getDonViTinh());
-            ps.setFloat(3, t.getDonGiaBan());
-            ps.setInt(4, t.getSoLuongTon());
-            ps.setString(5, t.getMaThuoc());
+            ps.setString(1, t.getTenThuoc());
+            ps.setString(2, t.getHoatChat());
+            ps.setString(3, t.getDonViTinh());
+            ps.setFloat(4, t.getDonGiaBan());
+            ps.setInt(5, t.getSoLuongTon());
+            ps.setString(6, t.getMaThuoc());
 
             return ps.executeUpdate() > 0 ;
         }catch(SQLException e){
