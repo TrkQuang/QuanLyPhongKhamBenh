@@ -8,7 +8,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 
 import phongkham.DTO.HoSoBenhAnDTO;
-import phongkham.db.DBConnection;
+import phongkham.db.DBConnection; 
 
 public class HoSoBenhAnDAO {
 
@@ -20,12 +20,12 @@ public class HoSoBenhAnDAO {
             ResultSet rs = stm.executeQuery(sql)) {
             while(rs.next()) {
                 HoSoBenhAnDTO hs = new HoSoBenhAnDTO();
-                hs.setChanDoan(rs.getString("ChanDoan"));
-                hs.setKetLuan(rs.getString("KetLuan"));
-                hs.setLoiDan(rs.getString("LoiDan"));
                 hs.setMaHoSo(rs.getString("MaHoSo"));
                 hs.setMaPhieuKham(rs.getString("MaPhieuKham"));
                 hs.setNgayKham(rs.getString("NgayKham"));
+                hs.setChanDoan(rs.getString("ChanDoan"));
+                hs.setKetLuan(rs.getString("KetLuan"));
+                hs.setLoiDan(rs.getString("LoiDan"));
                 ds.add(hs);
             }
         } catch (SQLException e) {

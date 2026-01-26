@@ -5,7 +5,7 @@ public class HoSoBenhAnDTO {
     private String NgayKham;
     private String ChanDoan;
     private String KetLuan;
-    private String LoiDan;
+    private String LoiDan; 
 
     public HoSoBenhAnDTO(){
         MaHoSo = "";

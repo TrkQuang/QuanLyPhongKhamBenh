@@ -18,8 +18,8 @@ public class UsersRolesDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, ur.getUser_ID());
-            ps.setInt(2, ur.getRole_ID());
+            ps.setString(1, ur.getUser_ID());
+            ps.setString(2, ur.getRole_ID());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -55,8 +55,8 @@ public class UsersRolesDAO {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                UsersRolesDTO ur = new UsersRolesDTO(rs.getInt("user_id"),
-                                                    rs.getInt("role_id"));
+                UsersRolesDTO ur = new UsersRolesDTO(rs.getString("user_id"),
+                                                    rs.getString("role_id"));
                 
 
                 list.add(ur);

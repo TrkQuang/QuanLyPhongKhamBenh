@@ -1,17 +1,17 @@
 package phongkham.DTO;
 
 public class RolesDTO{
-    private int STT;
+    private String STT;
     private String TenVaiTro;
     private String MoTa;
 
     public RolesDTO(){
-        STT = 0;
+        STT = "";
         TenVaiTro = "";
         MoTa = "";
     }
 
-    public RolesDTO(int STT, String TenVaiTro, String MoTa){
+    public RolesDTO(String STT, String TenVaiTro, String MoTa){
         this.STT = STT;
         this.TenVaiTro = TenVaiTro;
         this.MoTa = MoTa;
@@ -23,11 +23,11 @@ public class RolesDTO{
         this.MoTa = rl.MoTa;
     }
 
-    public int getSTT() {return STT;}
+    public String getSTT() {return STT;}
     public String getTenVaiTro() {return TenVaiTro;}
     public String getMoTa() {return MoTa;}
 
-    public void setSTT(int STT) {this.STT = STT;}
+    public void setSTT(String STT) {this.STT = STT;}
     public void setTenVaiTro(String TenVaiTro) {this.TenVaiTro = TenVaiTro;}
     public void setMoTa(String MoTa) {this.MoTa = MoTa;}
 }
