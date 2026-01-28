@@ -1,4 +1,5 @@
 package phongkham.dao;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,7 +11,7 @@ import phongkham.DTO.GoiDichVuDTO;
 
 public class GoiDichVuDAO {
 
-    // Lấy danh sách gói dịch vụ
+    // Lấy danh sách tất cả gói dịch vụ
     public ArrayList<GoiDichVuDTO> getAll() {
         ArrayList<GoiDichVuDTO> ds = new ArrayList<>();
         String sql = "SELECT * FROM GoiDichVu";
@@ -47,7 +48,6 @@ public class GoiDichVuDAO {
             ps.setString(3, g.getGiaDichVu());
             ps.setString(4, g.getThoiGianKham());
             ps.setString(5, g.getMoTa());
-
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -69,7 +69,6 @@ public class GoiDichVuDAO {
             ps.setString(3, g.getThoiGianKham());
             ps.setString(4, g.getMoTa());
             ps.setString(5, g.getMaGoi());
-
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -78,15 +77,55 @@ public class GoiDichVuDAO {
     }
 
     // Xóa gói dịch vụ theo mã
-    public boolean deleteByMaGoi(String maGoi) {
+    public boolean deleteMaGoi(String maGoi) {
         String sql = "DELETE FROM GoiDichVu WHERE MaGoi=?";
         try (
-            Connection conn = DBConnection.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
+            Connection c = DBConnection.getConnection();
+            PreparedStatement ps = c.prepareStatement(sql);
         ) {
             ps.setString(1, maGoi);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // Lấy gói dịch vụ theo mã
+    public GoiDichVuDTO getByMaGoi(String maGoi) {
+        String sql = "SELECT * FROM GoiDichVu WHERE MaGoi=?";
+        try (
+            Connection c = DBConnection.getConnection();
+            PreparedStatement ps = c.prepareStatement(sql);
+        ) {
+            ps.setString(1, maGoi);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                GoiDichVuDTO g = new GoiDichVuDTO();
+                g.setMaGoi(rs.getString("MaGoi"));
+                g.setTenGoi(rs.getString("TenGoi"));
+                g.setGiaDichVu(rs.getString("GiaDichVu"));
+                g.setThoiGianKham(rs.getString("ThoiGianKham"));
+                g.setMoTa(rs.getString("MoTa"));
+                return g;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Kiểm tra mã gói dịch vụ có tồn tại không
+    public boolean existsMaGoi(String maGoi) {
+        String sql = "SELECT 1 FROM GoiDichVu WHERE MaGoi=?";
+        try (
+            Connection c = DBConnection.getConnection();
+            PreparedStatement ps = c.prepareStatement(sql);
+        ) {
+            ps.setString(1, maGoi);
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return false;
