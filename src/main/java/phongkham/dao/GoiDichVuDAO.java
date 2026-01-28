@@ -1,3 +1,94 @@
 package phongkham.dao;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import phongkham.db.DBConnection;
+import phongkham.DTO.GoiDichVuDTO;
 
-public class GoiDichVuDAO {}
+public class GoiDichVuDAO {
+
+    // Lấy danh sách gói dịch vụ
+    public ArrayList<GoiDichVuDTO> getAll() {
+        ArrayList<GoiDichVuDTO> ds = new ArrayList<>();
+        String sql = "SELECT * FROM GoiDichVu";
+
+        try (
+            Connection c = DBConnection.getConnection();
+            Statement stm = c.createStatement();
+            ResultSet rs = stm.executeQuery(sql);
+        ) {
+            while (rs.next()) {
+                GoiDichVuDTO g = new GoiDichVuDTO();
+                g.setMaGoi(rs.getString("MaGoi"));
+                g.setTenGoi(rs.getString("TenGoi"));
+                g.setGiaDichVu(rs.getString("GiaDichVu"));
+                g.setThoiGianKham(rs.getString("ThoiGianKham"));
+                g.setMoTa(rs.getString("MoTa"));
+                ds.add(g);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ds;
+    }
+
+    // Thêm gói dịch vụ
+    public boolean insertGoiDichVu(GoiDichVuDTO g) {
+        String sql = "INSERT INTO GoiDichVu VALUES (?,?,?,?,?)";
+        try (
+            Connection c = DBConnection.getConnection();
+            PreparedStatement ps = c.prepareStatement(sql);
+        ) {
+            ps.setString(1, g.getMaGoi());
+            ps.setString(2, g.getTenGoi());
+            ps.setString(3, g.getGiaDichVu());
+            ps.setString(4, g.getThoiGianKham());
+            ps.setString(5, g.getMoTa());
+
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // Cập nhật gói dịch vụ
+    public boolean updateGoiDichVu(GoiDichVuDTO g) {
+        String sql = "UPDATE GoiDichVu "
+                   + "SET TenGoi=?, GiaDichVu=?, ThoiGianKham=?, MoTa=? "
+                   + "WHERE MaGoi=?";
+        try (
+            Connection c = DBConnection.getConnection();
+            PreparedStatement ps = c.prepareStatement(sql);
+        ) {
+            ps.setString(1, g.getTenGoi());
+            ps.setString(2, g.getGiaDichVu());
+            ps.setString(3, g.getThoiGianKham());
+            ps.setString(4, g.getMoTa());
+            ps.setString(5, g.getMaGoi());
+
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // Xóa gói dịch vụ theo mã
+    public boolean deleteByMaGoi(String maGoi) {
+        String sql = "DELETE FROM GoiDichVu WHERE MaGoi=?";
+        try (
+            Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+        ) {
+            ps.setString(1, maGoi);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+}
