@@ -63,4 +63,41 @@ public class DonThuocDAO {
         }
         return false;
     }
+      public boolean updateDonThuoc(DonThuocDTO dt) {
+        String sql = "UPDATE donthuoc SET MaHoSo=?, NgayKeDon=?, GhiChu=? WHERE MaDonThuoc=?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, dt.getMaHoSo());
+            ps.setString(2, dt.getNgayKeDon());
+            ps.setString(3, dt.getGhiChu());
+            ps.setString(4, dt.getMaDonThuoc());
+
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+      public DonThuocDTO searchTheoMa(String maDonThuoc) {
+        String sql = "SELECT * FROM donthuoc WHERE MaDonThuoc=?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, maDonThuoc);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return new DonThuocDTO(
+                        rs.getString("MaDonThuoc"),
+                        rs.getString("MaHoSo"),
+                        rs.getString("NgayKeDon"),
+                        rs.getString("GhiChu")
+                );
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
