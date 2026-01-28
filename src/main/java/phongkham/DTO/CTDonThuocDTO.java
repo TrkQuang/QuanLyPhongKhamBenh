@@ -1,4 +1,4 @@
-package phongkham.DTO;
++package phongkham.DTO;
 
 public class CTDonThuocDTO {
 
@@ -27,7 +27,7 @@ public class CTDonThuocDTO {
         this.CachDung=CachDung;
     }
 
-    public String gettMaCTDonThuoc() {return MaCTDonThuoc;}
+    public String getMaCTDonThuoc() {return MaCTDonThuoc;}
     public String getMaDonThuoc() {return MaDonThuoc;}
     public String getMaThuoc() {return MaThuoc;}
     public int getSoluong() {return SoLuong;}
