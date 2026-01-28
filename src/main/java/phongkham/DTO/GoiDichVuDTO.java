@@ -33,4 +33,5 @@ public class GoiDichVuDTO {
     public void setTenGoi(String TenGoi ) {this.TenGoi=TenGoi;}
     public void setGiaDichVu(String GiaDichVu ) {this.GiaDichVu=GiaDichVu;}
     public void setThoiGianKham(String ThoiGianKham ) {this.ThoiGianKham=ThoiGianKham;}
+    public void setMoTa(String Mota ) {this.Mota=Mota;}
 }
