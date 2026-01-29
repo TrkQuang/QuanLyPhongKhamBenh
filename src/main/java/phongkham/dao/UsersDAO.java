@@ -22,7 +22,7 @@ public class UsersDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     UsersDTO u = new UsersDTO();
-                    u.setUserID(rs.getInt("UserID"));
+                    u.setUserID(rs.getString("UserID"));
                     u.setUsername(rs.getString("Username"));
                     u.setPassword(rs.getString("Password"));
                     u.setEmail(rs.getString("Email"));
@@ -44,7 +44,7 @@ public class UsersDAO {
 
             while (rs.next()) {
                 UsersDTO u = new UsersDTO();
-                u.setUserID(rs.getInt("UserID"));
+                u.setUserID(rs.getString("UserID"));
                 u.setUsername(rs.getString("Username"));
                 u.setPassword(rs.getString("Password"));
                 u.setEmail(rs.getString("Email"));
@@ -61,7 +61,7 @@ public class UsersDAO {
         try (Connection c = DBConnection.getConnection();
                 PreparedStatement ps = c.prepareStatement(sql)) {
 
-            ps.setInt(1, u.getUserID());
+            ps.setString(1, u.getUserID());
             ps.setString(2, u.getUsername());
             ps.setString(3, u.getPassword());
             ps.setString(4, u.getEmail());
@@ -81,7 +81,7 @@ public class UsersDAO {
             ps.setString(1, u.getUsername());
             ps.setString(2, u.getPassword());
             ps.setString(3, u.getEmail());
-            ps.setInt(4, u.getUserID());
+            ps.setString(4, u.getUserID());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {

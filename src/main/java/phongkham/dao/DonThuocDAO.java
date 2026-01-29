@@ -65,7 +65,7 @@ public class DonThuocDAO {
     }
       public boolean updateDonThuoc(DonThuocDTO dt) {
         String sql = "UPDATE donthuoc SET MaHoSo=?, NgayKeDon=?, GhiChu=? WHERE MaDonThuoc=?";
-        try (Connection conn = getConnection();
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, dt.getMaHoSo());
@@ -81,7 +81,7 @@ public class DonThuocDAO {
     }
       public DonThuocDTO searchTheoMa(String maDonThuoc) {
         String sql = "SELECT * FROM donthuoc WHERE MaDonThuoc=?";
-        try (Connection conn = getConnection();
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, maDonThuoc);

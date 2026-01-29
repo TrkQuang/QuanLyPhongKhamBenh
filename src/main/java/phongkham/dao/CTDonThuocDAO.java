@@ -69,7 +69,7 @@ public class CTDonThuocDAO {
             ps.setInt(3, ct.getSoluong());
             ps.setString(4, ct.getLieuDung());
             ps.setString(5, ct.getCachDung());
-            ps.setString(6, ct.gettMaCTDonThuoc());
+            ps.setString(6, ct.getMaCTDonThuoc());
 
             return ps.executeUpdate() > 0;
         } catch (Exception e) {

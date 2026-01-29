@@ -5,8 +5,8 @@ Thư mục `phongkham/DB` chứa phần **kết nối JDBC** đến MySQL để 
 ## Thành phần
 
 - `DBConnection.java`: tạo và quản lý kết nối `java.sql.Connection`.
-  - `getConnection()`: trả về kết nối dùng chung (singleton).
-  - `closeConnection()`: đóng kết nối.
+- `getConnection()`: trả về kết nối dùng chung (singleton).
+- `closeConnection()`: đóng kết nối.
 - `TESTConnection.java`: chương trình nhỏ để test kết nối DB.
 
 ## Cách dùng
@@ -46,4 +46,4 @@ Gợi ý: với dự án thật, nên **tách cấu hình** ra file cấu hình 
 ## Lưu ý
 
 - Hiện tại code dùng **1 Connection dùng chung** (singleton). Cách này phù hợp app Swing nhỏ, nhưng không phải connection pool.
-- Nếu sau này chạy đa luồng nhiều, cân nhắc dùng connection pool (HikariCP) hoặc tạo/đóng connection theo từng thao tác.
+- Nếu sau này chạy đa luồng nhiều, cân nhắc dùng connection pool (HikariCP) hoặc tạo/đóng connection theo từng thao tác.                                                                                                                      
