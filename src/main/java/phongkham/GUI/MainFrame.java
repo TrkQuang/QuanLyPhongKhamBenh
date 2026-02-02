@@ -24,30 +24,30 @@ public class MainFrame extends JFrame {
     setSize(1200, 700);
     setResizable(true);
 
-    // Main panel
+    // Panel chính
     JPanel mainPanel = new JPanel(new BorderLayout());
     mainPanel.setBackground(Color.WHITE);
 
-    // Header panel
+    // Panel tiêu đề
     JPanel headerPanel = createHeaderPanel();
     mainPanel.add(headerPanel, BorderLayout.NORTH);
 
-    // Sidebar panel
+    // Panel thanh bên
     sidebarPanel = new SidebarPanel(this);
     mainPanel.add(sidebarPanel, BorderLayout.WEST);
 
-    // Content panel with CardLayout
+    // Panel nội dung với CardLayout
     cardLayout = new CardLayout();
     contentPanel = new JPanel(cardLayout);
     contentPanel.setBackground(new Color(245, 247, 250));
 
-    // Initialize panels
+    // Khởi tạo các panel
     homePanel = new HomePanel();
     servicePanel = new ServicePanel();
     contactPanel = new ContactPanel();
     aboutPanel = new AboutPanel();
 
-    // Add panels to CardLayout
+    // Thêm các panel vào CardLayout
     contentPanel.add(homePanel, "HOME");
     contentPanel.add(servicePanel, "SERVICE");
     contentPanel.add(contactPanel, "CONTACT");
@@ -57,7 +57,7 @@ public class MainFrame extends JFrame {
 
     add(mainPanel);
 
-    // Show home panel by default
+    // Hiển thị trang chủ mặc định
     showPanel("HOME");
   }
 
@@ -69,7 +69,7 @@ public class MainFrame extends JFrame {
       BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230))
     );
 
-    // Logo and title
+    // Logo và tiêu đề
     JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 15));
     leftPanel.setBackground(Color.WHITE);
 
@@ -83,7 +83,7 @@ public class MainFrame extends JFrame {
     titleLabel.setForeground(new Color(30, 30, 30));
     leftPanel.add(titleLabel);
 
-    // Right panel with hotline
+    // Panel bên phải với hotline
     JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 15));
     rightPanel.setBackground(Color.WHITE);
 
@@ -129,7 +129,7 @@ public class MainFrame extends JFrame {
     try {
       UIManager.setLookAndFeel(new com.formdev.flatlaf.FlatLightLaf());
     } catch (Exception ex) {
-      System.err.println("Failed to initialize FlatLaf");
+      System.err.println("Lỗi khởi tạo Flatlaf");
     }
 
     SwingUtilities.invokeLater(() -> {

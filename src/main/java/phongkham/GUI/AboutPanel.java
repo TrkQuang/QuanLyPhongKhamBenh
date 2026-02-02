@@ -13,21 +13,19 @@ public class AboutPanel extends JPanel {
     setLayout(new BorderLayout());
     setBackground(new Color(245, 247, 250));
 
-    // Main content
+    // Nội dung chính
     JPanel contentPanel = new JPanel();
     contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
     contentPanel.setBackground(new Color(245, 247, 250));
     contentPanel.setBorder(BorderFactory.createEmptyBorder(40, 60, 40, 60));
 
-    // Title
+    // Tiêu đề
     JLabel titleLabel = new JLabel("About US");
     titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 32));
     titleLabel.setForeground(new Color(30, 30, 30));
     titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-    JLabel subtitleLabel = new JLabel(
-      "Phòng Khám Bệnh"
-    );
+    JLabel subtitleLabel = new JLabel("Phòng Khám Bệnh");
     subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
     subtitleLabel.setForeground(new Color(100, 100, 100));
     subtitleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -37,7 +35,7 @@ public class AboutPanel extends JPanel {
     contentPanel.add(subtitleLabel);
     contentPanel.add(Box.createRigidArea(new Dimension(0, 40)));
 
-    // About content panel
+    // Panel nội dung giới thiệu
     JPanel aboutPanel = new JPanel() {
       @Override
       protected void paintComponent(Graphics g) {
@@ -61,7 +59,7 @@ public class AboutPanel extends JPanel {
     aboutPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
     aboutPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 500));
 
-    // Logo
+    // Biểu tượng
     JLabel logoLabel = new JLabel("⚕", SwingConstants.CENTER);
     logoLabel.setFont(new Font("Segoe UI", Font.PLAIN, 80));
     logoLabel.setForeground(new Color(37, 99, 235));
@@ -72,7 +70,7 @@ public class AboutPanel extends JPanel {
     clinicName.setForeground(new Color(30, 30, 30));
     clinicName.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-    // Description
+    // Mô tả
     JTextArea descArea = new JTextArea();
     descArea.setText(
       "Phòng Khám Đa Khoa là đơn vị y tế uy tín, cung cấp dịch vụ khám chữa bệnh " +
@@ -104,7 +102,7 @@ public class AboutPanel extends JPanel {
 
     add(contentPanel, BorderLayout.CENTER);
 
-    // Stats panel
+    // Panel thống kê
     JPanel statsPanel = new JPanel(new GridLayout(1, 3, 40, 0));
     statsPanel.setBackground(Color.WHITE);
     statsPanel.setPreferredSize(new Dimension(0, 120));

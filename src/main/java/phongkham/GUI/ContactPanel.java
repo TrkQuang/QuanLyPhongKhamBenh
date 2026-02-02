@@ -13,13 +13,13 @@ public class ContactPanel extends JPanel {
     setLayout(new BorderLayout());
     setBackground(new Color(245, 247, 250));
 
-    // Main content
+    // Nội dung chính
     JPanel contentPanel = new JPanel();
     contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
     contentPanel.setBackground(new Color(245, 247, 250));
     contentPanel.setBorder(BorderFactory.createEmptyBorder(40, 60, 40, 60));
 
-    // Title
+    // Tiêu đề
     JLabel titleLabel = new JLabel("Liên Hệ");
     titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 32));
     titleLabel.setForeground(new Color(30, 30, 30));
@@ -35,7 +35,7 @@ public class ContactPanel extends JPanel {
     contentPanel.add(subtitleLabel);
     contentPanel.add(Box.createRigidArea(new Dimension(0, 40)));
 
-    // Contact info panel
+    // Panel thông tin liên hệ
     JPanel infoPanel = new JPanel() {
       @Override
       protected void paintComponent(Graphics g) {
@@ -59,20 +59,20 @@ public class ContactPanel extends JPanel {
     infoPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
     infoPanel.setMaximumSize(new Dimension(700, Integer.MAX_VALUE));
 
-    // Phone
+    // Điện thoại
     JPanel phonePanel = createInfoRow("📞", "Điện thoại:", "1900-8888");
 
     // Email
     JPanel emailPanel = createInfoRow("✉", "Email:", "contact@phongkham.vn");
 
-    // Address
+    // Địa chỉ
     JPanel addressPanel = createInfoRow(
       "📍",
       "Địa chỉ:",
       "123 Đường Nguyễn Trãi, Quận 1, TP.HCM"
     );
 
-    // Working hours
+    // Giờ làm việc
     JPanel hoursPanel = createInfoRow(
       "🕐",
       "Giờ làm việc:",

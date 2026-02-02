@@ -13,13 +13,13 @@ public class ServicePanel extends JPanel {
     setLayout(new BorderLayout());
     setBackground(new Color(245, 247, 250));
 
-    // Main content
+    // Nội dung chính
     JPanel contentPanel = new JPanel();
     contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
     contentPanel.setBackground(new Color(245, 247, 250));
     contentPanel.setBorder(BorderFactory.createEmptyBorder(40, 60, 40, 60));
 
-    // Title
+    // Tiêu đề
     JLabel titleLabel = new JLabel("Dịch Vụ Y Tế");
     titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 32));
     titleLabel.setForeground(new Color(30, 30, 30));
@@ -37,7 +37,7 @@ public class ServicePanel extends JPanel {
     contentPanel.add(subtitleLabel);
     contentPanel.add(Box.createRigidArea(new Dimension(0, 40)));
 
-    // Services grid
+    // Lưới dịch vụ
     JPanel servicesGrid = new JPanel(new GridLayout(2, 3, 30, 30));
     servicesGrid.setBackground(new Color(245, 247, 250));
     servicesGrid.setMaximumSize(new Dimension(Integer.MAX_VALUE, 600));

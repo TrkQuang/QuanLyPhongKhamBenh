@@ -24,13 +24,13 @@ public class SidebarPanel extends JPanel {
       BorderFactory.createMatteBorder(0, 0, 0, 1, new Color(230, 230, 230))
     );
 
-    // Menu panel
+    // Panel menu
     JPanel menuPanel = new JPanel();
     menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
     menuPanel.setBackground(Color.WHITE);
     menuPanel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
 
-    // Create menu buttons
+    // Tạo các nút menu
     JButton btnHome = createMenuButton("🏠", "Trang chủ", "HOME");
     JButton btnService = createMenuButton("🏥", "Dịch vụ", "SERVICE");
     JButton btnContact = createMenuButton("📞", "Liên hệ", "CONTACT");
@@ -47,7 +47,7 @@ public class SidebarPanel extends JPanel {
 
     add(menuPanel, BorderLayout.CENTER);
 
-    // Footer panel
+    // Panel chân trang
     JPanel footerPanel = new JPanel(new BorderLayout());
     footerPanel.setBackground(new Color(249, 250, 251));
     footerPanel.setPreferredSize(new Dimension(0, 100));
@@ -86,7 +86,7 @@ public class SidebarPanel extends JPanel {
     footerPanel.add(footerContent, BorderLayout.CENTER);
     add(footerPanel, BorderLayout.SOUTH);
 
-    // Select home button by default
+    // Chọn nút trang chủ mặc định
     setSelectedButton(btnHome);
   }
 

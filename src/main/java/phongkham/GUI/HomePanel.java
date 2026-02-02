@@ -13,13 +13,13 @@ public class HomePanel extends JPanel {
     setLayout(new BorderLayout());
     setBackground(new Color(245, 247, 250));
 
-    // Main content panel
+    // Panel nội dung chính
     JPanel contentPanel = new JPanel();
     contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
     contentPanel.setBackground(new Color(245, 247, 250));
     contentPanel.setBorder(BorderFactory.createEmptyBorder(40, 60, 40, 60));
 
-    // Welcome text
+    // Văn bản chào mừng
     JPanel welcomePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
     welcomePanel.setBackground(new Color(245, 247, 250));
     welcomePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
@@ -48,7 +48,7 @@ public class HomePanel extends JPanel {
     contentPanel.add(welcomePanel);
     contentPanel.add(Box.createRigidArea(new Dimension(0, 40)));
 
-    // Cards panel
+    // Panel các thẻ
     JPanel cardsPanel = new JPanel(new GridLayout(1, 2, 40, 0));
     cardsPanel.setBackground(new Color(245, 247, 250));
     cardsPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 400));
@@ -81,7 +81,7 @@ public class HomePanel extends JPanel {
 
     add(contentPanel, BorderLayout.CENTER);
 
-    // Footer info
+    // Thông tin chân trang
     JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 20));
     footerPanel.setBackground(Color.WHITE);
     footerPanel.setPreferredSize(new Dimension(0, 80));
@@ -126,11 +126,11 @@ public class HomePanel extends JPanel {
           RenderingHints.VALUE_ANTIALIAS_ON
         );
 
-        // Shadow
+        // Bóng đổ
         g2.setColor(new Color(0, 0, 0, 20));
         g2.fillRoundRect(4, 4, getWidth() - 8, getHeight() - 8, 20, 20);
 
-        // Card background
+        // Nền thẻ
         g2.setColor(Color.WHITE);
         g2.fillRoundRect(0, 0, getWidth() - 8, getHeight() - 8, 20, 20);
         g2.dispose();
@@ -140,7 +140,7 @@ public class HomePanel extends JPanel {
     card.setOpaque(false);
     card.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
 
-    // Icon and content
+    // Biểu tượng và nội dung
     JPanel contentPanel = new JPanel();
     contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
     contentPanel.setOpaque(false);
@@ -170,7 +170,7 @@ public class HomePanel extends JPanel {
     contentPanel.add(Box.createRigidArea(new Dimension(0, 10)));
     contentPanel.add(descArea);
 
-    // Button
+    // Nút bấm
     JButton actionButton = new JButton(buttonText + " →") {
       @Override
       protected void paintComponent(Graphics g) {
