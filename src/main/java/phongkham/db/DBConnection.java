@@ -7,9 +7,9 @@ import java.sql.SQLException;
 public class DBConnection {
 
   private static final String URL =
-    "jdbc:mysql://tramway.proxy.rlwy.net:57864/PhongKham";
-  private static final String USER = "root";
-  private static final String PASS = "RSfJaDbgzwfGdkHBtEGwLPhFyXVemcGZ";
+    "jdbc:mysql://sql12.freesqldatabase.com:3306/sql12815966";
+  private static final String USER = "sql12815966";
+  private static final String PASS = "ZQPi5TAq98";
 
   private static Connection connection = null;
 
@@ -44,4 +44,3 @@ public class DBConnection {
     }
   }
 }
-
