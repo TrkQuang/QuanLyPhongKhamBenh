@@ -24,7 +24,7 @@ public class CTHDThuocBUS {
         if (cthd.getDonGia() <= 0) {
             System.err.println("Đơn giá phải > 0");
             return false;
-        }
+        } 
 
         return cthdThuocDAO.insert(cthd);
     }
