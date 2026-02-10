@@ -42,4 +42,9 @@ public class PhieuNhapDTO {
     public void setNgayNhap(String NgayNhap) {this.NgayNhap = NgayNhap;}
     public void setNguoiGiao(String NguoiGiao) {this.NguoiGiao = NguoiGiao;}
     public void setTongTienNhap(float TongTienNhap) {this.TongTienNhap = TongTienNhap;}
+
+    @Override 
+    public String toString(){
+        return "PhieuNhap{" + "MaPhieuNhap=" +MaPhieuNhap+ ", MaNhaCungCap=" +MaNhaCungCap+ ", NgayNhap='" +NgayNhap+ '\'' + ", NguoiGiao='" +NguoiGiao+ '\'' +", TongTienNhap" +TongTienNhap+ '}';
+    }
 }

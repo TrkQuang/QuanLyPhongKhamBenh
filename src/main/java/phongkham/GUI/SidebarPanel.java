@@ -35,10 +35,14 @@ public class SidebarPanel extends JPanel {
     JButton btnService = createMenuButton("🏥", "Dịch vụ", "SERVICE");
     JButton btnContact = createMenuButton("📞", "Liên hệ", "CONTACT");
     JButton btnAbout = createMenuButton("ℹ", "Về chúng tôi", "ABOUT");
+    JButton btnPhieuNhap = createMenuButton("📦", "Phiếu nhập thuốc", "PHIEUNHAP");
+
 
     menuPanel.add(btnHome);
     menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));
     menuPanel.add(btnService);
+    menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+    menuPanel.add(btnPhieuNhap);   
     menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));
     menuPanel.add(btnContact);
     menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));

@@ -12,6 +12,7 @@ public class MainFrame extends JFrame {
   private ServicePanel servicePanel;
   private ContactPanel contactPanel;
   private AboutPanel aboutPanel;
+  private PhieuNhapPanel phieuNhapPanel;
 
   public MainFrame() {
     initComponents();
@@ -46,12 +47,14 @@ public class MainFrame extends JFrame {
     servicePanel = new ServicePanel();
     contactPanel = new ContactPanel();
     aboutPanel = new AboutPanel();
+    phieuNhapPanel = new PhieuNhapPanel();
 
     // Thêm các panel vào CardLayout
     contentPanel.add(homePanel, "HOME");
     contentPanel.add(servicePanel, "SERVICE");
     contentPanel.add(contactPanel, "CONTACT");
     contentPanel.add(aboutPanel, "ABOUT");
+    contentPanel.add(phieuNhapPanel, "PHIEUNHAP");
 
     mainPanel.add(contentPanel, BorderLayout.CENTER);
 

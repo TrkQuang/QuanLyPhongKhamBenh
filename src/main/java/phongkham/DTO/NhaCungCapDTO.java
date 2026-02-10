@@ -4,7 +4,7 @@ public class NhaCungCapDTO {
     private String MaNhaCungCap;
     private String TenNhaCungCap;
     private String DiaChi;
-    private String SDT;
+    private String SDT; 
 
     public NhaCungCapDTO(){
         MaNhaCungCap = "";
@@ -36,4 +36,9 @@ public class NhaCungCapDTO {
     public void setTenNhaCungCap(String TenNhaCungCap) {this.TenNhaCungCap = TenNhaCungCap;}
     public void setDiaChi(String DiaChi) {this.DiaChi = DiaChi;}
     public void setSDT(String SDT) {this.SDT = SDT;}
+
+    @Override
+    public String toString(){
+        return "NhaCungCap{" + "MaNhaCungCap=" +MaNhaCungCap+ ", TenNhaCungCap='" +TenNhaCungCap+ '\''+ ", DiaChi='" +DiaChi+ '\''+ ", SDT='" +SDT+ '\''+ "}";
+    }
 }

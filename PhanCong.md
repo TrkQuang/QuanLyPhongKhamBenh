@@ -234,17 +234,14 @@ Guest → LichKham (KQ) → PhieuKham (KQ) → HoSoBenhAn (KQ)
 ### 🔧 **Tất cả thành viên đều làm 4 tầng**:
 
 1. **DTO** (Data Transfer Object)
-
    - Định nghĩa thuộc tính, constructor, getter/setter
    - Validation cơ bản (nếu cần)
 
 2. **DAO** (Data Access Object)
-
    - Kết nối database, CRUD operations
    - PreparedStatement, handle SQLException
 
 3. **BUS** (Business Logic)
-
    - Xử lý nghiệp vụ, validation phức tạp
    - Gọi DAO, trả kết quả cho GUI
 

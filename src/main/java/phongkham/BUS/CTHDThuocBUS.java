@@ -3,7 +3,7 @@ package phongkham.BUS;
 import phongkham.DTO.CTHDThuocDTO;
 import phongkham.dao.CTHDThuocDAO;
 import java.util.List;
-
+ 
 public class CTHDThuocBUS {
     private CTHDThuocDAO cthdThuocDAO = new CTHDThuocDAO();
 

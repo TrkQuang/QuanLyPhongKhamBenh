@@ -48,4 +48,9 @@ public class ThuocDTO {
     public void setDonViTinh(String DonViTinh) {this.DonViTinh = DonViTinh;}
     public void setDonGiaBan(float DonGiaBan) {this.DonGiaBan = DonGiaBan;}
     public void setSoLuongTon(int SoLuongTon) {this.SoLuongTon = SoLuongTon;}
+
+    @Override
+    public String toString(){
+        return "Thuoc{" + "MaThuoc=" +MaThuoc+ ", TenThuoc='" + TenThuoc+ '\'' +", HoatChat='" +HoatChat+ '\'' +", DonViTinh=" + DonViTinh +'\''+ ", DonGiaBan=" +DonGiaBan+ ", SoLuongTon=" +SoLuongTon+ "}";
+    }
 }

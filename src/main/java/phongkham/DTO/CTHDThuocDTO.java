@@ -129,7 +129,7 @@ public class CTHDThuocDTO {
         this.thanhTien = this.soLuong * this.donGia;
     }
 
-    @Override
+    @Override 
     public String toString() {
         return "CTHDThuocDTO{" +
                 "maCTHDThuoc=" + maCTHDThuoc +
