@@ -74,7 +74,7 @@ public class LoginForm extends JFrame {
 
     // Icon y tế
     JLabel iconLabel = new JLabel("⚕", SwingConstants.CENTER);
-    iconLabel.setFont(new Font("Segoe UI", Font.PLAIN, 50));
+    iconLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 50));
     iconLabel.setForeground(new Color(99, 102, 241));
     iconLabel.setBounds(0, 30, 320, 50);
     cardPanel.add(iconLabel);
@@ -110,7 +110,7 @@ public class LoginForm extends JFrame {
 
     // Email icon
     JLabel emailIcon = new JLabel("✉");
-    emailIcon.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+    emailIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
     emailIcon.setForeground(new Color(150, 150, 150));
     emailIcon.setBounds(255, 180, 25, 25);
     cardPanel.add(emailIcon);
@@ -138,7 +138,7 @@ public class LoginForm extends JFrame {
     btnTogglePassword.setContentAreaFilled(false);
     btnTogglePassword.setFocusPainted(false);
     btnTogglePassword.setCursor(new Cursor(Cursor.HAND_CURSOR));
-    btnTogglePassword.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+    btnTogglePassword.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 16));
     btnTogglePassword.addActionListener(e -> {
       if (txtPassword.getEchoChar() == '•') {
         txtPassword.setEchoChar((char) 0);
