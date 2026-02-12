@@ -9,7 +9,6 @@ public class SidebarPanel extends JPanel {
   private JButton selectedButton;
   private Color selectedColor = new Color(37, 99, 235);
   private Color hoverColor = new Color(243, 244, 246);
-  private Color defaultColor = Color.WHITE;
 
   public SidebarPanel(MainFrame mainFrame) {
     this.mainFrame = mainFrame;
@@ -35,14 +34,27 @@ public class SidebarPanel extends JPanel {
     JButton btnService = createMenuButton("🏥", "Dịch vụ", "SERVICE");
     JButton btnContact = createMenuButton("📞", "Liên hệ", "CONTACT");
     JButton btnAbout = createMenuButton("ℹ", "Về chúng tôi", "ABOUT");
-    JButton btnPhieuNhap = createMenuButton("📦", "Phiếu nhập thuốc", "PHIEUNHAP");
-
+    JButton btnPhieuNhap = createMenuButton(
+      "📦",
+      "Phiếu nhập thuốc",
+      "PHIEUNHAP"
+    );
+    JButton btnDatLich = createMenuButton("📝", "Đặt lịch khám", "DATLICHKHAM");
+    JButton btnQuanLyLich = createMenuButton(
+      "👨‍⚕️",
+      "Quản lý lịch khám",
+      "QUANLYLICHKHAM"
+    );
 
     menuPanel.add(btnHome);
     menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));
     menuPanel.add(btnService);
     menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-    menuPanel.add(btnPhieuNhap);   
+    menuPanel.add(btnDatLich);
+    menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+    menuPanel.add(btnQuanLyLich);
+    menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+    menuPanel.add(btnPhieuNhap);
     menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));
     menuPanel.add(btnContact);
     menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));

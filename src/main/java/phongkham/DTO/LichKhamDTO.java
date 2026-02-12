@@ -7,7 +7,7 @@ public class LichKhamDTO {
     private String ThoiGianBatDau;
     private String ThoiGianKetThuc;
     private String TrangThai;
-    private String MaDinhDanh;
+    private String MaDinhDanhTam;
 
     public LichKhamDTO(){
         MaLichKham = "";
@@ -16,17 +16,17 @@ public class LichKhamDTO {
         ThoiGianBatDau = "";
         ThoiGianKetThuc = "";
         TrangThai = "";
-        MaDinhDanh = "";
+        MaDinhDanhTam = "";
     }
 
-    public LichKhamDTO(String MaLichKham, String MaGoi, String MaBacSi, String ThoiGianBatDau, String ThoiGianKetThuc, String TrangThai, String MaDinhDanh){
+    public LichKhamDTO(String MaLichKham, String MaGoi, String MaBacSi, String ThoiGianBatDau, String ThoiGianKetThuc, String TrangThai, String MaDinhDanhTam){
         this.MaLichKham = MaLichKham;
         this.MaGoi = MaGoi;
         this.MaBacSi = MaBacSi;
         this.ThoiGianBatDau = ThoiGianBatDau;
         this.ThoiGianKetThuc = ThoiGianKetThuc;
         this.TrangThai = TrangThai;
-        this.MaDinhDanh = MaDinhDanh;
+        this.MaDinhDanhTam = MaDinhDanhTam;
     }
 
     public LichKhamDTO(LichKhamDTO lk){
@@ -36,7 +36,7 @@ public class LichKhamDTO {
         this.ThoiGianBatDau = lk.ThoiGianBatDau;
         this.ThoiGianKetThuc = lk.ThoiGianKetThuc;
         this.TrangThai = lk.TrangThai;
-        this.MaDinhDanh = lk.MaDinhDanh;
+        this.MaDinhDanhTam = lk.MaDinhDanhTam;
     }
 
     public String getMaLichKham() {return MaLichKham;}
@@ -45,7 +45,7 @@ public class LichKhamDTO {
     public String getThoiGianBatDau() {return ThoiGianBatDau;}
     public String getThoiGianKetThuc() {return ThoiGianKetThuc;}
     public String getTrangThai() {return TrangThai;}
-    public String getMaDinhDanh() {return MaDinhDanh;}
+    public String getMaDinhDanhTam() {return MaDinhDanhTam;}
 
     public void setMaLichKham(String MaLichKham) {this.MaLichKham = MaLichKham;}
     public void setMaGoi(String MaGoi) {this.MaGoi = MaGoi;}
@@ -53,5 +53,5 @@ public class LichKhamDTO {
     public void setThoiGianBatDau(String ThoiGianBatDau) {this.ThoiGianBatDau = ThoiGianBatDau;}
     public void setThoiGianKetThuc(String ThoiGianKetThuc) {this.ThoiGianKetThuc = ThoiGianKetThuc;}
     public void setTrangThai(String TrangThai) {this.TrangThai = TrangThai;}
-    public void setMaDinhDanh(String MaDinhDanh) {this.MaDinhDanh = MaDinhDanh;}
+    public void setMaDinhDanhTam(String MaDinhDanhTam) {this.MaDinhDanhTam = MaDinhDanhTam;}
 }

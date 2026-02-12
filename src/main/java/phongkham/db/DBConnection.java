@@ -7,36 +7,35 @@ import java.sql.SQLException;
 public class DBConnection {
 
   private static final String URL =
-    "jdbc:mysql://quanlyphongkham-doanquanlyphongkham.e.aivencloud.com:20567/PhongKham?ssl-mode=REQUIRED";
+    "jdbc:mysql://quanlyphongkham-doanquanlyphongkham.e.aivencloud.com:20567/PhongKham?sslMode=REQUIRED&allowPublicKeyRetrieval=true";
   private static final String USER = "avnadmin";
   private static final String PASS = "AVNS_P0GmFQ6e6gYGhk0ooIV";
-
-  private static Connection connection = null;
 
   // Không cho tạo object
   private DBConnection() {}
 
-  // tạo kết nối đến DB
+  // Tạo kết nối mới mỗi lần gọi (không cache)
   public static Connection getConnection() {
+    Connection conn = null;
     try {
-      if (connection == null || connection.isClosed()) {
-        Class.forName("com.mysql.cj.jdbc.Driver");
-        connection = DriverManager.getConnection(URL, USER, PASS);
-        System.out.println("Kết nối vào database thành công!");
-      }
+      Class.forName("com.mysql.cj.jdbc.Driver");
+      conn = DriverManager.getConnection(URL, USER, PASS);
+      System.out.println("Kết nối vào database thành công!");
     } catch (SQLException e) {
+      System.err.println("Lỗi kết nối database: " + e.getMessage());
       e.printStackTrace();
     } catch (ClassNotFoundException e) {
+      System.err.println("Không tìm thấy MySQL Driver: " + e.getMessage());
       e.printStackTrace();
     }
-    return connection;
+    return conn;
   }
 
-  //ngắt kết nối đến DB
-  public static void closeConnection() {
+  // Đóng connection được truyền vào
+  public static void closeConnection(Connection conn) {
     try {
-      if (connection != null && !connection.isClosed()) {
-        connection.close();
+      if (conn != null && !conn.isClosed()) {
+        conn.close();
         System.out.println("Đã đóng kết nối DB");
       }
     } catch (Exception e) {
