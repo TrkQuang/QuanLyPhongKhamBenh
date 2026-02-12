@@ -7,9 +7,9 @@ import java.sql.SQLException;
 public class DBConnection {
 
   private static final String URL =
-    "jdbc:mysql://sql12.freesqldatabase.com:3306/sql12815966";
-  private static final String USER = "sql12815966";
-  private static final String PASS = "ZQPi5TAq98";
+    "jdbc:mysql://quanlyphongkham-doanquanlyphongkham.e.aivencloud.com:20567/PhongKham?ssl-mode=REQUIRED";
+  private static final String USER = "avnadmin";
+  private static final String PASS = "AVNS_P0GmFQ6e6gYGhk0ooIV";
 
   private static Connection connection = null;
 

@@ -2,7 +2,6 @@ package phongkham.BUS;
 
 import phongkham.DTO.NhaCungCapDTO;
 import phongkham.dao.NhaCungCapDAO;
-import java.util.List;
 
 
 public class NhaCungCapBUS {
