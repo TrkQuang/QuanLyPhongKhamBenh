@@ -15,7 +15,7 @@ public class MainFrame extends JFrame {
   private PhieuNhapPanel phieuNhapPanel;
   private LichKhamPanel lichKhamPanel;
   private DatLichKhamPanel datLichKhamPanel;
-
+  private HoaDonKhamPanel hoadonkhamPanel;
   public MainFrame() {
     initComponents();
     setLocationRelativeTo(null);
@@ -52,6 +52,7 @@ public class MainFrame extends JFrame {
     phieuNhapPanel = new PhieuNhapPanel();
     lichKhamPanel = new LichKhamPanel();
     datLichKhamPanel = new DatLichKhamPanel();
+    hoadonkhamPanel = new HoaDonKhamPanel();
 
     // Thêm các panel vào CardLayout
     contentPanel.add(homePanel, "HOME");
@@ -61,6 +62,7 @@ public class MainFrame extends JFrame {
     contentPanel.add(phieuNhapPanel, "PHIEUNHAP");
     contentPanel.add(datLichKhamPanel, "DATLICHKHAM");
     contentPanel.add(lichKhamPanel, "QUANLYLICHKHAM");
+    contentPanel.add(hoadonkhamPanel, "HOADONKHAM");
 
     mainPanel.add(contentPanel, BorderLayout.CENTER);
 

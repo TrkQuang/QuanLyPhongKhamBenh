@@ -100,5 +100,33 @@ public class CTPhieuNhapDAO {
         }
         return null;
     }
+
+    public ArrayList<CTPhieuNhapDTO> getByMaPhieuNhap(String MaPhieuNhap) {
+        ArrayList<CTPhieuNhapDTO> list = new ArrayList<>();
+        String sql = "SELECT * FROM ChiTietPhieuNhap WHERE MaPhieuNhap = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, MaPhieuNhap);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                LocalDateTime localDateTime = rs.getObject("HanSuDung", LocalDateTime.class);
+                CTPhieuNhapDTO ctpn = new CTPhieuNhapDTO(
+                    rs.getString("MaCTPN"),
+                    rs.getString("MaPhieuNhap"),
+                    rs.getString("MaThuoc"),
+                    rs.getInt("SoLuongNhap"),
+                    rs.getBigDecimal("DonGiaNhap"),
+                    localDateTime
+                );
+                list.add(ctpn);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    
+
 }
 

@@ -87,4 +87,17 @@ public class PhieuNhapDAO {
         }
         return false;
     }
+
+    public boolean updateTrangThai(String maPN, String trangThaiMoi) {
+        String sql = "UPDATE PhieuNhap SET TrangThai = ? WHERE MaPhieuNhap = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, trangThaiMoi);
+            ps.setString(2, maPN);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

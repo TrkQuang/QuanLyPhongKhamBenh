@@ -82,9 +82,16 @@ public class PhieuNhapPanel extends JPanel {
 
 
 
-    btnChiTiet.addActionListener(e ->
-        JOptionPane.showMessageDialog(this, "Xem chi tiết " + maPN)
-    );
+    btnChiTiet.addActionListener(e -> {
+    NghiepVuPhieuNhapPanel detailPanel = new NghiepVuPhieuNhapPanel(maPN, this);
+
+    this.removeAll();
+    this.setLayout(new BorderLayout());
+    this.add(detailPanel, BorderLayout.CENTER);
+
+    this.revalidate();
+    this.repaint();
+});
 
     btnPanel.add(btnXacNhan);
     btnPanel.add(btnXoa);
@@ -105,6 +112,39 @@ private void loadFakeData() {
 
     listContainer.revalidate();
     listContainer.repaint();
+    }
+
+    // ===== HÀM MAIN ĐỂ TEST GIAO DIỆN =====
+    public static void main(String[] args) {
+        // Sử dụng FlatLaf nếu có, nếu không thì dùng LookAndFeel mặc định
+        try {
+            UIManager.setLookAndFeel(new javax.swing.plaf.nimbus.NimbusLookAndFeel());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("Test PhieuNhapPanel");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setSize(800, 600);
+            frame.setLocationRelativeTo(null);
+
+            // Thêm Panel vào Frame
+            PhieuNhapPanel panel = new PhieuNhapPanel();
+            frame.add(panel);
+
+            frame.setVisible(true);
+        });
+    }
+
+    public void showMainView() {
+    removeAll();
+    setLayout(new BorderLayout());
+    add(createTopPanel(), BorderLayout.NORTH);
+    add(createListArea(), BorderLayout.CENTER);
+    revalidate();
+    repaint();
 }
 
 }
+

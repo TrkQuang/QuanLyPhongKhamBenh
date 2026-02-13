@@ -46,6 +46,9 @@ public class SidebarPanel extends JPanel {
       "QUANLYLICHKHAM"
     );
 
+    JButton btnHoaDonKham = createMenuButton("🧾", "Hóa Đơn Khám", "HOADONKHAM");
+
+
     menuPanel.add(btnHome);
     menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));
     menuPanel.add(btnService);
@@ -56,10 +59,14 @@ public class SidebarPanel extends JPanel {
     menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));
     menuPanel.add(btnPhieuNhap);
     menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+    menuPanel.add(btnHoaDonKham);
+    menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));
     menuPanel.add(btnContact);
     menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+
     menuPanel.add(btnAbout);
     menuPanel.add(Box.createVerticalGlue());
+
 
     add(menuPanel, BorderLayout.CENTER);
 

@@ -93,4 +93,19 @@ public class ThuocDAO {
         return false;
     }
     
+    public boolean updateSoLuong(String maThuoc, int soLuongThem) {
+    // Câu lệnh SQL cộng dồn số lượng: SoLuong = SoLuong cũ + SoLuong mới
+    String sql = "UPDATE Thuoc SET SoLuong = SoLuong + ? WHERE MaThuoc = ?";
+    try (Connection conn = DBConnection.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        
+        ps.setInt(1, soLuongThem);
+        ps.setString(2, maThuoc);
+        
+        return ps.executeUpdate() > 0;
+    } catch (SQLException e) {
+        e.printStackTrace();
+        return false;
+    }
+}
 }
