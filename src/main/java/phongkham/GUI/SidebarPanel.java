@@ -20,14 +20,19 @@ public class SidebarPanel extends JPanel {
     setPreferredSize(new Dimension(200, 0));
     setBackground(Color.WHITE);
     setBorder(
-      BorderFactory.createMatteBorder(0, 0, 0, 1, new Color(230, 230, 230))
-    );
+        BorderFactory.createMatteBorder(0, 0, 0, 1, new Color(230, 230, 230)));
 
     // Panel menu
     JPanel menuPanel = new JPanel();
     menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
     menuPanel.setBackground(Color.WHITE);
     menuPanel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
+    // ___________________________________________________________
+    JButton btnBacSi = createMenuButton("👨‍⚕️", "Hồ sơ Bác sĩ", "BACSI_PROFILE");
+    JButton btnKhoa = createMenuButton("🏥", "Quản lý Khoa", "QUANLYKHOA");
+
+    JButton btnDangKy = createMenuButton("✍️", "Đăng ký ca làm", "LICHLAMVIEC");
+    // ______________________________________________________________
 
     // Tạo các nút menu
     JButton btnHome = createMenuButton("🏠", "Trang chủ", "HOME");
@@ -35,19 +40,17 @@ public class SidebarPanel extends JPanel {
     JButton btnContact = createMenuButton("📞", "Liên hệ", "CONTACT");
     JButton btnAbout = createMenuButton("ℹ", "Về chúng tôi", "ABOUT");
     JButton btnPhieuNhap = createMenuButton(
-      "📦",
-      "Phiếu nhập thuốc",
-      "PHIEUNHAP"
-    );
+        "📦",
+        "Phiếu nhập thuốc",
+        "PHIEUNHAP");
     JButton btnDatLich = createMenuButton("📝", "Đặt lịch khám", "DATLICHKHAM");
     JButton btnQuanLyLich = createMenuButton(
-      "👨‍⚕️",
-      "Quản lý lịch khám",
-      "QUANLYLICHKHAM"
-    );
+        "👨‍⚕️",
+        "Quản lý lịch khám",
+        "QUANLYLICHKHAM");
 
     JButton btnHoaDonKham = createMenuButton("🧾", "Hóa Đơn Khám", "HOADONKHAM");
-
+    // ... (các nút Home, Contact cũ giữ nguyên) ...
 
     menuPanel.add(btnHome);
     menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));
@@ -63,10 +66,26 @@ public class SidebarPanel extends JPanel {
     menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));
     menuPanel.add(btnContact);
     menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+    // _______________________________________________________________________
+    // ... (code cũ đang add nút Home, Service...)
+
+    // 1. Nút Hồ sơ Bác sĩ
+    menuPanel.add(Box.createRigidArea(new Dimension(0, 5))); // Tạo khoảng cách
+    menuPanel.add(btnBacSi);
+
+    // 2. Nút Quản lý Khoa
+    menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+    menuPanel.add(btnKhoa);
+
+    // 3. Nút Xếp Lịch (Admin)
+    menuPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+    menuPanel.add(btnDangKy);
+
+    // ... (code cũ add nút Contact, About...)
+    // __________________________________________________________________
 
     menuPanel.add(btnAbout);
     menuPanel.add(Box.createVerticalGlue());
-
 
     add(menuPanel, BorderLayout.CENTER);
 
@@ -75,11 +94,9 @@ public class SidebarPanel extends JPanel {
     footerPanel.setBackground(new Color(249, 250, 251));
     footerPanel.setPreferredSize(new Dimension(0, 100));
     footerPanel.setBorder(
-      BorderFactory.createCompoundBorder(
-        BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(230, 230, 230)),
-        BorderFactory.createEmptyBorder(15, 15, 15, 15)
-      )
-    );
+        BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(230, 230, 230)),
+            BorderFactory.createEmptyBorder(15, 15, 15, 15)));
 
     JPanel footerContent = new JPanel();
     footerContent.setLayout(new BoxLayout(footerContent, BoxLayout.Y_AXIS));
@@ -119,9 +136,8 @@ public class SidebarPanel extends JPanel {
       protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(
-          RenderingHints.KEY_ANTIALIASING,
-          RenderingHints.VALUE_ANTIALIAS_ON
-        );
+            RenderingHints.KEY_ANTIALIASING,
+            RenderingHints.VALUE_ANTIALIAS_ON);
 
         if (this == selectedButton) {
           g2.setColor(selectedColor);

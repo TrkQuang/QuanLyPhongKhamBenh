@@ -16,6 +16,7 @@ public class MainFrame extends JFrame {
   private LichKhamPanel lichKhamPanel;
   private DatLichKhamPanel datLichKhamPanel;
   private HoaDonKhamPanel hoadonkhamPanel;
+
   public MainFrame() {
     initComponents();
     setLocationRelativeTo(null);
@@ -63,6 +64,12 @@ public class MainFrame extends JFrame {
     contentPanel.add(datLichKhamPanel, "DATLICHKHAM");
     contentPanel.add(lichKhamPanel, "QUANLYLICHKHAM");
     contentPanel.add(hoadonkhamPanel, "HOADONKHAM");
+    // ____________________________________________________________
+    contentPanel.add(new BacSiProfilePanel(), "BACSI_PROFILE");
+    contentPanel.add(new KhoaPanel(), "QUANLYKHOA");
+    contentPanel.add(new LichLamViecPanel(), "LICHLAMVIEC");
+
+    // _______________________________________________________________
 
     mainPanel.add(contentPanel, BorderLayout.CENTER);
 
@@ -77,8 +84,7 @@ public class MainFrame extends JFrame {
     headerPanel.setBackground(Color.WHITE);
     headerPanel.setPreferredSize(new Dimension(0, 70));
     headerPanel.setBorder(
-      BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230))
-    );
+        BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)));
 
     // Logo và tiêu đề
     JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 15));
@@ -113,11 +119,9 @@ public class MainFrame extends JFrame {
     loginButton.setForeground(new Color(37, 99, 235));
     loginButton.setBackground(Color.WHITE);
     loginButton.setBorder(
-      BorderFactory.createCompoundBorder(
-        BorderFactory.createLineBorder(new Color(37, 99, 235), 1, true),
-        BorderFactory.createEmptyBorder(8, 15, 8, 15)
-      )
-    );
+        BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(37, 99, 235), 1, true),
+            BorderFactory.createEmptyBorder(8, 15, 8, 15)));
     loginButton.setFocusPainted(false);
     loginButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
     loginButton.addActionListener(e -> {
