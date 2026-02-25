@@ -102,4 +102,27 @@ public class UsersDAO {
         }
         return false;
     }
+
+    public UsersDTO getUserByID(String userID) {
+        String sql = "SELECT * FROM Users WHERE UserID = ?";
+        try (Connection c = DBConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+        
+        ps.setString(1, userID);
+        
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                UsersDTO u = new UsersDTO();
+                u.setUserID(rs.getString("UserID"));
+                u.setUsername(rs.getString("Username"));
+                u.setPassword(rs.getString("Password"));
+                u.setEmail(rs.getString("Email"));
+                return u;
+            }
+        }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
