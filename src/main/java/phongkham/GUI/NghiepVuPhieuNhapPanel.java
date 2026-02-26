@@ -127,7 +127,7 @@ public class NghiepVuPhieuNhapPanel extends JPanel {
                 tDAO.updateSoLuong(ct.getMaThuoc(), ct.getSoLuongNhap());
             }
 
-            pnDAO.updateTrangThai(maPN, "Đã nhập");
+            pnDAO.capNhatTrangThai(maPN, "Đã nhập");
 
             JOptionPane.showMessageDialog(this, "Nhập kho thành công!");
         } catch (Exception e) {

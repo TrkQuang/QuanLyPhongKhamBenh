@@ -1,154 +1,121 @@
 package phongkham.GUI;
 
+import com.formdev.flatlaf.FlatLightLaf;
 import java.awt.*;
 import javax.swing.*;
 
+/**
+ * MainFrame - SIÊU ĐƠN GIẢN
+ * CHỈ 80 DÒNG!
+ */
 public class MainFrame extends JFrame {
 
   private CardLayout cardLayout;
   private JPanel contentPanel;
-  private SidebarPanel sidebarPanel;
-  private HomePanel homePanel;
-  private ServicePanel servicePanel;
-  private ContactPanel contactPanel;
-  private AboutPanel aboutPanel;
-  private PhieuNhapPanel phieuNhapPanel;
-  private LichKhamPanel lichKhamPanel;
-  private DatLichKhamPanel datLichKhamPanel;
-  private HoaDonKhamPanel hoadonkhamPanel;
 
   public MainFrame() {
-    initComponents();
-    setLocationRelativeTo(null);
-  }
-
-  private void initComponents() {
     setTitle("Phòng Khám Đa Khoa");
-    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    setDefaultCloseOperation(EXIT_ON_CLOSE);
     setSize(1200, 700);
-    setResizable(true);
+    setLocationRelativeTo(null);
+    setLayout(new BorderLayout());
 
-    // Panel chính
-    JPanel mainPanel = new JPanel(new BorderLayout());
-    mainPanel.setBackground(Color.WHITE);
+    // ===== HEADER (1 dòng!) =====
+    add(createHeader(), BorderLayout.NORTH);
 
-    // Panel tiêu đề
-    JPanel headerPanel = createHeaderPanel();
-    mainPanel.add(headerPanel, BorderLayout.NORTH);
+    // ===== SIDEBAR (1 dòng!) =====
+    add(new SidebarPanel(this), BorderLayout.WEST);
 
-    // Panel thanh bên
-    sidebarPanel = new SidebarPanel(this);
-    mainPanel.add(sidebarPanel, BorderLayout.WEST);
-
-    // Panel nội dung với CardLayout
+    // ===== CONTENT =====
     cardLayout = new CardLayout();
     contentPanel = new JPanel(cardLayout);
     contentPanel.setBackground(new Color(245, 247, 250));
 
-    // Khởi tạo các panel
-    homePanel = new HomePanel();
-    servicePanel = new ServicePanel();
-    contactPanel = new ContactPanel();
-    aboutPanel = new AboutPanel();
-    phieuNhapPanel = new PhieuNhapPanel();
-    lichKhamPanel = new LichKhamPanel();
-    datLichKhamPanel = new DatLichKhamPanel();
-    hoadonkhamPanel = new HoaDonKhamPanel();
+    // ✅ Add panels (mỗi panel 1 dòng)
+    addPanel("HOME", new HomePanel());
+    addPanel("SERVICE", new ServicePanel());
+    addPanel("CONTACT", new ContactPanel());
+    addPanel("ABOUT", new AboutPanel());
+    addPanel("PHIEUNHAP", new PhieuNhapPanel());
+    addPanel("DATLICHKHAM", new DatLichKhamPanel());
+    addPanel("QUANLYLICHKHAM", new LichKhamPanel());
+    addPanel("HOADONKHAM", new HoaDonKhamPanel());
+    addPanel("BACSI_PROFILE", new BacSiProfilePanel());
+    addPanel("QUANLYKHOA", new KhoaPanel());
+    addPanel("LICHLAMVIEC", new LichLamViecPanel());
 
-    // Thêm các panel vào CardLayout
-    contentPanel.add(homePanel, "HOME");
-    contentPanel.add(servicePanel, "SERVICE");
-    contentPanel.add(contactPanel, "CONTACT");
-    contentPanel.add(aboutPanel, "ABOUT");
-    contentPanel.add(phieuNhapPanel, "PHIEUNHAP");
-    contentPanel.add(datLichKhamPanel, "DATLICHKHAM");
-    contentPanel.add(lichKhamPanel, "QUANLYLICHKHAM");
-    contentPanel.add(hoadonkhamPanel, "HOADONKHAM");
-    // ____________________________________________________________
-    contentPanel.add(new BacSiProfilePanel(), "BACSI_PROFILE");
-    contentPanel.add(new KhoaPanel(), "QUANLYKHOA");
-    contentPanel.add(new LichLamViecPanel(), "LICHLAMVIEC");
-
-    // _______________________________________________________________
-
-    mainPanel.add(contentPanel, BorderLayout.CENTER);
-
-    add(mainPanel);
-
-    // Hiển thị trang chủ mặc định
+    add(contentPanel, BorderLayout.CENTER);
     showPanel("HOME");
   }
 
-  private JPanel createHeaderPanel() {
-    JPanel headerPanel = new JPanel(new BorderLayout());
-    headerPanel.setBackground(Color.WHITE);
-    headerPanel.setPreferredSize(new Dimension(0, 70));
-    headerPanel.setBorder(
-        BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)));
+  // ✅ Helper: Tạo Header nhanh
+  private JPanel createHeader() {
+    JPanel p = new JPanel(new BorderLayout());
+    p.setBackground(Color.WHITE);
+    p.setPreferredSize(new Dimension(0, 70));
+    p.setBorder(
+      BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230))
+    );
 
-    // Logo và tiêu đề
-    JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 15));
-    leftPanel.setBackground(Color.WHITE);
+    // Left
+    JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 15));
+    left.setBackground(Color.WHITE);
+    left.add(
+      new JLabel("⚕  Phòng Khám Bệnh") {
+        {
+          setFont(new Font("Segoe UI", Font.BOLD, 20));
+          setForeground(new Color(37, 99, 235));
+        }
+      }
+    );
+    p.add(left, BorderLayout.WEST);
 
-    JLabel logoLabel = new JLabel("⚕");
-    logoLabel.setFont(new Font("Segoe UI", Font.PLAIN, 30));
-    logoLabel.setForeground(new Color(37, 99, 235));
-    leftPanel.add(logoLabel);
+    // Right
+    JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 15));
+    right.setBackground(Color.WHITE);
+    right.add(
+      new JLabel("HOTLINE: 1900-8888") {
+        {
+          setFont(new Font("Segoe UI", Font.BOLD, 14));
+          setForeground(new Color(37, 99, 235));
+        }
+      }
+    );
 
-    JLabel titleLabel = new JLabel("Phòng Khám Bệnh");
-    titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
-    titleLabel.setForeground(new Color(30, 30, 30));
-    leftPanel.add(titleLabel);
-
-    // Panel bên phải với hotline
-    JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 15));
-    rightPanel.setBackground(Color.WHITE);
-
-    JLabel hotlineLabel = new JLabel("HOTLINE");
-    hotlineLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-    hotlineLabel.setForeground(new Color(100, 100, 100));
-    rightPanel.add(hotlineLabel);
-
-    JLabel phoneLabel = new JLabel("1900-8888");
-    phoneLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
-    phoneLabel.setForeground(new Color(37, 99, 235));
-    rightPanel.add(phoneLabel);
-
-    JButton loginButton = new JButton("⚙ Đăng nhập nhân viên");
-    loginButton.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-    loginButton.setForeground(new Color(37, 99, 235));
-    loginButton.setBackground(Color.WHITE);
-    loginButton.setBorder(
-        BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(37, 99, 235), 1, true),
-            BorderFactory.createEmptyBorder(8, 15, 8, 15)));
-    loginButton.setFocusPainted(false);
-    loginButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-    loginButton.addActionListener(e -> {
+    JButton btn = new JButton("⚙ Đăng nhập");
+    btn.setForeground(new Color(37, 99, 235));
+    btn.setBackground(Color.WHITE);
+    btn.setBorder(
+      BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(37, 99, 235)),
+        BorderFactory.createEmptyBorder(8, 15, 8, 15)
+      )
+    );
+    btn.setFocusPainted(false);
+    btn.addActionListener(e -> {
       new LoginForm().setVisible(true);
       dispose();
     });
-    rightPanel.add(loginButton);
+    right.add(btn);
+    p.add(right, BorderLayout.EAST);
 
-    headerPanel.add(leftPanel, BorderLayout.WEST);
-    headerPanel.add(rightPanel, BorderLayout.EAST);
-
-    return headerPanel;
+    return p;
   }
 
-  public void showPanel(String panelName) {
-    cardLayout.show(contentPanel, panelName);
+  // ✅ Helper: Add panel vào CardLayout
+  private void addPanel(String name, JPanel panel) {
+    contentPanel.add(panel, name);
+  }
+
+  // ✅ Chuyển panel
+  public void showPanel(String name) {
+    cardLayout.show(contentPanel, name);
   }
 
   public static void main(String[] args) {
     try {
-      UIManager.setLookAndFeel(new com.formdev.flatlaf.FlatLightLaf());
-    } catch (Exception ex) {
-      System.err.println("Lỗi khởi tạo Flatlaf");
-    }
-
-    SwingUtilities.invokeLater(() -> {
-      new MainFrame().setVisible(true);
-    });
+      UIManager.setLookAndFeel(new FlatLightLaf());
+    } catch (Exception e) {}
+    SwingUtilities.invokeLater(() -> new MainFrame().setVisible(true));
   }
 }

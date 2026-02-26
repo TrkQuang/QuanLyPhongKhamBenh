@@ -3,76 +3,68 @@ package phongkham.GUI;
 import java.awt.*;
 import javax.swing.*;
 
+/**
+ * AboutPanel - ĐƠN GIẢN, CĂNG GIỮA
+ * CHỈ 50 DÒNG!
+ */
 public class AboutPanel extends JPanel {
 
   public AboutPanel() {
-    initComponents();
-  }
-
-  private void initComponents() {
     setLayout(new BorderLayout());
     setBackground(new Color(245, 247, 250));
 
-    // Nội dung chính
-    JPanel contentPanel = new JPanel();
-    contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-    contentPanel.setBackground(new Color(245, 247, 250));
-    contentPanel.setBorder(BorderFactory.createEmptyBorder(40, 60, 40, 60));
+    // ===== PANEL CHÍNH =====
+    JPanel content = new JPanel();
+    content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+    content.setBackground(new Color(245, 247, 250));
+    content.setBorder(BorderFactory.createEmptyBorder(40, 60, 40, 60));
 
-    // Tiêu đề
-    JLabel titleLabel = new JLabel("About US");
-    titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 32));
-    titleLabel.setForeground(new Color(30, 30, 30));
-    titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+    // ✅ TITLE - CĂNG GIỮA
+    JLabel title = new JLabel("Về Chúng Tôi");
+    title.setFont(new Font("Segoe UI", Font.BOLD, 32));
+    title.setForeground(new Color(30, 30, 30));
+    title.setAlignmentX(CENTER_ALIGNMENT); // ✅ Căn giữa
+    content.add(title);
+    content.add(Box.createRigidArea(new Dimension(0, 10)));
 
-    JLabel subtitleLabel = new JLabel("Phòng Khám Bệnh");
-    subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-    subtitleLabel.setForeground(new Color(100, 100, 100));
-    subtitleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+    // ✅ SUBTITLE - CĂNG GIỮA
+    JLabel subtitle = new JLabel("Phòng Khám Đa Khoa");
+    subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+    subtitle.setForeground(new Color(100, 100, 100));
+    subtitle.setAlignmentX(CENTER_ALIGNMENT); // ✅ Căn giữa
+    content.add(subtitle);
+    content.add(Box.createRigidArea(new Dimension(0, 40)));
 
-    contentPanel.add(titleLabel);
-    contentPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-    contentPanel.add(subtitleLabel);
-    contentPanel.add(Box.createRigidArea(new Dimension(0, 40)));
+    // Card
+    JPanel card = new JPanel();
+    card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+    card.setBackground(Color.WHITE);
+    card.setBorder(
+      BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(220, 220, 220)),
+        BorderFactory.createEmptyBorder(40, 40, 40, 40)
+      )
+    );
+    card.setMaximumSize(new Dimension(800, Integer.MAX_VALUE)); // ✅ Giới hạn width
+    card.setAlignmentX(CENTER_ALIGNMENT); // ✅ Căn giữa
 
-    // Panel nội dung giới thiệu
-    JPanel aboutPanel = new JPanel() {
-      @Override
-      protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setRenderingHint(
-          RenderingHints.KEY_ANTIALIASING,
-          RenderingHints.VALUE_ANTIALIAS_ON
-        );
+    // Logo
+    JLabel logo = new JLabel("⚕");
+    logo.setFont(new Font("Segoe UI", Font.PLAIN, 80));
+    logo.setForeground(new Color(37, 99, 235));
+    logo.setAlignmentX(CENTER_ALIGNMENT);
+    card.add(logo);
+    card.add(Box.createRigidArea(new Dimension(0, 20)));
 
-        g2.setColor(new Color(0, 0, 0, 15));
-        g2.fillRoundRect(3, 3, getWidth() - 6, getHeight() - 6, 20, 20);
-
-        g2.setColor(Color.WHITE);
-        g2.fillRoundRect(0, 0, getWidth() - 6, getHeight() - 6, 20, 20);
-        g2.dispose();
-      }
-    };
-    aboutPanel.setLayout(new BoxLayout(aboutPanel, BoxLayout.Y_AXIS));
-    aboutPanel.setOpaque(false);
-    aboutPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
-    aboutPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 500));
-
-    // Biểu tượng
-    JLabel logoLabel = new JLabel("⚕", SwingConstants.CENTER);
-    logoLabel.setFont(new Font("Segoe UI", Font.PLAIN, 80));
-    logoLabel.setForeground(new Color(37, 99, 235));
-    logoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-    JLabel clinicName = new JLabel("PHÒNG KHÁM ĐA KHOA", SwingConstants.CENTER);
-    clinicName.setFont(new Font("Segoe UI", Font.BOLD, 24));
-    clinicName.setForeground(new Color(30, 30, 30));
-    clinicName.setAlignmentX(Component.CENTER_ALIGNMENT);
+    // Tên
+    JLabel name = new JLabel("PHÒNG KHÁM ĐA KHOA");
+    name.setFont(new Font("Segoe UI", Font.BOLD, 24));
+    name.setAlignmentX(CENTER_ALIGNMENT);
+    card.add(name);
+    card.add(Box.createRigidArea(new Dimension(0, 30)));
 
     // Mô tả
-    JTextArea descArea = new JTextArea();
-    descArea.setText(
+    JTextArea desc = new JTextArea(
       "Phòng Khám Đa Khoa là đơn vị y tế uy tín, cung cấp dịch vụ khám chữa bệnh " +
         "chất lượng cao với đội ngũ bác sĩ giàu kinh nghiệm và trang thiết bị hiện đại.\n\n" +
         "Chúng tôi cam kết mang đến cho bạn:\n" +
@@ -82,62 +74,68 @@ public class AboutPanel extends JPanel {
         "• Môi trường khám chữa bệnh sạch sẽ, thân thiện\n" +
         "• Giá cả hợp lý, minh bạch"
     );
-    descArea.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-    descArea.setForeground(new Color(60, 60, 60));
-    descArea.setLineWrap(true);
-    descArea.setWrapStyleWord(true);
-    descArea.setEditable(false);
-    descArea.setOpaque(false);
-    descArea.setFocusable(false);
-    descArea.setAlignmentX(Component.CENTER_ALIGNMENT);
+    desc.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    desc.setForeground(new Color(60, 60, 60));
+    desc.setLineWrap(true);
+    desc.setWrapStyleWord(true);
+    desc.setEditable(false);
+    desc.setOpaque(false);
+    desc.setFocusable(false);
+    card.add(desc);
 
-    aboutPanel.add(logoLabel);
-    aboutPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-    aboutPanel.add(clinicName);
-    aboutPanel.add(Box.createRigidArea(new Dimension(0, 30)));
-    aboutPanel.add(descArea);
+    content.add(card);
+    content.add(Box.createRigidArea(new Dimension(0, 40)));
 
-    contentPanel.add(aboutPanel);
-    contentPanel.add(Box.createVerticalGlue());
+    // Stats
+    content.add(createStatsPanel());
+    content.add(Box.createVerticalGlue());
 
-    add(contentPanel, BorderLayout.CENTER);
+    // ✅ ScrollPane
+    JScrollPane scroll = new JScrollPane(content);
+    scroll.setBorder(null);
+    scroll.getVerticalScrollBar().setUnitIncrement(16);
+    add(scroll, BorderLayout.CENTER);
+  }
 
-    // Panel thống kê
-    JPanel statsPanel = new JPanel(new GridLayout(1, 3, 40, 0));
-    statsPanel.setBackground(Color.WHITE);
-    statsPanel.setPreferredSize(new Dimension(0, 120));
-    statsPanel.setBorder(
+  // ✅ Tạo panel thống kê - CĂNG GIỮA
+  private JPanel createStatsPanel() {
+    JPanel stats = new JPanel(new GridLayout(1, 3, 40, 0));
+    stats.setBackground(Color.WHITE);
+    stats.setMaximumSize(new Dimension(800, 120)); // ✅ Giới hạn width
+    stats.setAlignmentX(CENTER_ALIGNMENT); // ✅ Căn giữa
+    stats.setBorder(
       BorderFactory.createCompoundBorder(
-        BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(230, 230, 230)),
-        BorderFactory.createEmptyBorder(30, 60, 30, 60)
+        BorderFactory.createLineBorder(new Color(220, 220, 220)),
+        BorderFactory.createEmptyBorder(30, 20, 30, 20)
       )
     );
 
-    statsPanel.add(createStatItem("10+", "Năm kinh nghiệm"));
-    statsPanel.add(createStatItem("50+", "Bác sĩ chuyên khoa"));
-    statsPanel.add(createStatItem("100K+", "Bệnh nhân tin tưởng"));
+    stats.add(createStatItem("10+", "Năm kinh nghiệm"));
+    stats.add(createStatItem("50+", "Bác sĩ chuyên khoa"));
+    stats.add(createStatItem("100K+", "Bệnh nhân tin tưởng"));
 
-    add(statsPanel, BorderLayout.SOUTH);
+    return stats;
   }
 
+  // ✅ Tạo item thống kê
   private JPanel createStatItem(String number, String label) {
     JPanel panel = new JPanel();
     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
     panel.setBackground(Color.WHITE);
 
-    JLabel numLabel = new JLabel(number, SwingConstants.CENTER);
-    numLabel.setFont(new Font("Segoe UI", Font.BOLD, 36));
-    numLabel.setForeground(new Color(37, 99, 235));
-    numLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    JLabel num = new JLabel(number);
+    num.setFont(new Font("Segoe UI", Font.BOLD, 36));
+    num.setForeground(new Color(37, 99, 235));
+    num.setAlignmentX(CENTER_ALIGNMENT);
 
-    JLabel textLabel = new JLabel(label, SwingConstants.CENTER);
-    textLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-    textLabel.setForeground(new Color(100, 100, 100));
-    textLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+    JLabel text = new JLabel(label);
+    text.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    text.setForeground(new Color(100, 100, 100));
+    text.setAlignmentX(CENTER_ALIGNMENT);
 
-    panel.add(numLabel);
+    panel.add(num);
     panel.add(Box.createRigidArea(new Dimension(0, 5)));
-    panel.add(textLabel);
+    panel.add(text);
 
     return panel;
   }

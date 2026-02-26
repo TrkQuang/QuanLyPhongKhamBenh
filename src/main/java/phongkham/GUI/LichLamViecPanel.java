@@ -7,7 +7,6 @@ import javax.swing.table.DefaultTableModel;
 
 public class LichLamViecPanel extends JPanel {
 
-    private final Color PRIMARY_COLOR = new Color(37, 99, 235);
     private final Color BG_COLOR = new Color(245, 247, 250);
 
     private JTable table;

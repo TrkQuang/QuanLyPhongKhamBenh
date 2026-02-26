@@ -1,76 +1,189 @@
 package phongkham.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
-
-import phongkham.DTO.*;
+import phongkham.DTO.PhieuKhamDTO;
 import phongkham.db.DBConnection;
-
 public class PhieuKhamDAO {
 
-    public ArrayList<PhieuKhamDTO> getAll() {
-        String sql = "SELECT * FROM PhieuKham";
-        ArrayList<PhieuKhamDTO> ds = new ArrayList<>();
-        try(Connection c = DBConnection.getConnection();
-            Statement stm = c.createStatement();
-            ResultSet rs = stm.executeQuery(sql);) {
-                PhieuKhamDTO pk = new PhieuKhamDTO();
-                pk.setMaBacSi(rs.getString("MaBacSi"));
-                pk.setMaLichKham(rs.getString("MaLichKham"));
-                pk.setMaPhieuKham(rs.getString("MaPhieuKham"));
-                pk.setThoiGianTao(rs.getString("ThoiGianTao"));
-                pk.setTrieuChungSoBo(rs.getString("TrieuChungSoBo"));
-                ds.add(pk);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return ds;
-    }
+  // ✅ 1. METHOD DÙNG CHUNG: Tạo DTO từ ResultSet
+  private PhieuKhamDTO mapResultSet(ResultSet rs) throws SQLException {
+    PhieuKhamDTO pk = new PhieuKhamDTO();
+    pk.setMaPhieuKham(rs.getString("MaPhieuKham"));
+    pk.setMaLichKham(rs.getString("MaLichKham"));
+    pk.setMaBacSi(rs.getString("MaBacSi"));
+    pk.setThoiGianTao(rs.getString("ThoiGianTao"));
+    pk.setTrieuChungSoBo(rs.getString("TrieuChungSoBo"));
+    return pk;
+  }
 
-    public boolean insertPhieuKham(PhieuKhamDTO pk) {
-        String sql = "INSERT INTO PhieuKham VALUES(?,?,?,?,?)";
-        try(Connection c = DBConnection.getConnection();
-            PreparedStatement ps = c.prepareStatement(sql);) {
-                ps.setString(1, pk.getMaPhieuKham());
-                ps.setString(2, pk.getMaLichKham());
-                ps.setString(3, pk.getMaBacSi());
-                ps.setString(4, pk.getThoiGianTao());
-                ps.setString(5, pk.getTrieuChungSoBo());
-                return ps.executeUpdate() > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
+  // ✅ 2. METHOD DÙNG CHUNG: Execute query trả về List
+  private ArrayList<PhieuKhamDTO> executeQuery(String sql, Object... params) {
+    ArrayList<PhieuKhamDTO> list = new ArrayList<>();
+    try (
+      Connection conn = DBConnection.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql)
+    ) {
+      // Set parameters
+      for (int i = 0; i < params.length; i++) {
+        ps.setObject(i + 1, params[i]);
+      }
 
-    public boolean updatePhieuKham(PhieuKhamDTO pk) {
-        String sql = "UPDATE PhieuKham SET MaLichKham=? MaBacSi=? ThoiGianTao=? TrieuChungSoBo=? WHERE MaPhieuKham=?";
-        try(Connection c = DBConnection.getConnection();
-            PreparedStatement ps = c.prepareStatement(sql);) {
-                ps.setString(1, pk.getMaLichKham());
-                ps.setString(2, pk.getMaBacSi());
-                ps.setString(3, pk.getThoiGianTao());
-                ps.setString(4, pk.getTrieuChungSoBo());
-                ps.setString(5, pk.getMaPhieuKham());
-                return ps.executeUpdate() > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
+      try (ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) {
+          // ✅ SỬA LỖI: Thêm while
+          list.add(mapResultSet(rs));
         }
-        return false;
+      }
+    } catch (SQLException e) {
+      System.err.println("❌ Lỗi query: " + e.getMessage());
     }
+    return list;
+  }
 
-    public boolean deletePhieuKham(String MaPhieuKham){
-        String sql = "DELETE PhieuKham WHERE MaPhieuKham=?";
-        try(Connection c = DBConnection.getConnection();
-            PreparedStatement ps = c.prepareStatement(sql);) {
-                ps.setString(1, MaPhieuKham);
-                return ps.executeUpdate() > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
+  // ✅ 3. METHOD DÙNG CHUNG: Execute update
+  private boolean executeUpdate(String sql, Object... params) {
+    try (
+      Connection conn = DBConnection.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql)
+    ) {
+      for (int i = 0; i < params.length; i++) {
+        ps.setObject(i + 1, params[i]);
+      }
+
+      return ps.executeUpdate() > 0;
+    } catch (SQLException e) {
+      System.err.println("❌ Lỗi update: " + e.getMessage());
     }
+    return false;
+  }
+
+  // ===== CRUD OPERATIONS =====
+
+  public ArrayList<PhieuKhamDTO> getAll() {
+    return executeQuery("SELECT * FROM PhieuKham ORDER BY ThoiGianTao DESC");
+  }
+
+  // ✅ THÊM: getById()
+  public PhieuKhamDTO getById(String maPhieuKham) {
+    ArrayList<PhieuKhamDTO> list = executeQuery(
+      "SELECT * FROM PhieuKham WHERE MaPhieuKham = ?",
+      maPhieuKham
+    );
+    return list.isEmpty() ? null : list.get(0);
+  }
+
+  public boolean insert(PhieuKhamDTO pk) {
+    String sql =
+      "INSERT INTO PhieuKham (MaPhieuKham, MaLichKham, MaBacSi, ThoiGianTao, TrieuChungSoBo) " +
+      "VALUES (?, ?, ?, ?, ?)";
+
+    boolean success = executeUpdate(
+      sql,
+      pk.getMaPhieuKham(),
+      pk.getMaLichKham(),
+      pk.getMaBacSi(),
+      pk.getThoiGianTao(),
+      pk.getTrieuChungSoBo()
+    );
+
+    if (success) System.out.println(
+      "✅ Thêm phiếu khám: " + pk.getMaPhieuKham()
+    );
+    return success;
+  }
+
+  public boolean update(PhieuKhamDTO pk) {
+    String sql =
+      "UPDATE PhieuKham SET MaLichKham=?, MaBacSi=?, ThoiGianTao=?, TrieuChungSoBo=? " +
+      "WHERE MaPhieuKham=?"; // ✅ SỬA LỖI: Thêm dấu phẩy
+
+    boolean success = executeUpdate(
+      sql,
+      pk.getMaLichKham(),
+      pk.getMaBacSi(),
+      pk.getThoiGianTao(),
+      pk.getTrieuChungSoBo(),
+      pk.getMaPhieuKham()
+    );
+
+    if (success) System.out.println(
+      "✅ Cập nhật phiếu khám: " + pk.getMaPhieuKham()
+    );
+    return success;
+  }
+
+  public boolean delete(String maPhieuKham) {
+    String sql = "DELETE FROM PhieuKham WHERE MaPhieuKham=?"; // ✅ SỬA LỖI: Thêm FROM
+    return executeUpdate(sql, maPhieuKham);
+  }
+
+  // ===== SEARCH OPERATIONS =====
+
+  // ✅ THÊM: Tìm theo mã lịch khám
+  public ArrayList<PhieuKhamDTO> getByMaLichKham(String maLichKham) {
+    return executeQuery(
+      "SELECT * FROM PhieuKham WHERE MaLichKham = ? ORDER BY ThoiGianTao DESC",
+      maLichKham
+    );
+  }
+
+  // ✅ THÊM: Tìm theo mã bác sĩ
+  public ArrayList<PhieuKhamDTO> getByMaBacSi(String maBacSi) {
+    return executeQuery(
+      "SELECT * FROM PhieuKham WHERE MaBacSi = ? ORDER BY ThoiGianTao DESC",
+      maBacSi
+    );
+  }
+
+  // ✅ THÊM: Tìm theo triệu chứng
+  public ArrayList<PhieuKhamDTO> getByTrieuChung(String trieuchung) {
+    return executeQuery(
+      "SELECT * FROM PhieuKham WHERE TrieuChungSoBo LIKE ? ORDER BY ThoiGianTao DESC",
+      "%" + trieuchung + "%"
+    );
+  }
+
+  // ✅ THÊM: Tìm kiếm đa điều kiện
+  public ArrayList<PhieuKhamDTO> search(String keyword) {
+    return executeQuery(
+      "SELECT * FROM PhieuKham WHERE MaPhieuKham LIKE ? OR TrieuChungSoBo LIKE ? ORDER BY ThoiGianTao DESC",
+      "%" + keyword + "%",
+      "%" + keyword + "%"
+    );
+  }
+
+  // ✅ THÊM: Đếm số phiếu khám của bác sĩ
+  public int countByBacSi(String maBacSi) {
+    String sql = "SELECT COUNT(*) FROM PhieuKham WHERE MaBacSi = ?";
+    try (
+      Connection conn = DBConnection.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql)
+    ) {
+      ps.setString(1, maBacSi);
+      try (ResultSet rs = ps.executeQuery()) {
+        return rs.next() ? rs.getInt(1) : 0;
+      }
+    } catch (SQLException e) {
+      System.err.println("❌ Lỗi đếm: " + e.getMessage());
+    }
+    return 0;
+  }
+
+  // ✅ THÊM: Kiểm tra phiếu khám tồn tại
+  public boolean exists(String maPhieuKham) {
+    String sql = "SELECT COUNT(*) FROM PhieuKham WHERE MaPhieuKham = ?";
+    try (
+      Connection conn = DBConnection.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql)
+    ) {
+      ps.setString(1, maPhieuKham);
+      try (ResultSet rs = ps.executeQuery()) {
+        return rs.next() && rs.getInt(1) > 0;
+      }
+    } catch (SQLException e) {
+      System.err.println("❌ Lỗi kiểm tra: " + e.getMessage());
+    }
+    return false;
+  }
 }
