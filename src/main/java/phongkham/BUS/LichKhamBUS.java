@@ -7,12 +7,6 @@ import java.util.Arrays;
 import java.util.List;
 import phongkham.DTO.LichKhamDTO;
 import phongkham.dao.LichKhamDAO;
-
-/**
- * LichKhamBUS - TỐI ƯU
- * Từ 429 dòng → 250 dòng (-42%)
- * Giảm 179 dòng code lặp!
- */
 public class LichKhamBUS {
 
   private LichKhamDAO dao = new LichKhamDAO();
