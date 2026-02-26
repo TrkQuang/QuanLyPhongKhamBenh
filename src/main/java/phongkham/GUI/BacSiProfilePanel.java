@@ -15,7 +15,6 @@ public class BacSiProfilePanel extends JPanel {
     private final Color DANGER_COLOR = new Color(220, 38, 38);
     private final Color SUCCESS_COLOR = new Color(22, 163, 74);
     private final Color BG_COLOR = new Color(245, 247, 250);
-    private final Font MAIN_FONT = new Font("Segoe UI", Font.PLAIN, 14);
 
     private JTable tableBacSi;
     private DefaultTableModel tableModel;

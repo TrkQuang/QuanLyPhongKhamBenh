@@ -110,67 +110,9 @@ public class HoaDonKhamPanel extends JPanel {
     btFind.addActionListener(this::btFindAction);
     btReload.addActionListener(this::btReloadAction);
 
-    // Sự kiện xuất PDF hóa đơn chi tiết
+    // Sự kiện xuất PDF hóa đơn đơn giản
     btExport.addActionListener(e -> {
-      int selectedRow = dataTable.getSelectedRow();
-      if (selectedRow == -1) {
-        JOptionPane.showMessageDialog(
-          this,
-          "Vui lòng chọn một hóa đơn để xuất PDF!",
-          "Thông báo",
-          JOptionPane.INFORMATION_MESSAGE
-        );
-        return;
-      }
-
-      String maHDKham = (String) tableModel.getValueAt(selectedRow, 0);
-
-      // Chọn nơi lưu file
-      JFileChooser fileChooser = new JFileChooser();
-      fileChooser.setDialogTitle("Lưu hóa đơn PDF");
-      fileChooser.setSelectedFile(
-        new java.io.File("HoaDon_" + maHDKham + ".pdf")
-      );
-
-      int userSelection = fileChooser.showSaveDialog(this);
-      if (userSelection == JFileChooser.APPROVE_OPTION) {
-        java.io.File fileToSave = fileChooser.getSelectedFile();
-
-        boolean success = phongkham.Utils.HoaDonPDF.exportHoaDonToPDF(
-          maHDKham,
-          fileToSave.getAbsolutePath()
-        );
-
-        if (success) {
-          int openFile = JOptionPane.showConfirmDialog(
-            this,
-            "Xuất hóa đơn PDF thành công!\nBạn có muốn mở file không?",
-            "Thành công",
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.INFORMATION_MESSAGE
-          );
-
-          if (openFile == JOptionPane.YES_OPTION) {
-            try {
-              java.awt.Desktop.getDesktop().open(fileToSave);
-            } catch (Exception ex) {
-              JOptionPane.showMessageDialog(
-                this,
-                "Không thể mở file PDF: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE
-              );
-            }
-          }
-        } else {
-          JOptionPane.showMessageDialog(
-            this,
-            "Xuất hóa đơn PDF thất bại!",
-            "Lỗi",
-            JOptionPane.ERROR_MESSAGE
-          );
-        }
-      }
+      phongkham.Utils.PdfExport.exportTable(dataTable, "Hóa đơn khám");
     });
 
     // Ép chiều cao panel lên 70px để thoải mái không gian

@@ -2,182 +2,199 @@ package phongkham.Utils;
 
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
-import com.itextpdf.text.pdf.draw.LineSeparator;
-
+import java.awt.Desktop;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.awt.Desktop;
-import javax.swing.JTable;
-import javax.swing.JOptionPane;
-import java.time.LocalDateTime;
+import java.text.NumberFormat;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import phongkham.DTO.HoaDonKhamDTO;
+import phongkham.dao.HoaDonKhamDAO;
 
+/**
+ * Class xuất PDF đơn giản cho hóa đơn khám bệnh
+ */
 public class PdfExport {
 
-    private static final String FONT_PATH = "C:\\Windows\\Fonts\\arial.ttf";
+  /**
+   * Xuất hóa đơn đã chọn trong JTable ra PDF
+   * @param table Bảng chứa danh sách hóa đơn
+   * @param titleName Tên tiêu đề (không sử dụng, giữ để tương thích)
+   */
+  public static void exportTable(JTable table, String titleName) {
+    int row = table.getSelectedRow();
+    if (row == -1) {
+      JOptionPane.showMessageDialog(
+        null,
+        "Vui lòng chọn một hóa đơn để xuất PDF!",
+        "Thông báo",
+        JOptionPane.INFORMATION_MESSAGE
+      );
+      return;
+    }
 
-    public static void exportTable(JTable table, String titleName) {
-        int row = table.getSelectedRow();
-        if (row == -1) {
-            JOptionPane.showMessageDialog(null, "Vui lòng chọn một hóa đơn!");
-            return;
+    // Lấy mã hóa đơn từ cột đầu tiên
+    String maHD = table.getValueAt(row, 0).toString();
+
+    try {
+      // Tên file PDF
+      String fileName = "HoaDon_" + maHD + ".pdf";
+
+      // Xuất PDF đơn giản
+      boolean success = exportSimplePDF(maHD, fileName);
+
+      if (success) {
+        // Hỏi người dùng có muốn mở file không
+        int option = JOptionPane.showConfirmDialog(
+          null,
+          "Xuất hóa đơn PDF thành công!\nBạn có muốn mở file không?",
+          "Thành công",
+          JOptionPane.YES_NO_OPTION,
+          JOptionPane.INFORMATION_MESSAGE
+        );
+
+        if (option == JOptionPane.YES_OPTION) {
+          File pdfFile = new File(fileName);
+          if (pdfFile.exists()) {
+            Desktop.getDesktop().open(pdfFile);
+          }
         }
-
-        String maHD = table.getValueAt(row, 0).toString();
-        String maPhieu = table.getValueAt(row, 1).toString();
-        String maGoi = table.getValueAt(row, 2).toString();
-        String ngay = table.getValueAt(row, 3).toString();
-        String tongTien = table.getValueAt(row, 4).toString();
-        String hinhThuc = table.getValueAt(row, 5).toString();
-
-        Document document = new Document(PageSize.A5, 30, 30, 20, 20);
-
-        try {
-            String fileName = "HoaDon_" + maHD + ".pdf";
-            PdfWriter.getInstance(document, new FileOutputStream(fileName));
-            document.open();
-
-            BaseFont bf = BaseFont.createFont(FONT_PATH, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
-
-            Font fTitle = new Font(bf, 16, Font.BOLD);
-            Font fHeader = new Font(bf, 12, Font.BOLD);
-            Font fNormal = new Font(bf, 11);
-            Font fSmall = new Font(bf, 10);
-
-            // ===== HEADER =====
-            Paragraph clinic = new Paragraph("PHÒNG KHÁM ĐA KHOA", fHeader);
-            clinic.setAlignment(Element.ALIGN_CENTER);
-            document.add(clinic);
-
-            Paragraph info = new Paragraph(
-                    "Địa chỉ: 123 Nguyễn Trãi, Q1, TP.HCM\n" +
-                    "Hotline: 1900-8888  |  Email: contact@phongkham.vn",
-                    fSmall
-            );
-            info.setAlignment(Element.ALIGN_CENTER);
-            document.add(info);
-
-            addLine(document);
-
-            // ===== TITLE =====
-            Paragraph title = new Paragraph("HÓA ĐƠN THANH TOÁN", fTitle);
-            title.setAlignment(Element.ALIGN_CENTER);
-            document.add(title);
-
-            document.add(new Paragraph(" "));
-
-            // ===== INFO =====
-            PdfPTable infoTable = new PdfPTable(2);
-            infoTable.setWidthPercentage(100);
-            infoTable.setWidths(new float[]{1.3f, 2.7f});
-
-            addInfoRow(infoTable, "Mã hóa đơn:", maHD, fNormal);
-            addInfoRow(infoTable, "Mã phiếu khám:", maPhieu, fNormal);
-            addInfoRow(infoTable, "Ngày:", ngay, fNormal);
-            addInfoRow(infoTable, "Thanh toán:", hinhThuc, fNormal);
-
-            document.add(infoTable);
-
-            addLine(document);
-
-            // ===== TABLE =====
-            PdfPTable tablePDF = new PdfPTable(2);
-            tablePDF.setWidthPercentage(100);
-            tablePDF.setWidths(new float[]{2.5f, 1.5f});
-
-            addHeaderCell(tablePDF, "Dịch vụ", fHeader);
-            addHeaderCell(tablePDF, "Thành tiền", fHeader);
-
-            addCell(tablePDF, "Gói khám: " + maGoi, fNormal, Element.ALIGN_LEFT);
-            addCell(tablePDF, tongTien, fNormal, Element.ALIGN_RIGHT);
-
-            document.add(tablePDF);
-
-            addLine(document);
-
-            // ===== TOTAL =====
-            Paragraph total = new Paragraph("TỔNG CỘNG: " + tongTien, fHeader);
-            total.setAlignment(Element.ALIGN_RIGHT);
-            document.add(total);
-
-            document.add(new Paragraph(" "));
-
-            // ===== DATE =====
-            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-            Paragraph date = new Paragraph("Ngày in: " + LocalDateTime.now().format(dtf), fSmall);
-            date.setAlignment(Element.ALIGN_RIGHT);
-            document.add(date);
-
-            document.add(new Paragraph("\n\n"));
-
-            // ===== SIGN =====
-            PdfPTable sign = new PdfPTable(2);
-            sign.setWidthPercentage(100);
-
-            addSignCell(sign, "Khách hàng\n(Ký, ghi rõ họ tên)", fSmall);
-            addSignCell(sign, "Thu ngân\n(Ký, ghi rõ họ tên)", fSmall);
-
-            document.add(sign);
-
-            document.close();
-            Desktop.getDesktop().open(new File(fileName));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+      } else {
+        JOptionPane.showMessageDialog(
+          null,
+          "Xuất hóa đơn PDF thất bại!\nVui lòng kiểm tra lại dữ liệu.",
+          "Lỗi",
+          JOptionPane.ERROR_MESSAGE
+        );
+      }
+    } catch (Exception e) {
+      JOptionPane.showMessageDialog(
+        null,
+        "Lỗi khi xuất PDF: " + e.getMessage(),
+        "Lỗi",
+        JOptionPane.ERROR_MESSAGE
+      );
+      e.printStackTrace();
     }
+  }
 
-    // ===== UTILS =====
-    private static void addLine(Document doc) throws Exception {
-        doc.add(new Paragraph(" "));
-        LineSeparator ls = new LineSeparator(1, 100, BaseColor.GRAY, Element.ALIGN_CENTER, 0);
-        doc.add(ls);
-        doc.add(new Paragraph(" "));
-    }
+  /**
+   * Xuất PDF đơn giản với thông tin cơ bản của hóa đơn
+   */
+  private static boolean exportSimplePDF(String maHD, String outputPath) {
+    try {
+      // Lấy thông tin hóa đơn từ database
+      HoaDonKhamDAO hoaDonDAO = new HoaDonKhamDAO();
+      HoaDonKhamDTO hoaDon = hoaDonDAO.Search(maHD);
 
-    private static void addInfoRow(PdfPTable table, String label, String value, Font font) {
-        PdfPCell c1 = new PdfPCell(new Phrase(label, font));
-        PdfPCell c2 = new PdfPCell(new Phrase(value, font));
-        c1.setBorder(Rectangle.NO_BORDER);
-        c2.setBorder(Rectangle.NO_BORDER);
-        table.addCell(c1);
-        table.addCell(c2);
-    }
+      if (hoaDon == null) {
+        return false;
+      }
 
-    private static void addHeaderCell(PdfPTable table, String text, Font font) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, font));
-        cell.setBackgroundColor(new BaseColor(230,230,230));
-        cell.setPadding(6);
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        table.addCell(cell);
-    }
+      // Tạo document PDF
+      Document document = new Document(PageSize.A4);
+      PdfWriter.getInstance(document, new FileOutputStream(outputPath));
+      document.open();
 
-    private static void addCell(PdfPTable table, String text, Font font, int align) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, font));
-        cell.setPadding(6);
-        cell.setHorizontalAlignment(align);
-        table.addCell(cell);
-    }
+      // Font tiếng Việt
+      BaseFont baseFont;
+      try {
+        baseFont = BaseFont.createFont(
+          "c:/windows/fonts/arial.ttf",
+          BaseFont.IDENTITY_H,
+          BaseFont.EMBEDDED
+        );
+      } catch (Exception e) {
+        baseFont = BaseFont.createFont(
+          BaseFont.HELVETICA,
+          BaseFont.CP1252,
+          BaseFont.EMBEDDED
+        );
+      }
 
-    private static void addSignCell(PdfPTable table, String text, Font font) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, font));
-        cell.setBorder(Rectangle.NO_BORDER);
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        table.addCell(cell);
+      Font titleFont = new Font(baseFont, 20, Font.BOLD);
+      Font headerFont = new Font(baseFont, 14, Font.BOLD);
+      Font normalFont = new Font(baseFont, 12, Font.NORMAL);
+
+      // Tiêu đề
+      Paragraph title = new Paragraph("HÓA ĐƠN KHÁM BỆNH", titleFont);
+      title.setAlignment(Element.ALIGN_CENTER);
+      title.setSpacingAfter(30);
+      document.add(title);
+
+      // Thông tin hóa đơn
+      document.add(new Paragraph("THÔNG TIN HÓA ĐƠN", headerFont));
+      document.add(new Paragraph(" ", normalFont)); // Spacing
+
+      // Mã hóa đơn
+      Paragraph maHoaDon = new Paragraph(
+        "Mã hóa đơn: " + hoaDon.getMaHDKham(),
+        normalFont
+      );
+      document.add(maHoaDon);
+      document.add(new Paragraph(" ", normalFont));
+
+      // Mã gói dịch vụ
+      Paragraph maGoi = new Paragraph(
+        "Mã gói dịch vụ: " + hoaDon.getMaGoi(),
+        normalFont
+      );
+      document.add(maGoi);
+      document.add(new Paragraph(" ", normalFont));
+
+      // Ngày thanh toán
+      if (hoaDon.getNgayThanhToan() != null) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(
+          "dd/MM/yyyy HH:mm"
+        );
+        String ngayThanhToan = hoaDon.getNgayThanhToan().format(formatter);
+        Paragraph ngay = new Paragraph(
+          "Ngày thanh toán: " + ngayThanhToan,
+          normalFont
+        );
+        document.add(ngay);
+        document.add(new Paragraph(" ", normalFont));
+      }
+
+      // Tổng tiền
+      NumberFormat currencyFormat = NumberFormat.getInstance(
+        new Locale("vi", "VN")
+      );
+      String tongTienStr = currencyFormat.format(hoaDon.getTongTien()) + " VNĐ";
+      Paragraph tongTien = new Paragraph(
+        "Tổng tiền: " + tongTienStr,
+        normalFont
+      );
+      document.add(tongTien);
+      document.add(new Paragraph(" ", normalFont));
+
+      // Hình thức thanh toán
+      String hinhThuc =
+        hoaDon.getHinhThucThanhToan() != null
+          ? hoaDon.getHinhThucThanhToan()
+          : "Chưa thanh toán";
+      Paragraph hinhThucTT = new Paragraph(
+        "Hình thức thanh toán: " + hinhThuc,
+        normalFont
+      );
+      document.add(hinhThucTT);
+      document.add(new Paragraph(" ", normalFont));
+
+      // Trạng thái
+      Paragraph trangThai = new Paragraph(
+        "Trạng thái: " + hoaDon.getTrangThai(),
+        normalFont
+      );
+      document.add(trangThai);
+
+      // Đóng document
+      document.close();
+      return true;
+    } catch (Exception e) {
+      e.printStackTrace();
+      return false;
     }
+  }
 }
-
-
-// Hàm phụ trợ để thêm dòng thông tin không viền
-// private static void addInfoRow(PdfPTable table, String label, String value, Font font) {
-//     PdfPCell cellLabel = new PdfPCell(new Phrase(label, font));
-//     cellLabel.setBorder(Rectangle.NO_BORDER);
-//     cellLabel.setPaddingBottom(5);
-    
-//     PdfPCell cellValue = new PdfPCell(new Phrase(value, font));
-//     cellValue.setBorder(Rectangle.NO_BORDER);
-//     cellValue.setPaddingBottom(5);
-    
-//     table.addCell(cellLabel);
-//     table.addCell(cellValue);
-// }
