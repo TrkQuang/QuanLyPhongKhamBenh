@@ -8,9 +8,10 @@ import java.util.List;
 import phongkham.dao.CTPhieuNhapDAO;
 import phongkham.dao.PhieuNhapDAO;
 import phongkham.dao.ThuocDAO;
+import phongkham.BUS.CTPhieuNhapBUS;
 import phongkham.DTO.CTPhieuNhapDTO;
 
-public class NghiepVuPhieuNhapPanel extends JPanel {
+public class ChiTietPhieuNhapPanel extends JPanel {
 
     private String maPN;
     private PhieuNhapPanel parentPanel;
@@ -19,7 +20,7 @@ public class NghiepVuPhieuNhapPanel extends JPanel {
     private DefaultTableModel model;
     private JLabel lblTongTien;
 
-    public NghiepVuPhieuNhapPanel(String maPN, PhieuNhapPanel parentPanel) {
+    public ChiTietPhieuNhapPanel(String maPN, PhieuNhapPanel parentPanel) {
         this.maPN = maPN;
         this.parentPanel = parentPanel;
 
@@ -117,11 +118,10 @@ public class NghiepVuPhieuNhapPanel extends JPanel {
         if (confirm != JOptionPane.YES_OPTION) return;
 
         try {
-            CTPhieuNhapDAO ctDAO = new CTPhieuNhapDAO();
+            CTPhieuNhapBUS bus = new CTPhieuNhapBUS();
             ThuocDAO tDAO = new ThuocDAO();
             PhieuNhapDAO pnDAO = new PhieuNhapDAO();
-
-            List<CTPhieuNhapDTO> list = ctDAO.getByMaPhieuNhap(maPN);
+            List<CTPhieuNhapDTO> list = bus.getByMaPhieuNhap(maPN);
 
             for (CTPhieuNhapDTO ct : list) {
                 tDAO.updateSoLuong(ct.getMaThuoc(), ct.getSoLuongNhap());

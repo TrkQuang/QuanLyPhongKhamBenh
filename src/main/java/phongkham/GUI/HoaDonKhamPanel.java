@@ -3,11 +3,13 @@ package phongkham.GUI;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+
 import phongkham.DTO.HoaDonKhamDTO;
-import phongkham.dao.HoaDonKhamDAO;
+import phongkham.BUS.HoaDonKhamBUS;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
@@ -19,127 +21,91 @@ public class HoaDonKhamPanel extends JPanel {
     private DefaultTableModel tableModel;
     private JLabel lbInfo;
 
-    private HoaDonKhamDAO hdDAO = new HoaDonKhamDAO();
+    private HoaDonKhamBUS hdBUS = new HoaDonKhamBUS();
     private ArrayList<HoaDonKhamDTO> fullList = new ArrayList<>();
 
     private int currentPage = 1;
     private final int rowsPerPage = 10;
 
     public HoaDonKhamPanel() {
-        setLayout(new BorderLayout(0, 10)); // Khoảng cách giữa Top và Center
+        setLayout(new BorderLayout(0, 10));
         setBackground(new Color(245, 247, 250));
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // KHỐI TOP: Chứa tiêu đề, tìm kiếm và phân trang
         add(createMasterTopPanel(), BorderLayout.NORTH);
-        
-        // KHỐI CENTER: Chứa bảng dữ liệu
         add(createTablePanel(), BorderLayout.CENTER);
 
-        fullList = hdDAO.getAll();
+        fullList = hdBUS.getAll();
         loadDataToTable();
     }
 
-    // --- PANEL TỔNG HỢP PHÍA BẮC ---
     private JPanel createMasterTopPanel() {
         JPanel master = new JPanel();
         master.setLayout(new BoxLayout(master, BoxLayout.Y_AXIS));
         master.setOpaque(false);
 
-        // Dòng 1: Tiêu đề
         master.add(createTitlePanel());
         master.add(Box.createVerticalStrut(15));
-
-        // Dòng 2: Thanh tìm kiếm (Màu trắng, bo góc nhẹ nếu cần)
         master.add(createSearchPanel());
         master.add(Box.createVerticalStrut(10));
-
-        // Dòng 3: Thông tin phân trang
         master.add(createPaginationPanel());
-        
+
         return master;
     }
 
     private JPanel createTitlePanel() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         panel.setOpaque(false);
-        JLabel title = new JLabel("QUẢN LÝ HÓA ĐƠN");
+        JLabel title = new JLabel("QUẢN LÝ HÓA ĐƠN KHÁM");
         title.setFont(new Font("Segoe UI", Font.BOLD, 24));
         panel.add(title);
         return panel;
     }
 
     private JPanel createSearchPanel() {
-    // Sử dụng FlowLayout với khoảng cách ngang 10px để tiết kiệm diện tích
-    JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 15));
-    panel.setBackground(Color.WHITE);
-    panel.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230)));
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 15));
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230)));
 
-    // Điều chỉnh độ rộng JTextField nhỏ lại một chút để nhường chỗ cho nút bấm
-    txtTimKiem = new JTextField(12);
-    txtTuNgay = new JTextField(7);
-    txtDenNgay = new JTextField(7);
+        txtTimKiem = new JTextField(12);
+        txtTuNgay = new JTextField(8);
+        txtDenNgay = new JTextField(8);
 
-    // Khởi tạo các nút bấm với màu sắc phân biệt
-    btFind = createStyledButton("Tìm kiếm", new Color(37, 99, 235), Color.WHITE);
-    btReload = createStyledButton("Làm mới", new Color(107, 114, 128), Color.WHITE);
-    btExport = createStyledButton("Xuất PDF", new Color(220, 38, 38), Color.WHITE); // Màu đỏ cho PDF
+        btFind = createStyledButton("Tìm", new Color(37, 99, 235), Color.WHITE);
+        btReload = createStyledButton("Làm mới", new Color(107, 114, 128), Color.WHITE);
+        btExport = createStyledButton("Xuất PDF", new Color(220, 38, 38), Color.WHITE);
 
-    panel.add(new JLabel("Tìm kiếm:"));
-    panel.add(txtTimKiem);
-    panel.add(new JLabel("Từ:"));
-    panel.add(txtTuNgay);
-    panel.add(new JLabel("Đến:"));
-    panel.add(txtDenNgay);
-    panel.add(btFind);
-    panel.add(btReload);
-    panel.add(btExport); // Nút này sẽ luôn hiện nếu đủ chỗ ngang
+        panel.add(new JLabel("Tìm mã:"));
+        panel.add(txtTimKiem);
+        panel.add(new JLabel("Từ ngày (yyyy-MM-dd):"));
+        panel.add(txtTuNgay);
+        panel.add(new JLabel("Đến ngày:"));
+        panel.add(txtDenNgay);
+        panel.add(btFind);
+        panel.add(btReload);
+        panel.add(btExport);
 
-    // Gán sự kiện
-    btFind.addActionListener(this::btFindAction);
-    btReload.addActionListener(this::btReloadAction);
-    
-    // Sự kiện xuất PDF
-    btExport.addActionListener(e -> {
-        if (dataTable.getRowCount() == 0) {
-            JOptionPane.showMessageDialog(this, "Không có dữ liệu để xuất!");
-            return;
-        }
-        // Gọi hàm export từ class Utils của bạn
-        phongkham.Utils.PdfExport.exportTable(dataTable, "HoaDonKham");
-    });
+        btFind.addActionListener(this::btFindAction);
+        btReload.addActionListener(this::btReloadAction);
 
-    // Ép chiều cao panel lên 70px để thoải mái không gian
-    panel.setPreferredSize(new Dimension(panel.getPreferredSize().width, 70));
-    panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
-    
-    return panel;
-}
+        return panel;
+    }
 
     private JScrollPane createTablePanel() {
-        String[] cols = {"Mã hóa đơn", "Mã phiếu", "Mã gói", "Ngày thanh toán", "Tổng tiền", "Hình thức"};
+        String[] cols = {"Mã HĐ", "Mã phiếu", "Mã gói", "Ngày TT", "Tổng tiền", "Hình thức"};
         tableModel = new DefaultTableModel(cols, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) { return false; }
+            public boolean isCellEditable(int r, int c) { return false; }
         };
 
         dataTable = new JTable(tableModel);
-        dataTable.setRowHeight(40);
-        dataTable.setGridColor(new Color(240, 240, 240));
-        dataTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
-        dataTable.getTableHeader().setBackground(new Color(248, 249, 250));
+        dataTable.setRowHeight(35);
 
         DefaultTableCellRenderer center = new DefaultTableCellRenderer();
         center.setHorizontalAlignment(JLabel.CENTER);
-        for (int i = 0; i < cols.length; i++) {
+        for (int i = 0; i < cols.length; i++)
             dataTable.getColumnModel().getColumn(i).setCellRenderer(center);
-        }
 
-        JScrollPane scroll = new JScrollPane(dataTable);
-        scroll.getViewport().setBackground(Color.WHITE);
-        scroll.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230)));
-
-        return scroll;
+        return new JScrollPane(dataTable);
     }
 
     private JPanel createPaginationPanel() {
@@ -147,7 +113,6 @@ public class HoaDonKhamPanel extends JPanel {
         panel.setOpaque(false);
 
         lbInfo = new JLabel();
-        lbInfo.setFont(new Font("Segoe UI", Font.ITALIC, 13));
 
         JButton btnPrev = new JButton("<");
         JButton btnNext = new JButton(">");
@@ -177,7 +142,6 @@ public class HoaDonKhamPanel extends JPanel {
         return panel;
     }
 
-    // Hàm tiện ích để tạo nút bấm đẹp
     private JButton createStyledButton(String text, Color bg, Color fg) {
         JButton btn = new JButton(text);
         btn.setBackground(bg);
@@ -185,13 +149,13 @@ public class HoaDonKhamPanel extends JPanel {
         btn.setFocusPainted(false);
         btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
         return btn;
     }
 
     private void loadDataToTable() {
         tableModel.setRowCount(0);
         DateTimeFormatter f = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
         int total = fullList.size();
         int start = (currentPage - 1) * rowsPerPage;
         int end = Math.min(start + rowsPerPage, total);
@@ -211,24 +175,32 @@ public class HoaDonKhamPanel extends JPanel {
     }
 
     private void btFindAction(ActionEvent e) {
-        String key = txtTimKiem.getText().trim();
-        if (key.isEmpty()) {
-            fullList = hdDAO.getAll();
-        } else {
-            fullList.clear();
-            HoaDonKhamDTO hd = hdDAO.Search(key);
-            if (hd != null) fullList.add(hd);
-            else JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn!");
+        try {
+            if (!txtTuNgay.getText().isEmpty() && !txtDenNgay.getText().isEmpty()) {
+                LocalDate from = LocalDate.parse(txtTuNgay.getText());
+                LocalDate to = LocalDate.parse(txtDenNgay.getText());
+                fullList = hdBUS.filterByDate(from, to);
+            } else {
+                String key = txtTimKiem.getText().trim();
+                if (key.isEmpty()) fullList = hdBUS.getAll();
+                else {
+                    fullList.clear();
+                    HoaDonKhamDTO hd = hdBUS.search(key);
+                    if (hd != null) fullList.add(hd);
+                }
+            }
+            currentPage = 1;
+            loadDataToTable();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Sai định dạng ngày! yyyy-MM-dd");
         }
-        currentPage = 1;
-        loadDataToTable();
     }
 
     private void btReloadAction(ActionEvent e) {
         txtTimKiem.setText("");
         txtTuNgay.setText("");
         txtDenNgay.setText("");
-        fullList = hdDAO.getAll();
+        fullList = hdBUS.getAll();
         currentPage = 1;
         loadDataToTable();
     }

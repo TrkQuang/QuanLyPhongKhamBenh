@@ -1,5 +1,6 @@
 package phongkham.dao;
 
+import java.sql.Timestamp;
 import phongkham.DTO.HoaDonKhamDTO;
 import phongkham.db.DBConnection;
 import java.sql.Connection;
@@ -106,5 +107,28 @@ public class HoaDonKhamDAO {
         }
         return null;
     }
-    
+
+
+    public ArrayList<HoaDonKhamDTO> filterByDate(LocalDateTime from, LocalDateTime to) {
+        ArrayList<HoaDonKhamDTO> list = new ArrayList<>();
+
+        String sql = "SELECT * FROM HoaDonKham WHERE NgayThanhToan BETWEEN ? AND ?";
+
+        try (Connection con = DBConnection.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setTimestamp(1, Timestamp.valueOf(from));
+            ps.setTimestamp(2, Timestamp.valueOf(to));
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                HoaDonKhamDTO hd = new HoaDonKhamDTO();
+                // map dữ liệu
+                list.add(hd);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }  
 }

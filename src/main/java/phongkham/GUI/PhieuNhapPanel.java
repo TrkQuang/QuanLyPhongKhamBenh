@@ -83,7 +83,7 @@ public class PhieuNhapPanel extends JPanel {
 
 
     btnChiTiet.addActionListener(e -> {
-    NghiepVuPhieuNhapPanel detailPanel = new NghiepVuPhieuNhapPanel(maPN, this);
+    ChiTietPhieuNhapPanel detailPanel = new ChiTietPhieuNhapPanel(maPN, this);
 
     this.removeAll();
     this.setLayout(new BorderLayout());
