@@ -8,7 +8,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import phongkham.db.DBConnection;
 import phongkham.DTO.GoiDichVuDTO;
-
+import java.math.BigDecimal;
 public class GoiDichVuDAO {
 
     // Lấy danh sách tất cả gói dịch vụ
@@ -25,7 +25,7 @@ public class GoiDichVuDAO {
                 GoiDichVuDTO g = new GoiDichVuDTO();
                 g.setMaGoi(rs.getString("MaGoi"));
                 g.setTenGoi(rs.getString("TenGoi"));
-                g.setGiaDichVu(rs.getString("GiaDichVu"));
+                g.setGiaDichVu(rs.getBigDecimal("GiaDichVu"));
                 g.setThoiGianKham(rs.getString("ThoiGianKham"));
                 g.setMoTa(rs.getString("MoTa"));
                 ds.add(g);
@@ -45,7 +45,7 @@ public class GoiDichVuDAO {
         ) {
             ps.setString(1, g.getMaGoi());
             ps.setString(2, g.getTenGoi());
-            ps.setString(3, g.getGiaDichVu());
+            ps.setBigDecimal(3, g.getGiaDichVu());
             ps.setString(4, g.getThoiGianKham());
             ps.setString(5, g.getMoTa());
             return ps.executeUpdate() > 0;
@@ -65,7 +65,7 @@ public class GoiDichVuDAO {
             PreparedStatement ps = c.prepareStatement(sql);
         ) {
             ps.setString(1, g.getTenGoi());
-            ps.setString(2, g.getGiaDichVu());
+            ps.setBigDecimal(2, g.getGiaDichVu());
             ps.setString(3, g.getThoiGianKham());
             ps.setString(4, g.getMoTa());
             ps.setString(5, g.getMaGoi());
@@ -104,7 +104,7 @@ public class GoiDichVuDAO {
                 GoiDichVuDTO g = new GoiDichVuDTO();
                 g.setMaGoi(rs.getString("MaGoi"));
                 g.setTenGoi(rs.getString("TenGoi"));
-                g.setGiaDichVu(rs.getString("GiaDichVu"));
+                g.setGiaDichVu(rs.getBigDecimal("GiaDichVu"));
                 g.setThoiGianKham(rs.getString("ThoiGianKham"));
                 g.setMoTa(rs.getString("MoTa"));
                 return g;

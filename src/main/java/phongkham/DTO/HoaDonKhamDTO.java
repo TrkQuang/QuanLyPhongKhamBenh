@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 public class HoaDonKhamDTO {
 
   private String MaHDKham;
-  private String MaHoSo; // Đổi: MaPhieuKham → MaHoSo
+  private String MaHoSo;
   private String MaGoi;
   private LocalDateTime NgayThanhToan;
   private BigDecimal TongTien = BigDecimal.ZERO;
