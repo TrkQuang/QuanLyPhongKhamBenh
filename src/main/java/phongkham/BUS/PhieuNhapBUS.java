@@ -1,102 +1,113 @@
 package phongkham.BUS;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import phongkham.DTO.PhieuNhapDTO;
 import phongkham.dao.PhieuNhapDAO;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-
 public class PhieuNhapBUS {
-    private PhieuNhapDAO phieuNhapDAO = new PhieuNhapDAO();
 
-    //lấy tất cả phiếu nhập
-    public ArrayList<PhieuNhapDTO> list(){
-        return phieuNhapDAO.getAllPhieuNhap();
+  private PhieuNhapDAO dao = new PhieuNhapDAO();
+
+  // ===== CRUD OPERATIONS =====
+
+  public ArrayList<PhieuNhapDTO> getAll() {
+    return dao.getAll();
+  }
+
+  public PhieuNhapDTO getById(String maPhieuNhap) {
+    return dao.getById(maPhieuNhap);
+  }
+
+  public boolean insert(PhieuNhapDTO pn) {
+    // ✅ Validate
+    String error = validate(pn);
+    if (error != null) {
+      System.err.println("❌ " + error);
+      return false;
     }
+    return dao.insert(pn);
+  }
 
-    //thêm phiếu nhập
-    public boolean addPhieuNhap(PhieuNhapDTO pn){
-        if(pn == null){
-            System.err.println("Phiếu nhập không được để trống");
-            return false;
-        }
-        if(pn.getMaPhieuNhap() == null || pn.getMaPhieuNhap().trim().isEmpty() || pn.getMaNhaCungCap() == null || pn.getMaNhaCungCap().trim().isEmpty()){
-            System.err.println("Mã phiếu nhập và mã nhà cung cấp không được để trống");
-            return false;
-        }
-        if(pn.getNgayNhap() == null || pn.getNgayNhap().trim().isEmpty()){
-            System.err.println("Ngày nhập không được để trống");
-            return false;
-        }
-        if(pn.getNguoiGiao() == null || pn.getNguoiGiao().trim().isEmpty()){
-            System.err.println("Người giao không được để trống");
-            return false;
-        }
-        if(pn.getTongTienNhap() < 0){
-            System.err.println("Tổng tiền nhập không được âm");
-            return false;
-        }
-        return phieuNhapDAO.insertPhieuNhap(pn);
+  public boolean update(PhieuNhapDTO pn) {
+    // ✅ Validate
+    String error = validate(pn);
+    if (error != null) {
+      System.err.println("❌ " + error);
+      return false;
     }
+    return dao.update(pn);
+  }
 
-    //cập nhật phiếu nhập
-    public boolean updatePN(PhieuNhapDTO pn){
-        if(pn == null){
-            System.err.println("Phiếu nhập không được để trống");
-            return false;
-        }
-        if(pn.getMaPhieuNhap() == null || pn.getMaPhieuNhap().trim().isEmpty() || pn.getMaNhaCungCap() == null || pn.getMaNhaCungCap().trim().isEmpty()){
-            System.err.println("Mã phiếu nhập và mã nhà cung cấp không được để trống");
-            return false;
-        }
-        if(pn.getNgayNhap() == null || pn.getNgayNhap().trim().isEmpty()){
-            System.err.println("Ngày nhập không được để trống");
-            return false;
-        }
-        if(pn.getNguoiGiao() == null || pn.getNguoiGiao().trim().isEmpty()){
-            System.err.println("Người giao không được để trống");
-            return false;
-        }
-        if(pn.getTongTienNhap() < 0){
-            System.err.println("Tổng tiền nhập không được âm");
-            return false;
-        }
-        return phieuNhapDAO.updatePhieuNhap(pn);
-    }
+  public boolean delete(String maPhieuNhap) {
+    return dao.delete(maPhieuNhap);
+  }
 
-    //xóa phiếu nhập theo mã
-    public boolean deletePN(String MaPN){
-        return phieuNhapDAO.deletePhieuNhap(MaPN);
-    }
+  public boolean capNhatTrangThai(String maPhieuNhap, String trangThaiMoi) {
+    return dao.capNhatTrangThai(maPhieuNhap, trangThaiMoi);
+  }
 
-    //tìm kiếm theo mã phiếu nhập
-    public PhieuNhapDTO searchByID(String MaPN){
-        return phieuNhapDAO.getById(MaPN);
-    }
+  // ===== SEARCH OPERATIONS =====
 
-    //tìm kiếm theo khoảng ngày
-    public ArrayList<PhieuNhapDTO> searchByDate(LocalDateTime startDate, LocalDateTime endDate){
-        return phieuNhapDAO.getByDate(startDate, endDate);
-    }
+  public ArrayList<PhieuNhapDTO> getByDate(
+    LocalDateTime startDate,
+    LocalDateTime endDate
+  ) {
+    return dao.getByDate(startDate, endDate);
+  }
 
-    //tìm theo mã nhà cung cấp
-    public ArrayList<PhieuNhapDTO> searchByNCC(String MaNCC){
-        return phieuNhapDAO.getByMaNCC(MaNCC);
-    }
+  public ArrayList<PhieuNhapDTO> getByMaNCC(String maNCC) {
+    return dao.getByMaNCC(maNCC);
+  }
 
-    //tìm theo người giao
-    public ArrayList<PhieuNhapDTO> searchByNguoiGiao(String NguoiGiao){
-        return phieuNhapDAO.getByNguoiGiao(NguoiGiao);
-    }
+  public ArrayList<PhieuNhapDTO> getByNguoiGiao(String nguoiGiao) {
+    return dao.getByNguoiGiao(nguoiGiao);
+  }
 
-    //xóa phiếu nhập theo mã nhà cung cấp
-    public boolean deleteByMaNCC(String MaNCC){
-        return phieuNhapDAO.deleteByNCC(MaNCC);
-    }
+  public ArrayList<PhieuNhapDTO> getByTrangThai(String trangThai) {
+    return dao.getByTrangThai(trangThai); // ✅ Gọi thẳng DAO, không loop
+  }
 
-    //ktra nhà cung cấp có phiếu nhập chưa
-    public boolean checkNCC(String MaNCC){
-        return phieuNhapDAO.hasPhieuNhap(MaNCC);
-    }
+  public ArrayList<PhieuNhapDTO> search(String keyword) {
+    return dao.search(keyword);
+  }
 
+  // ===== UTILITY OPERATIONS =====
+
+  public boolean deleteByMaNCC(String maNCC) {
+    return dao.deleteByNCC(maNCC);
+  }
+
+  public boolean hasPhieuNhap(String maNCC) {
+    return dao.hasPhieuNhap(maNCC);
+  }
+
+  public double getTongTienByTrangThai(String trangThai) {
+    return dao.getTongTienByTrangThai(trangThai);
+  }
+
+  // ===== VALIDATION =====
+
+  // ✅ METHOD DUY NHẤT: Validate tất cả
+  private String validate(PhieuNhapDTO pn) {
+    if (pn == null) return "Phiếu nhập không được null";
+
+    if (
+      pn.getMaPhieuNhap() == null || pn.getMaPhieuNhap().trim().isEmpty()
+    ) return "Mã phiếu nhập không được trống";
+
+    if (
+      pn.getMaNCC() == null || pn.getMaNCC().trim().isEmpty()
+    ) return "Mã nhà cung cấp không được trống";
+
+    if (pn.getNgayNhap() == null) return "Ngày nhập không được trống";
+
+    if (
+      pn.getNguoiGiao() == null || pn.getNguoiGiao().trim().isEmpty()
+    ) return "Người giao không được trống";
+
+    if (pn.getTongTienNhap() < 0) return "Tổng tiền nhập không được âm";
+
+    return null; // ✅ Hợp lệ
+  }
 }

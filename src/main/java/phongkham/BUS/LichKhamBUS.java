@@ -3,325 +3,252 @@ package phongkham.BUS;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import phongkham.DTO.LichKhamDTO;
 import phongkham.dao.LichKhamDAO;
-
 public class LichKhamBUS {
 
-  private LichKhamDAO lichKhamDAO = new LichKhamDAO();
+  private LichKhamDAO dao = new LichKhamDAO();
 
-  // ================= LẤY TẤT CẢ LỊCH KHÁM =================
-  public ArrayList<LichKhamDTO> getAll() {
-    return lichKhamDAO.getAll();
-  }
+  // ✅ CONSTANTS: Danh sách trạng thái hợp lệ
+  private static final List<String> VALID_STATUSES = Arrays.asList(
+    "Đã đặt",
+    "Đang khám",
+    "Hoàn thành",
+    "Đã hủy"
+  );
 
-  // ================= THÊM LỊCH KHÁM =================
+  private static final DateTimeFormatter DATETIME_FORMAT =
+    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+  private static final DateTimeFormatter DATE_FORMAT =
+    DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+  // ===== CRUD OPERATIONS =====
+
   public String insert(LichKhamDTO lk) {
-    // Validate dữ liệu không được để trống
-    if (lk.getMaLichKham() == null || lk.getMaLichKham().trim().isEmpty()) {
-      return "Mã lịch khám không được để trống";
-    }
-    if (lk.getMaBacSi() == null || lk.getMaBacSi().trim().isEmpty()) {
-      return "Mã bác sĩ không được để trống";
-    }
-    if (
-      lk.getThoiGianBatDau() == null || lk.getThoiGianBatDau().trim().isEmpty()
-    ) {
-      return "Thời gian bắt đầu không được để trống";
-    }
-    if (
-      lk.getThoiGianKetThuc() == null ||
-      lk.getThoiGianKetThuc().trim().isEmpty()
-    ) {
-      return "Thời gian kết thúc không được để trống";
-    }
-    if (lk.getTrangThai() == null || lk.getTrangThai().trim().isEmpty()) {
-      return "Trạng thái không được để trống";
-    }
-
-    // Kiểm tra mã lịch khám đã tồn tại
-    if (lichKhamDAO.getById(lk.getMaLichKham()) != null) {
-      return "Mã lịch khám đã tồn tại";
-    }
-
-    // Validate thời gian
-    if (lk.getThoiGianBatDau().compareTo(lk.getThoiGianKetThuc()) >= 0) {
-      return "Thời gian kết thúc phải lớn hơn thời gian bắt đầu";
-    }
-
-    // Kiểm tra trùng lịch bác sĩ
-    if (
-      lichKhamDAO.checkTrungLich(
-        lk.getMaBacSi(),
-        lk.getThoiGianBatDau(),
-        lk.getThoiGianKetThuc()
-      )
-    ) {
-      return "Bác sĩ đã có lịch khám trùng với khung giờ này";
-    }
-
-    // Validate trạng thái hợp lệ
-    String trangThai = lk.getTrangThai();
-    if (
-      !trangThai.equals("Đã đặt") &&
-      !trangThai.equals("Đang khám") &&
-      !trangThai.equals("Hoàn thành") &&
-      !trangThai.equals("Đã hủy")
-    ) {
-      return "Trạng thái không hợp lệ (Đã đặt/Đang khám/Hoàn thành/Đã hủy)";
-    }
+    // Validate
+    String error = validateLichKham(lk, false);
+    if (error != null) return error;
 
     // Thực hiện thêm
-    boolean result = lichKhamDAO.insert(lk);
-    if (result) {
-      return "Thêm lịch khám thành công";
-    }
-    return "Thêm lịch khám thất bại";
+    return dao.insert(lk)
+      ? "✅ Thêm lịch khám thành công"
+      : "❌ Thêm lịch khám thất bại";
   }
 
-  // ================= CẬP NHẬT LỊCH KHÁM =================
   public String update(LichKhamDTO lk) {
-    // Validate dữ liệu không được để trống
-    if (lk.getMaLichKham() == null || lk.getMaLichKham().trim().isEmpty()) {
-      return "Mã lịch khám không được để trống";
-    }
-    if (lk.getMaBacSi() == null || lk.getMaBacSi().trim().isEmpty()) {
-      return "Mã bác sĩ không được để trống";
-    }
-    if (
-      lk.getThoiGianBatDau() == null || lk.getThoiGianBatDau().trim().isEmpty()
-    ) {
-      return "Thời gian bắt đầu không được để trống";
-    }
-    if (
-      lk.getThoiGianKetThuc() == null ||
-      lk.getThoiGianKetThuc().trim().isEmpty()
-    ) {
-      return "Thời gian kết thúc không được để trống";
-    }
-    if (lk.getTrangThai() == null || lk.getTrangThai().trim().isEmpty()) {
-      return "Trạng thái không được để trống";
-    }
-
-    // Kiểm tra lịch khám có tồn tại không
-    if (lichKhamDAO.getById(lk.getMaLichKham()) == null) {
-      return "Lịch khám không tồn tại";
-    }
-
-    // Validate thời gian
-    if (lk.getThoiGianBatDau().compareTo(lk.getThoiGianKetThuc()) >= 0) {
-      return "Thời gian kết thúc phải lớn hơn thời gian bắt đầu";
-    }
-
-    // Kiểm tra trùng lịch bác sĩ khi cập nhật
-    if (
-      lichKhamDAO.checkTrungLichWhenUpdate(
-        lk.getMaLichKham(),
-        lk.getMaBacSi(),
-        lk.getThoiGianBatDau(),
-        lk.getThoiGianKetThuc()
-      )
-    ) {
-      return "Bác sĩ đã có lịch khám trùng với khung giờ này";
-    }
-
-    // Validate trạng thái hợp lệ
-    String trangThai = lk.getTrangThai();
-    if (
-      !trangThai.equals("Đã đặt") &&
-      !trangThai.equals("Đang khám") &&
-      !trangThai.equals("Hoàn thành") &&
-      !trangThai.equals("Đã hủy")
-    ) {
-      return "Trạng thái không hợp lệ (Đã đặt/Đang khám/Hoàn thành/Đã hủy)";
-    }
+    // Validate
+    String error = validateLichKham(lk, true);
+    if (error != null) return error;
 
     // Thực hiện cập nhật
-    boolean result = lichKhamDAO.update(lk);
-    if (result) {
-      return "Cập nhật lịch khám thành công";
-    }
-    return "Cập nhật lịch khám thất bại";
+    return dao.update(lk)
+      ? "✅ Cập nhật lịch khám thành công"
+      : "❌ Cập nhật lịch khám thất bại";
   }
 
-  // ================= XÓA LỊCH KHÁM =================
   public String delete(String maLichKham) {
-    if (maLichKham == null || maLichKham.trim().isEmpty()) {
-      return "Mã lịch khám không được để trống";
+    if (isEmpty(maLichKham)) {
+      return "❌ Mã lịch khám không được để trống";
     }
 
-    if (lichKhamDAO.getById(maLichKham) == null) {
-      return "Lịch khám không tồn tại";
-    }
-
-    // Kiểm tra xem lịch khám đã hoàn thành chưa
-    LichKhamDTO lk = lichKhamDAO.getById(maLichKham);
-    if (lk.getTrangThai().equals("Hoàn thành")) {
-      return "Không thể xóa lịch khám đã hoàn thành";
-    }
-
-    boolean result = lichKhamDAO.delete(maLichKham);
-    if (result) {
-      return "Xóa lịch khám thành công";
-    }
-    return "Xóa lịch khám thất bại";
-  }
-
-  // ================= HỦY LỊCH KHÁM (SOFT DELETE) =================
-  public String huyLichKham(String maLichKham) {
-    if (maLichKham == null || maLichKham.trim().isEmpty()) {
-      return "Mã lịch khám không được để trống";
-    }
-
-    LichKhamDTO lk = lichKhamDAO.getById(maLichKham);
+    LichKhamDTO lk = dao.getById(maLichKham);
     if (lk == null) {
-      return "Lịch khám không tồn tại";
+      return "❌ Lịch khám không tồn tại";
     }
 
-    if (lk.getTrangThai().equals("Hoàn thành")) {
-      return "Không thể hủy lịch khám đã hoàn thành";
+    if ("Hoàn thành".equals(lk.getTrangThai())) {
+      return "❌ Không thể xóa lịch khám đã hoàn thành";
     }
 
-    if (lk.getTrangThai().equals("Đã hủy")) {
-      return "Lịch khám đã được hủy trước đó";
-    }
-
-    boolean result = lichKhamDAO.updateTrangThai(maLichKham, "Đã hủy");
-    if (result) {
-      return "Hủy lịch khám thành công";
-    }
-    return "Hủy lịch khám thất bại";
+    return dao.delete(maLichKham)
+      ? "✅ Xóa lịch khám thành công"
+      : "❌ Xóa lịch khám thất bại";
   }
 
-  // ================= CẬP NHẬT TRẠNG THÁI =================
+  // ===== VALIDATION =====
+
+  /**
+   * ✅ METHOD DÙNG CHUNG: Validate lịch khám
+   * @param lk Lịch khám cần validate
+   * @param isUpdate true nếu đang update, false nếu đang insert
+   * @return Error message hoặc null nếu hợp lệ
+   */
+  private String validateLichKham(LichKhamDTO lk, boolean isUpdate) {
+    // 1. Validate null/empty
+    if (
+      isEmpty(lk.getMaLichKham())
+    ) return "❌ Mã lịch khám không được để trống";
+    if (isEmpty(lk.getMaBacSi())) return "❌ Mã bác sĩ không được để trống";
+    if (
+      isEmpty(lk.getThoiGianBatDau())
+    ) return "❌ Thời gian bắt đầu không được để trống";
+    if (
+      isEmpty(lk.getThoiGianKetThuc())
+    ) return "❌ Thời gian kết thúc không được để trống";
+    if (isEmpty(lk.getTrangThai())) return "❌ Trạng thái không được để trống";
+
+    // 2. Validate tồn tại
+    boolean exists = dao.exists(lk.getMaLichKham());
+    if (!isUpdate && exists) {
+      return "❌ Mã lịch khám đã tồn tại";
+    }
+    if (isUpdate && !exists) {
+      return "❌ Lịch khám không tồn tại";
+    }
+
+    // 3. Validate thời gian
+    if (lk.getThoiGianBatDau().compareTo(lk.getThoiGianKetThuc()) >= 0) {
+      return "❌ Thời gian kết thúc phải lớn hơn thời gian bắt đầu";
+    }
+
+    // 4. Validate trùng lịch
+    boolean trungLich = isUpdate
+      ? dao.checkTrungLichWhenUpdate(
+          lk.getMaLichKham(),
+          lk.getMaBacSi(),
+          lk.getThoiGianBatDau(),
+          lk.getThoiGianKetThuc()
+        )
+      : dao.checkTrungLich(
+          lk.getMaBacSi(),
+          lk.getThoiGianBatDau(),
+          lk.getThoiGianKetThuc()
+        );
+
+    if (trungLich) {
+      return "❌ Bác sĩ đã có lịch khám trùng với khung giờ này";
+    }
+
+    // 5. Validate trạng thái
+    if (!isValidStatus(lk.getTrangThai())) {
+      return "❌ Trạng thái không hợp lệ (Đã đặt/Đang khám/Hoàn thành/Đã hủy)";
+    }
+
+    return null; // ✅ Hợp lệ
+  }
+
+  /**
+   * ✅ HELPER: Kiểm tra chuỗi rỗng
+   */
+  private boolean isEmpty(String str) {
+    return str == null || str.trim().isEmpty();
+  }
+
+  /**
+   * ✅ HELPER: Kiểm tra trạng thái hợp lệ
+   */
+  private boolean isValidStatus(String status) {
+    return VALID_STATUSES.contains(status);
+  }
+
+  // ===== STATUS OPERATIONS =====
+
+  public String huyLichKham(String maLichKham) {
+    if (isEmpty(maLichKham)) {
+      return "❌ Mã lịch khám không được để trống";
+    }
+
+    LichKhamDTO lk = dao.getById(maLichKham);
+    if (lk == null) {
+      return "❌ Lịch khám không tồn tại";
+    }
+
+    String status = lk.getTrangThai();
+    if ("Hoàn thành".equals(status)) {
+      return "❌ Không thể hủy lịch khám đã hoàn thành";
+    }
+    if ("Đã hủy".equals(status)) {
+      return "⚠️ Lịch khám đã được hủy trước đó";
+    }
+
+    return dao.updateTrangThai(maLichKham, "Đã hủy")
+      ? "✅ Hủy lịch khám thành công"
+      : "❌ Hủy lịch khám thất bại";
+  }
+
   public String updateTrangThai(String maLichKham, String trangThai) {
-    if (maLichKham == null || maLichKham.trim().isEmpty()) {
-      return "Mã lịch khám không được để trống";
+    if (isEmpty(maLichKham)) {
+      return "❌ Mã lịch khám không được để trống";
     }
-    if (trangThai == null || trangThai.trim().isEmpty()) {
-      return "Trạng thái không được để trống";
+    if (isEmpty(trangThai)) {
+      return "❌ Trạng thái không được để trống";
     }
-
-    // Validate trạng thái hợp lệ
-    if (
-      !trangThai.equals("Đã đặt") &&
-      !trangThai.equals("Đang khám") &&
-      !trangThai.equals("Hoàn thành") &&
-      !trangThai.equals("Đã hủy")
-    ) {
-      return "Trạng thái không hợp lệ (Đã đặt/Đang khám/Hoàn thành/Đã hủy)";
+    if (!isValidStatus(trangThai)) {
+      return "❌ Trạng thái không hợp lệ (Đã đặt/Đang khám/Hoàn thành/Đã hủy)";
+    }
+    if (!dao.exists(maLichKham)) {
+      return "❌ Lịch khám không tồn tại";
     }
 
-    if (lichKhamDAO.getById(maLichKham) == null) {
-      return "Lịch khám không tồn tại";
-    }
-
-    boolean result = lichKhamDAO.updateTrangThai(maLichKham, trangThai);
-    if (result) {
-      return "Cập nhật trạng thái thành công";
-    }
-    return "Cập nhật trạng thái thất bại";
+    return dao.updateTrangThai(maLichKham, trangThai)
+      ? "✅ Cập nhật trạng thái thành công"
+      : "❌ Cập nhật trạng thái thất bại";
   }
 
-  // ================= TÌM THEO MÃ =================
+  // ===== SEARCH OPERATIONS =====
+
+  public ArrayList<LichKhamDTO> getAll() {
+    return dao.getAll();
+  }
+
   public LichKhamDTO getById(String ma) {
-    if (ma == null || ma.trim().isEmpty()) {
-      return null;
-    }
-    return lichKhamDAO.getById(ma);
+    return isEmpty(ma) ? null : dao.getById(ma);
   }
 
-  // ================= TÌM THEO BÁC SĨ =================
   public ArrayList<LichKhamDTO> getByMaBacSi(String maBacSi) {
-    if (maBacSi == null || maBacSi.trim().isEmpty()) {
-      return new ArrayList<>();
-    }
-    return lichKhamDAO.getByMaBacSi(maBacSi);
+    return isEmpty(maBacSi) ? new ArrayList<>() : dao.getByMaBacSi(maBacSi);
   }
 
-  // ================= TÌM THEO GÓI DỊCH VỤ =================
   public ArrayList<LichKhamDTO> getByMaGoi(String maGoi) {
-    if (maGoi == null || maGoi.trim().isEmpty()) {
-      return new ArrayList<>();
-    }
-    return lichKhamDAO.getByMaGoi(maGoi);
+    return isEmpty(maGoi) ? new ArrayList<>() : dao.getByMaGoi(maGoi);
   }
 
-  // ================= TÌM THEO MÃ ĐỊNH DANH =================
-  public ArrayList<LichKhamDTO> getByMaDinhDanhTam(String MaDinhDanhTam) {
-    if (MaDinhDanhTam == null || MaDinhDanhTam.trim().isEmpty()) {
-      return new ArrayList<>();
-    }
-    return lichKhamDAO.getByMaDinhDanhTam(MaDinhDanhTam);
+  public ArrayList<LichKhamDTO> getByMaDinhDanhTam(String maDinhDanhTam) {
+    return isEmpty(maDinhDanhTam)
+      ? new ArrayList<>()
+      : dao.getByMaDinhDanhTam(maDinhDanhTam);
   }
 
-  // ================= TÌM THEO TRẠNG THÁI =================
   public ArrayList<LichKhamDTO> getByTrangThai(String trangThai) {
-    if (trangThai == null || trangThai.trim().isEmpty()) {
-      return new ArrayList<>();
-    }
-    return lichKhamDAO.getByTrangThai(trangThai);
+    return isEmpty(trangThai)
+      ? new ArrayList<>()
+      : dao.getByTrangThai(trangThai);
   }
 
-  // ================= TÌM THEO NGÀY =================
   public ArrayList<LichKhamDTO> getByNgay(String ngay) {
-    if (ngay == null || ngay.trim().isEmpty()) {
-      return new ArrayList<>();
-    }
-    return lichKhamDAO.getByNgay(ngay);
+    return isEmpty(ngay) ? new ArrayList<>() : dao.getByNgay(ngay);
   }
 
-  // ================= TÌM THEO BÁC SĨ VÀ NGÀY =================
   public ArrayList<LichKhamDTO> getByBacSiAndNgay(String maBacSi, String ngay) {
-    if (
-      maBacSi == null ||
-      maBacSi.trim().isEmpty() ||
-      ngay == null ||
-      ngay.trim().isEmpty()
-    ) {
+    if (isEmpty(maBacSi) || isEmpty(ngay)) {
       return new ArrayList<>();
     }
-    return lichKhamDAO.getByBacSiAndNgay(maBacSi, ngay);
+    return dao.getByBacSiAndNgay(maBacSi, ngay);
   }
 
-  // ================= TÌM THEO KHOẢNG THỜI GIAN =================
   public ArrayList<LichKhamDTO> getByKhoangThoiGian(
     String tuNgay,
     String denNgay
   ) {
-    if (
-      tuNgay == null ||
-      tuNgay.trim().isEmpty() ||
-      denNgay == null ||
-      denNgay.trim().isEmpty()
-    ) {
+    if (isEmpty(tuNgay) || isEmpty(denNgay) || tuNgay.compareTo(denNgay) > 0) {
       return new ArrayList<>();
     }
-
-    if (tuNgay.compareTo(denNgay) > 0) {
-      return new ArrayList<>();
-    }
-
-    return lichKhamDAO.getByKhoangThoiGian(tuNgay, denNgay);
+    return dao.getByKhoangThoiGian(tuNgay, denNgay);
   }
 
-  // ================= ĐẾM LỊCH KHÁM THEO TRẠNG THÁI =================
-  public int countByTrangThai(String trangThai) {
-    if (trangThai == null || trangThai.trim().isEmpty()) {
-      return 0;
-    }
-    return lichKhamDAO.countByTrangThai(trangThai);
-  }
-
-  // ================= TÌM KIẾM THEO NHIỀU TIÊU CHÍ =================
   public ArrayList<LichKhamDTO> search(String keyword) {
-    if (keyword == null || keyword.trim().isEmpty()) {
-      return lichKhamDAO.getAll();
-    }
-    return lichKhamDAO.search(keyword);
+    return isEmpty(keyword) ? dao.getAll() : dao.search(keyword);
   }
 
-  // ================= KIỂM TRA TRÙNG LỊCH =================
+  // ===== UTILITY OPERATIONS =====
+
+  public int countByTrangThai(String trangThai) {
+    return isEmpty(trangThai) ? 0 : dao.countByTrangThai(trangThai);
+  }
+
   public boolean kiemTraTrungLich(
     String maBacSi,
     String thoiGianBatDau,
@@ -330,49 +257,36 @@ public class LichKhamBUS {
     if (maBacSi == null || thoiGianBatDau == null || thoiGianKetThuc == null) {
       return false;
     }
-    return lichKhamDAO.checkTrungLich(maBacSi, thoiGianBatDau, thoiGianKetThuc);
+    return dao.checkTrungLich(maBacSi, thoiGianBatDau, thoiGianKetThuc);
   }
 
-  // ================= LẤY LỊCH KHÁM SẮP TỚI CỦA BÁC SĨ =================
   public ArrayList<LichKhamDTO> getLichKhamSapToi(String maBacSi) {
-    ArrayList<LichKhamDTO> dsAll = lichKhamDAO.getByMaBacSi(maBacSi);
+    ArrayList<LichKhamDTO> dsAll = dao.getByMaBacSi(maBacSi);
     ArrayList<LichKhamDTO> dsSapToi = new ArrayList<>();
+    LocalDateTime now = LocalDateTime.now();
 
-    try {
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern(
-        "yyyy-MM-dd HH:mm:ss"
-      );
-      LocalDateTime now = LocalDateTime.now();
-
-      for (LichKhamDTO lk : dsAll) {
+    for (LichKhamDTO lk : dsAll) {
+      try {
         LocalDateTime tgBatDau = LocalDateTime.parse(
           lk.getThoiGianBatDau(),
-          formatter
+          DATETIME_FORMAT
         );
-        if (tgBatDau.isAfter(now) && !lk.getTrangThai().equals("Đã hủy")) {
+        if (tgBatDau.isAfter(now) && !"Đã hủy".equals(lk.getTrangThai())) {
           dsSapToi.add(lk);
         }
+      } catch (Exception e) {
+        System.err.println("❌ Lỗi parse thời gian: " + e.getMessage());
       }
-    } catch (Exception e) {
-      e.printStackTrace();
     }
 
     return dsSapToi;
   }
 
-  // ================= LẤY LỊCH KHÁM HÔM NAY =================
   public ArrayList<LichKhamDTO> getLichKhamHomNay() {
-    try {
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-      String homNay = LocalDateTime.now().format(formatter);
-      return lichKhamDAO.getByNgay(homNay);
-    } catch (Exception e) {
-      e.printStackTrace();
-      return new ArrayList<>();
-    }
+    String homNay = LocalDateTime.now().format(DATE_FORMAT);
+    return dao.getByNgay(homNay);
   }
 
-  // ================= THỐNG KÊ LỊCH KHÁM =================
   public String thongKeLichKham() {
     int soDaDat = countByTrangThai("Đã đặt");
     int soDangKham = countByTrangThai("Đang khám");
@@ -380,20 +294,23 @@ public class LichKhamBUS {
     int soDaHuy = countByTrangThai("Đã hủy");
     int tongSo = soDaDat + soDangKham + soHoanThanh + soDaHuy;
 
-    StringBuilder sb = new StringBuilder();
-    sb.append("=== THỐNG KÊ LỊCH KHÁM ===\n");
-    sb.append("Tổng số lịch khám: ").append(tongSo).append("\n");
-    sb.append("Đã đặt: ").append(soDaDat).append("\n");
-    sb.append("Đang khám: ").append(soDangKham).append("\n");
-    sb.append("Hoàn thành: ").append(soHoanThanh).append("\n");
-    sb.append("Đã hủy: ").append(soDaHuy).append("\n");
-
-    return sb.toString();
+    return String.format(
+      "=== THỐNG KÊ LỊCH KHÁM ===\n" +
+        "Tổng số: %d\n" +
+        "Đã đặt: %d\n" +
+        "Đang khám: %d\n" +
+        "Hoàn thành: %d\n" +
+        "Đã hủy: %d",
+      tongSo,
+      soDaDat,
+      soDangKham,
+      soHoanThanh,
+      soDaHuy
+    );
   }
 
-  // ================= TẠO MÃ LỊCH KHÁM TỰ ĐỘNG =================
   public String generateMaLichKham() {
-    ArrayList<LichKhamDTO> dsAll = lichKhamDAO.getAll();
+    ArrayList<LichKhamDTO> dsAll = dao.getAll();
     int maxId = 0;
 
     for (LichKhamDTO lk : dsAll) {
@@ -401,25 +318,19 @@ public class LichKhamBUS {
         String ma = lk.getMaLichKham();
         if (ma.startsWith("LK")) {
           int id = Integer.parseInt(ma.substring(2));
-          if (id > maxId) {
-            maxId = id;
-          }
+          maxId = Math.max(maxId, id);
         }
       } catch (Exception e) {
-        // Bỏ qua các mã không đúng định dạng
+        // Bỏ qua mã không hợp lệ
       }
     }
 
     return String.format("LK%03d", maxId + 1);
   }
 
-  // ================= VALIDATE FORMAT THỜI GIAN =================
   public boolean validateTimeFormat(String time) {
     try {
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern(
-        "yyyy-MM-dd HH:mm:ss"
-      );
-      LocalDateTime.parse(time, formatter);
+      LocalDateTime.parse(time, DATETIME_FORMAT);
       return true;
     } catch (Exception e) {
       return false;

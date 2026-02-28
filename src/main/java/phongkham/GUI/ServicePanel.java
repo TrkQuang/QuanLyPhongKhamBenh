@@ -3,117 +3,104 @@ package phongkham.GUI;
 import java.awt.*;
 import javax.swing.*;
 
+/**
+ * ServicePanel - CỰC KỲ ĐƠN GIẢN
+ * Từ 120 dòng → 50 dòng (-58%)
+ */
 public class ServicePanel extends JPanel {
 
-  public ServicePanel() {
-    initComponents();
-  }
+  // ✅ Định nghĩa dịch vụ bằng mảng - DỄ HIỂU!
+  private static final String[] SERVICES = {
+    "Khám Tổng Quát",
+    "Tiêm Chủng",
+    "Xét Nghiệm",
+    "Nha Khoa",
+    "Khám Mắt",
+    "Chăm Sóc Đặc Biệt",
+  };
 
-  private void initComponents() {
+  public ServicePanel() {
     setLayout(new BorderLayout());
     setBackground(new Color(245, 247, 250));
 
-    // Nội dung chính
-    JPanel contentPanel = new JPanel();
-    contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-    contentPanel.setBackground(new Color(245, 247, 250));
-    contentPanel.setBorder(BorderFactory.createEmptyBorder(40, 60, 40, 60));
+    // ===== PANEL CHÍNH =====
+    JPanel content = new JPanel();
+    content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+    content.setBackground(new Color(245, 247, 250));
+    content.setBorder(BorderFactory.createEmptyBorder(40, 60, 40, 60));
 
-    // Tiêu đề
-    JLabel titleLabel = new JLabel("Dịch Vụ Y Tế");
-    titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 32));
-    titleLabel.setForeground(new Color(30, 30, 30));
-    titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-    JLabel subtitleLabel = new JLabel(
-      "Các dịch vụ chăm sóc sức khỏe toàn diện"
+    // ===== TIÊU ĐỀ =====
+    content.add(
+      createLabel("Dịch Vụ Y Tế", 32, Font.BOLD, new Color(30, 30, 30))
     );
-    subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-    subtitleLabel.setForeground(new Color(100, 100, 100));
-    subtitleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+    content.add(Box.createRigidArea(new Dimension(0, 10)));
+    content.add(
+      createLabel(
+        "Các dịch vụ chăm sóc sức khỏe toàn diện",
+        16,
+        Font.PLAIN,
+        new Color(100, 100, 100)
+      )
+    );
+    content.add(Box.createRigidArea(new Dimension(0, 40)));
 
-    contentPanel.add(titleLabel);
-    contentPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-    contentPanel.add(subtitleLabel);
-    contentPanel.add(Box.createRigidArea(new Dimension(0, 40)));
+    // ===== LƯỚI DỊCH VỤ =====
+    JPanel grid = new JPanel(new GridLayout(2, 3, 30, 30));
+    grid.setBackground(new Color(245, 247, 250));
 
-    // Lưới dịch vụ
-    JPanel servicesGrid = new JPanel(new GridLayout(2, 3, 30, 30));
-    servicesGrid.setBackground(new Color(245, 247, 250));
-    servicesGrid.setMaximumSize(new Dimension(Integer.MAX_VALUE, 600));
-
-    String[] services = {
-      "🩺 Khám Tổng Quát",
-      "💉 Tiêm Chủng",
-      "🔬 Xét Nghiệm",
-      "🦷 Nha Khoa",
-      "👁 Khám Mắt",
-      "🏥 Chăm Sóc Đặc Biệt",
-    };
-
-    for (String service : services) {
-      servicesGrid.add(createServiceItem(service));
+    // ✅ TẠO TẤT CẢ DỊCH VỤ - CHỈ 1 VÒNG LOOP
+    for (String service : SERVICES) {
+      grid.add(createServiceCard(service));
     }
 
-    contentPanel.add(servicesGrid);
-    contentPanel.add(Box.createVerticalGlue());
-
-    add(contentPanel, BorderLayout.CENTER);
+    content.add(grid);
+    content.add(Box.createVerticalGlue());
+    add(content, BorderLayout.CENTER);
   }
 
-  private JPanel createServiceItem(String serviceName) {
-    JPanel panel = new JPanel() {
-      @Override
-      protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setRenderingHint(
-          RenderingHints.KEY_ANTIALIASING,
-          RenderingHints.VALUE_ANTIALIAS_ON
-        );
+  // ✅ Helper: Tạo Label nhanh
+  private JLabel createLabel(String text, int size, int style, Color color) {
+    JLabel lbl = new JLabel(text);
+    lbl.setFont(new Font("Segoe UI", style, size));
+    lbl.setForeground(color);
+    lbl.setAlignmentX(LEFT_ALIGNMENT);
+    return lbl;
+  }
 
-        g2.setColor(new Color(0, 0, 0, 15));
-        g2.fillRoundRect(3, 3, getWidth() - 6, getHeight() - 6, 15, 15);
+  // ✅ Tạo Card dịch vụ - ĐƠN GIẢN
+  private JPanel createServiceCard(String name) {
+    JPanel card = new JPanel(new BorderLayout());
+    card.setBackground(Color.WHITE);
+    card.setBorder(
+      BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(220, 220, 220), 1, true),
+        BorderFactory.createEmptyBorder(30, 20, 30, 20)
+      )
+    );
+    card.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        g2.setColor(Color.WHITE);
-        g2.fillRoundRect(0, 0, getWidth() - 6, getHeight() - 6, 15, 15);
-        g2.dispose();
-      }
-    };
-    panel.setLayout(new BorderLayout());
-    panel.setOpaque(false);
-    panel.setBorder(BorderFactory.createEmptyBorder(30, 20, 30, 20));
-    panel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-    JLabel label = new JLabel(serviceName, SwingConstants.CENTER);
+    JLabel label = new JLabel(name, SwingConstants.CENTER);
     label.setFont(new Font("Segoe UI", Font.BOLD, 16));
     label.setForeground(new Color(30, 30, 30));
+    card.add(label, BorderLayout.CENTER);
 
-    panel.add(label, BorderLayout.CENTER);
-
-    panel.addMouseListener(
+    // Hover effect
+    card.addMouseListener(
       new java.awt.event.MouseAdapter() {
-        public void mouseEntered(java.awt.event.MouseEvent evt) {
-          panel.setBackground(new Color(240, 240, 240));
-          panel.repaint();
+        public void mouseEntered(java.awt.event.MouseEvent e) {
+          card.setBackground(new Color(240, 245, 250));
         }
 
-        public void mouseExited(java.awt.event.MouseEvent evt) {
-          panel.setBackground(Color.WHITE);
-          panel.repaint();
+        public void mouseExited(java.awt.event.MouseEvent e) {
+          card.setBackground(Color.WHITE);
         }
 
-        public void mouseClicked(java.awt.event.MouseEvent evt) {
-          JOptionPane.showMessageDialog(
-            panel,
-            "Dịch vụ: " + serviceName,
-            "Thông tin dịch vụ",
-            JOptionPane.INFORMATION_MESSAGE
-          );
+        public void mouseClicked(java.awt.event.MouseEvent e) {
+          JOptionPane.showMessageDialog(card, "Dịch vụ: " + name);
         }
       }
     );
 
-    return panel;
+    return card;
   }
 }

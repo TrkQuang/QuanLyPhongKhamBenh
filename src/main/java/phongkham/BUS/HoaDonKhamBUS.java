@@ -34,7 +34,7 @@ public class HoaDonKhamBUS {
 
             if (key != null && !key.isEmpty()) {
                 match &= String.valueOf(hd.getMaHDKham()).contains(key)
-                        || String.valueOf(hd.getMaPhieuKham()).contains(key)
+                        || String.valueOf(hd.getMaHoSo()).contains(key)
                         || String.valueOf(hd.getMaGoi()).contains(key);
             }
 

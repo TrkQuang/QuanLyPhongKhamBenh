@@ -98,20 +98,17 @@ public class ThuocDAO {
     }
 
     public boolean updateSoLuong(String maThuoc, int soLuongThem) {
-    // Câu lệnh SQL cộng dồn số lượng: SoLuong = SoLuong cũ + SoLuong mới
-    String sql = "UPDATE Thuoc SET SoLuong = SoLuong + ? WHERE MaThuoc = ?";
-    try (Connection conn = DBConnection.getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
-        
-        ps.setInt(1, soLuongThem);
-        ps.setString(2, maThuoc);
-        
-        return ps.executeUpdate() > 0;
-    } catch (SQLException e) {
-        e.printStackTrace();
-        return false;
+        String sql = "UPDATE Thuoc SET SoLuongTon = SoLuongTon + ? WHERE MaThuoc = ?";
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, soLuongThem);
+            ps.setString(2, maThuoc);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
-}
 
     //tìm theo mã
     public ThuocDTO searchById(String maThuoc){
@@ -211,34 +208,6 @@ public class ThuocDAO {
             }
             return ds;
     }
-
-    //tính số lượng tồn
-    public int getSoLuongTon(String maThuoc) {
-        String sql = """
-            SELECT
-                COALESCE(SUM(nhap.SoLuong), 0)
-                - COALESCE(SUM(xuat.SoLuong), 0) AS SoLuongTon
-            FROM Thuoc t
-            LEFT JOIN CTPhieuNhap nhap ON t.MaThuoc = nhap.MaThuoc
-            LEFT JOIN CTHDThuoc xuat ON t.MaThuoc = xuat.MaThuoc
-            WHERE t.MaThuoc = ?
-            """;
-
-        try (Connection conn = DBConnection.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, maThuoc);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt("SoLuongTon");
-                }
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Lỗi tính số lượng tồn: " + e.getMessage());
-        }
-
-        return 0;
-    }
 }
+
+    
