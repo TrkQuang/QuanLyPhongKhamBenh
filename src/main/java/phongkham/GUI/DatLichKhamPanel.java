@@ -1,274 +1,420 @@
 package phongkham.GUI;
 
+import com.toedter.calendar.JDateChooser;
 import java.awt.*;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.awt.event.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import javax.swing.*;
+import java.util.Date;
+import javax.swing.table.DefaultTableModel;
+import phongkham.BUS.BacSiBUS;
+import phongkham.BUS.GoiDichVuBUS;
+import phongkham.BUS.HoSoBenhAnBUS;
 import phongkham.BUS.LichKhamBUS;
+import phongkham.DTO.BacSiDTO;
+import phongkham.DTO.GoiDichVuDTO;
+import phongkham.DTO.HoSoBenhAnDTO;
 import phongkham.DTO.LichKhamDTO;
 
 public class DatLichKhamPanel extends JPanel {
 
-  private LichKhamBUS lichKhamBUS;
-  private JTextField txtHoTen, txtSoDienThoai, txtEmail;
-  private JComboBox<String> cboBacSi, cboGoiDichVu, cboNgay, cboGio;
-  private JTextArea txtGhiChu;
+  private HoSoBenhAnBUS hsBUS = new HoSoBenhAnBUS();
+  private LichKhamBUS lkBUS = new LichKhamBUS();
+
+  //Thông tin cá nhân - components
+  private JTextField txtHoTen, txtSDT, txtCCCD, txtDiaChi;
+  private JDateChooser dateNgaySinh;
+  private JRadioButton radNam, radNu;
+  private ButtonGroup groupGioiTinh;
+
+  //Thông tin đặt khám
+  private JComboBox<String> GoiDV, LichKham, BacSi;
+  private JTextArea txtMoTaGoi;
+  private JLabel lblGiaGoi;
+
+  //Table & Button
+  private JButton btnDangky, btnRefresh, btnSearch;
 
   public DatLichKhamPanel() {
-    lichKhamBUS = new LichKhamBUS();
     initComponents();
+    loadData();
+    loadEvents();
   }
 
-  private void initComponents() {
-    setLayout(new BorderLayout(15, 15));
-    setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+  public void initComponents() {
+    this.setLayout(new BorderLayout());
 
-    // Title
-    JLabel lblTitle = new JLabel("ĐẶT LỊCH KHÁM BỆNH");
-    lblTitle.setFont(new Font("Arial", Font.BOLD, 20));
-    lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
+    // Header
+    JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 20));
+    JLabel header = new JLabel("ĐĂNG KÝ HỒ SƠ KHÁM", JLabel.CENTER);
+    header.setFont(new Font("Segoe UI", Font.BOLD, 20));
+    headerPanel.add(header);
+    this.add(headerPanel, BorderLayout.NORTH);
 
-    // Form
-    JPanel formPanel = new JPanel(new GridLayout(9, 2, 10, 10));
-    formPanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
+    // Center - căn trái sát với sidebar
+    JPanel centerPanel = createCenter();
+    JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 30, 30));
+    wrapper.add(centerPanel);
 
-    formPanel.add(new JLabel("Họ và tên: *"));
-    txtHoTen = new JTextField();
-    formPanel.add(txtHoTen);
+    JScrollPane center = new JScrollPane(wrapper);
+    center.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+    center.getVerticalScrollBar().setBlockIncrement(100);
+    this.add(center, BorderLayout.CENTER);
 
-    formPanel.add(new JLabel("Số điện thoại: *"));
-    txtSoDienThoai = new JTextField();
-    formPanel.add(txtSoDienThoai);
+    // Footer
+    JPanel Footer = createFooter();
+    this.add(Footer, BorderLayout.SOUTH);
+  }
 
-    formPanel.add(new JLabel("Email:"));
-    txtEmail = new JTextField();
-    formPanel.add(txtEmail);
-
-    formPanel.add(new JLabel("Gói dịch vụ: *"));
-    cboGoiDichVu = new JComboBox<>(
-      new String[] { "GOI001", "GOI002", "GOI003" }
-    );
-    formPanel.add(cboGoiDichVu);
-
-    formPanel.add(new JLabel("Bác sĩ: *"));
-    cboBacSi = new JComboBox<>(
-      new String[] { "BS001", "BS002", "BS003", "BS004" }
-    );
-    formPanel.add(cboBacSi);
-
-    formPanel.add(new JLabel("Ngày khám: *"));
-    cboNgay = new JComboBox<>(generateNextDays(14));
-    formPanel.add(cboNgay);
-
-    formPanel.add(new JLabel("Giờ khám: *"));
-    cboGio = new JComboBox<>(
+  public JPanel createCenter() {
+    JPanel center = new JPanel();
+    center.setPreferredSize(new Dimension(650, 800));
+    center.setLayout(new GridLayout(0, 2, 15, 15));
+    center.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    JLabel lblHoten = createLabel("Họ và tên");
+    center.add(lblHoten);
+    txtHoTen = new JTextField(20);
+    center.add(txtHoTen);
+    JLabel lblSDT = createLabel("Số điện thoại");
+    center.add(lblSDT);
+    txtSDT = new JTextField(20);
+    center.add(txtSDT);
+    JLabel lblCCCD = createLabel("Căn cước công dân");
+    center.add(lblCCCD);
+    txtCCCD = new JTextField(20);
+    center.add(txtCCCD);
+    JLabel lblDiaChi = createLabel("Địa chỉ");
+    center.add(lblDiaChi);
+    txtDiaChi = new JTextField(20);
+    center.add(txtDiaChi);
+    JLabel lblNgaySinh = createLabel("Ngày sinh");
+    center.add(lblNgaySinh);
+    dateNgaySinh = new JDateChooser();
+    dateNgaySinh.setDateFormatString("dd/mm/yyyy");
+    center.add(dateNgaySinh);
+    JLabel lblGioiTinh = createLabel("Giới tính");
+    center.add(lblGioiTinh);
+    radNam = new JRadioButton("Nam");
+    radNu = new JRadioButton("Nữ");
+    groupGioiTinh = new ButtonGroup();
+    radNam.setSelected(true);
+    JPanel GioiTinh = new JPanel();
+    GioiTinh.setLayout(new FlowLayout(FlowLayout.LEFT));
+    GioiTinh.add(radNam);
+    GioiTinh.add(radNu);
+    center.add(GioiTinh);
+    JLabel lblGoiDV = createLabel("Gói dịch vụ");
+    GoiDV = new JComboBox<>();
+    center.add(lblGoiDV);
+    center.add(GoiDV);
+    JLabel lblMoTaGoi = createLabel("Mô tả gói dịch vụ");
+    center.add(lblMoTaGoi);
+    txtMoTaGoi = new JTextArea(3, 20);
+    txtMoTaGoi.setLineWrap(true);
+    txtMoTaGoi.setWrapStyleWord(true);
+    txtMoTaGoi.setEditable(false);
+    center.add(txtMoTaGoi);
+    JLabel lblGia = createLabel("Giá dịch vụ");
+    center.add(lblGia);
+    lblGiaGoi = new JLabel("0 VNĐ");
+    lblGiaGoi.setFont(new Font("Segoe UI", Font.ITALIC, 15));
+    lblGiaGoi.setForeground(Color.GREEN);
+    lblGiaGoi.setHorizontalAlignment(SwingConstants.LEFT);
+    center.add(lblGiaGoi);
+    JLabel lblLichKham = createLabel("Lịch khám");
+    LichKham = new JComboBox<>(
       new String[] {
-        "08:00",
-        "08:30",
-        "09:00",
-        "09:30",
-        "10:00",
-        "10:30",
-        "13:00",
-        "13:30",
-        "14:00",
-        "14:30",
-        "15:00",
-        "15:30",
+        "08:00 - 8:30",
+        "08:30 - 9:00",
+        "09:00 - 9:30",
+        "09:30 - 10:00",
+        "10:00 - 10:30",
+        "10:30 - 11:00",
+        "13:00 - 13:30",
+        "13:30 - 14:00",
+        "14:00 - 14:30",
+        "14:30 - 15:00",
+        "15:00 - 15:30",
+        "15:30 - 16:00",
+        "16:00 - 16:30",
       }
     );
-    formPanel.add(cboGio);
-
-    formPanel.add(new JLabel("Ghi chú:"));
-    txtGhiChu = new JTextArea(3, 20);
-    JScrollPane scrollGhiChu = new JScrollPane(txtGhiChu);
-    formPanel.add(scrollGhiChu);
-
-    // Buttons
-    JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
-    JButton btnDatLich = new JButton("Đặt lịch khám");
-    JButton btnLamMoi = new JButton("Làm mới");
-    JButton btnXemLich = new JButton("Xem lịch của tôi");
-
-    btnDatLich.addActionListener(e -> datLichKham());
-    btnLamMoi.addActionListener(e -> lamMoi());
-    btnXemLich.addActionListener(e -> xemLichCuaToi());
-
-    btnPanel.add(btnDatLich);
-    btnPanel.add(btnLamMoi);
-    btnPanel.add(btnXemLich);
-
-    add(lblTitle, BorderLayout.NORTH);
-    add(formPanel, BorderLayout.CENTER);
-    add(btnPanel, BorderLayout.SOUTH);
+    center.add(lblLichKham);
+    center.add(LichKham);
+    JLabel lblBacSi = createLabel("Bác sĩ");
+    BacSi = new JComboBox<>();
+    center.add(lblBacSi);
+    center.add(BacSi);
+    return center;
   }
 
-  private String[] generateNextDays(int days) {
-    String[] result = new String[days];
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-    for (int i = 0; i < days; i++) {
-      LocalDateTime date = LocalDateTime.now().plusDays(i);
-      result[i] = date.format(formatter);
-    }
-
-    return result;
+  public JPanel createFooter() {
+    JPanel footer = new JPanel();
+    footer.setLayout(new FlowLayout(FlowLayout.CENTER, 30, 20));
+    btnDangky = createButton("Đăng ký lịch khám");
+    btnRefresh = createButton("Làm mới");
+    btnSearch = createButton("Tìm kiếm hồ sơ khám");
+    footer.add(btnDangky);
+    footer.add(btnRefresh);
+    footer.add(btnSearch);
+    return footer;
   }
 
-  private void datLichKham() {
-    // Validate
-    if (txtHoTen.getText().trim().isEmpty()) {
-      JOptionPane.showMessageDialog(
-        this,
-        "Vui lòng nhập họ tên!",
-        "Lỗi",
-        JOptionPane.ERROR_MESSAGE
-      );
-      return;
-    }
+  public JLabel createLabel(String txt) {
+    JLabel lbl = new JLabel(txt);
+    lbl.setFont(new Font("Segoe UI", Font.BOLD, 15));
+    lbl.setHorizontalAlignment(SwingConstants.RIGHT);
+    return lbl;
+  }
 
-    if (txtSoDienThoai.getText().trim().isEmpty()) {
-      JOptionPane.showMessageDialog(
-        this,
-        "Vui lòng nhập số điện thoại!",
-        "Lỗi",
-        JOptionPane.ERROR_MESSAGE
-      );
-      return;
-    }
+  public JButton createButton(String txt) {
+    JButton btn = new JButton(txt);
+    btn.setFocusPainted(false);
+    btn.setFont(new Font("Segoe UI", Font.BOLD, 15));
+    btn.setPreferredSize(new Dimension(200, 50));
+    return btn;
+  }
 
-    try {
-      // Lấy thông tin
-      String ngay = cboNgay.getSelectedItem().toString();
-      String gio = cboGio.getSelectedItem().toString();
-      String maBacSi = cboBacSi.getSelectedItem().toString();
-      String maGoi = cboGoiDichVu.getSelectedItem().toString();
+  //===================XỬ LÝ DATA===============
+  private void loadData() {
+    loadGoiDichVu();
+    loadBacSi();
+  }
 
-      String thoiGianBatDau = ngay + " " + gio + ":00";
-
-      // Tính thời gian kết thúc (+ 30 phút)
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern(
-        "yyyy-MM-dd HH:mm:ss"
-      );
-      LocalDateTime batDau = LocalDateTime.parse(thoiGianBatDau, formatter);
-      LocalDateTime ketThuc = batDau.plusMinutes(30);
-      String thoiGianKetThuc = ketThuc.format(formatter);
-
-      // Tạo DTO
-      LichKhamDTO lk = new LichKhamDTO();
-      lk.setMaLichKham(lichKhamBUS.generateMaLichKham());
-      lk.setMaGoi(maGoi);
-      lk.setMaBacSi(maBacSi);
-      lk.setThoiGianBatDau(thoiGianBatDau);
-      lk.setThoiGianKetThuc(thoiGianKetThuc);
-      lk.setTrangThai("Đã đặt");
-      lk.setMaDinhDanhTam(txtSoDienThoai.getText().trim());
-
-      // Insert
-      String result = lichKhamBUS.insert(lk);
-
-      if (result.contains("thành công")) {
-        JOptionPane.showMessageDialog(
-          this,
-          "Đặt lịch thành công!\n\n" +
-            "Mã lịch khám: " +
-            lk.getMaLichKham() +
-            "\n" +
-            "Bác sĩ: " +
-            maBacSi +
-            "\n" +
-            "Thời gian: " +
-            thoiGianBatDau +
-            "\n\n" +
-            "Vui lòng đến đúng giờ!",
-          "Thành công",
-          JOptionPane.INFORMATION_MESSAGE
-        );
-        lamMoi();
-      } else {
-        JOptionPane.showMessageDialog(
-          this,
-          "Lỗi: " + result,
-          "Lỗi",
-          JOptionPane.ERROR_MESSAGE
-        );
+  //Sau khi có Dịch vụ bus thì bỏ comment cái này
+  public void loadGoiDichVu() {
+    GoiDV.removeAllItems();
+    GoiDichVuBUS dvBUS = new GoiDichVuBUS();
+    ArrayList<GoiDichVuDTO> list = new ArrayList<>();
+    // list = dvBUS.getAll();
+    if (list != null && !list.isEmpty()) {
+      for (GoiDichVuDTO dichvu : list) {
+        GoiDV.addItem(dichvu.getMaGoi() + "-" + dichvu.getTenGoi());
       }
+    }
+  }
+
+  //Bác sĩ BUS xong thì bỏ comment cái này
+  public void loadBacSi() {
+    BacSi.removeAllItems();
+    BacSiBUS bsBUS = new BacSiBUS();
+    ArrayList<BacSiDTO> list = new ArrayList<>();
+    // list = bsBUS.getAll();
+    if (list != null && !list.isEmpty()) {
+      for (BacSiDTO bs : list) {
+        BacSi.addItem(bs.getHoTen());
+      }
+    }
+  }
+
+  //================XỬ LÝ SỰ KIỆN===================
+  private void loadEvents() {
+    //sự kiện thay đổi gói dịch vụ
+    GoiDV.addActionListener(e -> onGoiDichVuChanged());
+    btnDangky.addActionListener(e -> onDangKy());
+    btnRefresh.addActionListener(e -> onRefresh());
+    btnSearch.addActionListener(e -> onSearch());
+  }
+
+  private void onGoiDichVuChanged() {
+    String selected = (String) GoiDV.getSelectedItem();
+    if (selected != null && !selected.isEmpty()) {
+      String MaGoi = selected.split("-")[0];
+      // GoiDichVuDTO goi = GoiDVBUS.getByMaGoi(goi.getMaGoi());
+      // if(goi != null) {
+      //   txtMoTaGoi.setText(goi.getMoTa());
+      //   lblGiaGoi.setText(goi.getGiaDichVu() + " VND");
+      // }
+    }
+  }
+
+  private void onDangKy() {
+    try {
+      if (!validateInput()) {
+        return;
+      }
+      //Tạo hồ sơ trước
+      String maHoSo = generateMaHoSo();
+      HoSoBenhAnDTO hs = new HoSoBenhAnDTO();
+      hs.setMaHoSo(maHoSo);
+      hs.setCCCD(txtCCCD.getText());
+      hs.setHoTen(txtHoTen.getText());
+      hs.setDiaChi(txtDiaChi.getText());
+      hs.setGioiTinh(radNam.isSelected() ? "Nam" : "Nu");
+      hs.setTrangThai("CHO_KHAM");
+      SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+      hs.setNgaySinh(java.sql.Date.valueOf(sdf.format(dateNgaySinh.getDate())));
+      boolean insertHS = hsBUS.dangKyBenhNhan(hs);
+      if (!insertHS) {
+        JOptionPane.showMessageDialog(this, "Lỗi khi tạo mới hồ sơ");
+        return;
+      }
+
+      //Tạo lịch khám
+      String maLichKham = lkBUS.generateMaLichKham();
+      LichKhamDTO lichKham = new LichKhamDTO();
+      lichKham.setMaLichKham(maLichKham);
+      
+      String maBacSi = ((String) BacSi.getSelectedItem()).split(" - ")[0];
+      lichKham.setMaBacSi(maBacSi);
+      
+      String maGoi = ((String) GoiDV.getSelectedItem()).split(" - ")[0];
+      lichKham.setMaGoi(maGoi);
+      
+      lichKham.setMaDinhDanhTam(maHoSo);
+
+      String ngayKham = sdf.format(new Date());
+      String gioKham = (String)LichKham.getSelectedItem();
+      String[] gio = gioKham.split(" - ");
+      
+      lichKham.setThoiGianBatDau(ngayKham + " " + gio[0] + ":00");
+      lichKham.setThoiGianKetThuc(ngayKham + " " + gio[1] + ":00");
+      lichKham.setTrangThai("Chờ xác nhận");
+      String result = lkBUS.insert(lichKham);
+      
+      if (result.contains("✅")) {
+        JOptionPane.showMessageDialog(this, 
+          "✅ Đặt lịch khám thành công!\nMã lịch khám: " + maLichKham,
+          "Thành công", 
+          JOptionPane.INFORMATION_MESSAGE);
+        onRefresh();
+      } else {
+        JOptionPane.showMessageDialog(this, result, "Lỗi", JOptionPane.ERROR_MESSAGE);
+      }
+
     } catch (Exception ex) {
-      JOptionPane.showMessageDialog(
-        this,
-        "Lỗi: " + ex.getMessage(),
-        "Lỗi",
-        JOptionPane.ERROR_MESSAGE
-      );
+      JOptionPane.showMessageDialog(this, 
+        "❌ Lỗi: " + ex.getMessage(), 
+        "Lỗi", 
+        JOptionPane.ERROR_MESSAGE);
       ex.printStackTrace();
     }
-  }
+    }
 
-  private void lamMoi() {
+  private void onRefresh() {
     txtHoTen.setText("");
-    txtSoDienThoai.setText("");
-    txtEmail.setText("");
-    txtGhiChu.setText("");
-    cboGoiDichVu.setSelectedIndex(0);
-    cboBacSi.setSelectedIndex(0);
-    cboNgay.setSelectedIndex(0);
-    cboGio.setSelectedIndex(0);
+    txtSDT.setText("");
+    txtCCCD.setText("");
+    txtDiaChi.setText("");
+    dateNgaySinh.setDate(null);
+    radNam.setSelected(true);
+    GoiDV.setSelectedIndex(0);
+    BacSi.setSelectedIndex(0);
+    txtMoTaGoi.setText("");
+    lblGiaGoi.setText("0 VND");
   }
 
-  private void xemLichCuaToi() {
+  private void onSearch() {
     String sdt = JOptionPane.showInputDialog(
       this,
-      "Nhập số điện thoại để tra cứu lịch khám:"
+      "Nhập số điện thoại của bạn: ",
+      "Tìm kiếm hồ sơ",
+      JOptionPane.QUESTION_MESSAGE
     );
-
-    if (sdt != null && !sdt.trim().isEmpty()) {
-      ArrayList<LichKhamDTO> danhSach = lichKhamBUS.getByMaDinhDanhTam(sdt.trim());
-
-      if (danhSach.isEmpty()) {
-        JOptionPane.showMessageDialog(
-          this,
-          "Không tìm thấy lịch khám với số điện thoại này!"
-        );
-      } else {
-        showLichKhamDialog(danhSach);
-      }
+    if (sdt == null || sdt.trim().isEmpty()) {
+      return;
+    }
+    ArrayList<HoSoBenhAnDTO> list = new ArrayList<>();
+    list = hsBUS.getBySDT(sdt);
+    if (list == null || list.isEmpty()) {
+      JOptionPane.showMessageDialog(
+        this,
+        "Không tìm thấy hồ sơ nào!",
+        "Thông báo",
+        JOptionPane.INFORMATION_MESSAGE
+      );
+    } else {
+      showHoSo(list);
     }
   }
 
-  private void showLichKhamDialog(ArrayList<LichKhamDTO> danhSach) {
+  private void showHoSo(ArrayList<HoSoBenhAnDTO> list) {
     JDialog dialog = new JDialog(
       (Frame) SwingUtilities.getWindowAncestor(this),
-      "Lịch khám của tôi",
+      "Danh sách hồ sơ",
       true
     );
-    dialog.setSize(700, 400);
+    dialog.setSize(800, 400);
     dialog.setLocationRelativeTo(this);
 
-    String[] columns = { "Mã lịch", "Bác sĩ", "Thời gian", "Trạng thái" };
-    Object[][] data = new Object[danhSach.size()][4];
+    //tạo table
+    String[] col = {
+      "Mã hồ sơ",
+      "Họ tên",
+      "CCCD",
+      "Ngày sinh",
+      "Giới tính",
+      "Ngày khám",
+      "Bác sĩ khám",
+      "Chẩn đoán",
+      "Lời dặn",
+      "Trạng thái",
+    };
+    DefaultTableModel model = new DefaultTableModel(col, 0);
+    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+    for (HoSoBenhAnDTO hs : list) {
+      model.addRow(
+        new Object[] {
+          hs.getMaHoSo(),
+          hs.getHoTen(),
+          hs.getCCCD(),
+          hs.getNgaySinh() != null ? sdf.format(hs.getNgaySinh()) : "",
+          hs.getGioiTinh(),
+          hs.getNgayKham() != null ? sdf.format(hs.getNgayKham()) : "",
+          hs.getMaBacSi(),
+          hs.getChanDoan(),
+          hs.getLoiDan(),
+          hs.getTrangThai(),
+        }
+      );
+    }
+    JTable table = new JTable(model);
+    table.setRowHeight(30);
+    JScrollPane scroll = new JScrollPane(table);
 
-    for (int i = 0; i < danhSach.size(); i++) {
-      LichKhamDTO lk = danhSach.get(i);
-      data[i][0] = lk.getMaLichKham();
-      data[i][1] = lk.getMaBacSi();
-      data[i][2] = lk.getThoiGianBatDau();
-      data[i][3] = lk.getTrangThai();
+    dialog.add(scroll);
+    dialog.setVisible(true);
+  }
+
+  private boolean validateInput() {
+    if (txtHoTen.getText().trim().isEmpty()) {
+      JOptionPane.showMessageDialog(this, "Vui lòng nhập họ tên!");
+      txtHoTen.requestFocus();
+      return false;
     }
 
-    JTable table = new JTable(data, columns);
-    table.setRowHeight(30);
-    JScrollPane scrollPane = new JScrollPane(table);
+    if (txtSDT.getText().trim().isEmpty()) {
+      JOptionPane.showMessageDialog(this, "Vui lòng nhập số điện thoại!");
+      txtSDT.requestFocus();
+      return false;
+    }
 
-    JButton btnDong = new JButton("Đóng");
-    btnDong.addActionListener(e -> dialog.dispose());
+    if (!txtSDT.getText().matches("^0\\d{9}$")) {
+      JOptionPane.showMessageDialog(this, "Số điện thoại không hợp lệ!");
+      txtSDT.requestFocus();
+      return false;
+    }
 
-    JPanel buttonPanel = new JPanel();
-    buttonPanel.add(btnDong);
+    if (dateNgaySinh.getDate() == null) {
+      JOptionPane.showMessageDialog(this, "Vui lòng chọn ngày sinh!");
+      return false;
+    }
 
-    dialog.add(scrollPane, BorderLayout.CENTER);
-    dialog.add(buttonPanel, BorderLayout.SOUTH);
+    if (GoiDV.getSelectedItem() == null) {
+      JOptionPane.showMessageDialog(this, "Vui lòng chọn gói dịch vụ!");
+      return false;
+    }
 
-    dialog.setVisible(true);
+    if (BacSi.getSelectedItem() == null) {
+      JOptionPane.showMessageDialog(this, "Vui lòng chọn bác sĩ!");
+      return false;
+    }
+
+    return true;
+  }
+
+  private String generateMaHoSo() {
+    return "HS" + System.currentTimeMillis();
   }
 }
