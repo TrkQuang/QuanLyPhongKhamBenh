@@ -1,4 +1,4 @@
-package phongkham.bus;
+package phongkham.BUS;
 
 import java.util.ArrayList;
 import phongkham.dao.GoiDichVuDAO;
