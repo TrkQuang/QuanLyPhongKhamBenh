@@ -120,4 +120,23 @@ public class CTDonThuocDAO {
         }
         return ds;
     }
+  // Kiểm tra mã chi tiết đơn thuốc tồn tại
+public boolean existsMaCTDonThuoc(String maCT) {
+
+    String sql = "SELECT 1 FROM CTDonThuoc WHERE MaCTDonThuoc=?";
+
+    try (
+        Connection c = DBConnection.getConnection();
+        PreparedStatement ps = c.prepareStatement(sql);
+    ) {
+        ps.setString(1, maCT);
+        ResultSet rs = ps.executeQuery();
+        return rs.next();
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    return false;
+  }
 }
