@@ -49,7 +49,7 @@ public class CTPhieuNhapDAO {
         return false;
     }
 
-    public boolean Delete(String MaCTPN, String MaPhieuNhap){
+    public boolean Delete(String MaCTPN){
         String sqp = "DELETE FROM ChiTietPhieuNhap WHERE MaCTPN = ?";
         try(Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sqp);){

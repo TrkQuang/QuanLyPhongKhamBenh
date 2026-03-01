@@ -3,75 +3,100 @@ package phongkham.BUS;
 import phongkham.DTO.CTPhieuNhapDTO;
 import phongkham.dao.CTPhieuNhapDAO;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 
 public class CTPhieuNhapBUS {
 
     private CTPhieuNhapDAO ctDAO;
-    private ArrayList<CTPhieuNhapDTO> list;
 
     public CTPhieuNhapBUS() {
         ctDAO = new CTPhieuNhapDAO();
-        list = ctDAO.getAll();
     }
 
-    // ===== LOAD DANH SÁCH =====
+    // ================= LOAD TẤT CẢ =================
     public ArrayList<CTPhieuNhapDTO> getAll() {
-        list = ctDAO.getAll();
-        return list;
+        return ctDAO.getAll();
     }
 
-    // ===== LẤY THEO MÃ PHIẾU NHẬP =====
+    // ================= LẤY THEO MÃ PHIẾU NHẬP =================
     public ArrayList<CTPhieuNhapDTO> getByMaPhieuNhap(String maPN) {
+        if (maPN == null || maPN.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
         return ctDAO.getByMaPhieuNhap(maPN);
     }
 
-    // ===== THÊM =====
+    // ================= THÊM =================
     public boolean insert(CTPhieuNhapDTO ct) {
-        if (ct == null) return false;
-        if (ct.getSoLuongNhap() <= 0) return false;
-        if (ct.getDonGiaNhap().doubleValue() <= 0) return false;
 
-        boolean ok = ctDAO.Insert(ct);
-        if (ok) list.add(ct);
+        if (!validate(ct)) return false;
 
-        return ok;
+        return ctDAO.Insert(ct);
     }
 
-    // ===== XÓA =====
-    public boolean delete(String maCTPN) {
-        boolean ok = ctDAO.Delete(maCTPN, null);
-        if (ok) {
-            list.removeIf(ct -> ct.getMaCTPN().equals(maCTPN));
-        }
-        return ok;
-    }
-
-    // ===== CẬP NHẬT =====
+    // ================= CẬP NHẬT =================
     public boolean update(CTPhieuNhapDTO ct) {
-        boolean ok = ctDAO.Update(ct);
-        if (ok) {
-            for (int i = 0; i < list.size(); i++) {
-                if (list.get(i).getMaCTPN().equals(ct.getMaCTPN())) {
-                    list.set(i, ct);
-                    break;
-                }
-            }
-        }
-        return ok;
+
+        if (!validate(ct)) return false;
+
+        return ctDAO.Update(ct);
     }
 
-    // ===== TÌM THEO MÃ =====
+    // ================= XÓA =================
+    public boolean delete(String maCTPN) {
+
+        if (maCTPN == null || maCTPN.trim().isEmpty()) {
+            return false;
+        }
+
+        return ctDAO.Delete(maCTPN);
+    }
+
+    // ================= TÌM THEO MÃ =================
     public CTPhieuNhapDTO search(String maCTPN) {
+
+        if (maCTPN == null || maCTPN.trim().isEmpty()) {
+            return null;
+        }
+
         return ctDAO.Search(maCTPN);
     }
 
-    // ===== TÍNH TỔNG TIỀN PHIẾU NHẬP =====
-    public double tinhTongTien(String maPN) {
-        double tong = 0;
+    // ================= TÍNH TỔNG TIỀN PHIẾU NHẬP =================
+    public BigDecimal tinhTongTien(String maPN) {
+
+        BigDecimal tong = BigDecimal.ZERO;
+
         for (CTPhieuNhapDTO ct : getByMaPhieuNhap(maPN)) {
-            tong += ct.getSoLuongNhap() * ct.getDonGiaNhap().doubleValue();
+
+            if (ct.getDonGiaNhap() != null) {
+
+                BigDecimal thanhTien = ct.getDonGiaNhap()
+                        .multiply(BigDecimal.valueOf(ct.getSoLuongNhap()));
+
+                tong = tong.add(thanhTien);
+            }
         }
+
         return tong;
+    }
+
+    // ================= VALIDATE =================
+    private boolean validate(CTPhieuNhapDTO ct) {
+
+        if (ct == null) return false;
+
+        if (ct.getMaPhieuNhap() == null || ct.getMaPhieuNhap().trim().isEmpty())
+            return false;
+
+        if (ct.getSoLuongNhap() <= 0)
+            return false;
+
+        if (ct.getDonGiaNhap() == null 
+                || ct.getDonGiaNhap().compareTo(BigDecimal.ZERO) <= 0)
+            return false;
+
+        return true;
     }
 }

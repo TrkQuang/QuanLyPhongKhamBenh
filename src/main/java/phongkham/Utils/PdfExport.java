@@ -20,6 +20,8 @@ import phongkham.dao.HoaDonKhamDAO;
  */
 public class PdfExport {
 
+  private static final String FONT_PATH = "c:/windows/fonts/arial.ttf";
+
   /**
    * Xuất hóa đơn đã chọn trong JTable ra PDF
    * @param table Bảng chứa danh sách hóa đơn
@@ -102,7 +104,7 @@ public class PdfExport {
         BaseFont baseFont;
         try {
             baseFont = BaseFont.createFont(
-                    "c:/windows/fonts/arial.ttf",
+                    FONT_PATH,
                     BaseFont.IDENTITY_H,
                     BaseFont.EMBEDDED
             );
@@ -201,22 +203,75 @@ public class PdfExport {
         // ===== FOOTER =====
         Paragraph thanks = new Paragraph(
                 "Cảm ơn quý khách đã sử dụng dịch vụ!",
-                normalFont
-        );
+                normalFont);
+
         thanks.setAlignment(Element.ALIGN_CENTER);
         document.add(thanks);
 
         document.close();
         return true;
 
-    } catch (Exception e) {
-        e.printStackTrace();
-        return false;
-    }
-}
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+  }
   private static PdfPCell createCell(String text, Font font) {
       PdfPCell cell = new PdfPCell(new Phrase(text, font));
       cell.setPadding(8);
       return cell;
+  }
+
+  public static void exportText(String content, String fileName) {
+    try {
+      // Tự động thêm .pdf nếu chưa có
+      if (!fileName.endsWith(".pdf")) {
+        fileName += ".pdf";
+      }
+
+      Document document = new Document();
+      PdfWriter.getInstance(document, new FileOutputStream(fileName));
+      document.open();
+
+      // Load font tiếng Việt
+      BaseFont bf = BaseFont.createFont(
+        FONT_PATH,
+        BaseFont.IDENTITY_H,
+        BaseFont.EMBEDDED
+      );
+
+      // Xử lý từng dòng
+      for (String line : content.split("\n")) {
+        Font font;
+        int align = Element.ALIGN_LEFT;
+
+        if (line.startsWith("===")) {
+          // Tiêu đề chính: đậm + căn giữa
+          font = new Font(bf, 16, Font.BOLD);
+          align = Element.ALIGN_CENTER;
+        } else if (line.startsWith("---")) {
+          // Tiêu đề phụ: đậm
+          font = new Font(bf, 12, Font.BOLD);
+        } else {
+          // Nội dung: bình thường
+          font = new Font(bf, 11, Font.NORMAL);
+        }
+
+        Paragraph p = new Paragraph(line, font);
+        p.setAlignment(align);
+        document.add(p);
+      }
+
+      document.close();
+      System.out.println("✅ Đã xuất PDF: " + fileName);
+
+      // Mở file PDF
+      if (java.awt.Desktop.isDesktopSupported()) {
+        java.awt.Desktop.getDesktop().open(new java.io.File(fileName));
+      }
+    } catch (Exception e) {
+      System.err.println("❌ Lỗi xuất PDF: " + e.getMessage());
+      e.printStackTrace();
+    }
   }
 }

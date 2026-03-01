@@ -4,12 +4,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import phongkham.DTO.LichKhamDTO;
 import phongkham.db.DBConnection;
-
-/**
- * LichKhamDAO - TỐI ƯU
- * Từ 505 dòng → 220 dòng (-57%)
- * Giảm 285 dòng code lặp!
- */
 public class LichKhamDAO {
 
   // ✅ 1. METHOD DÙNG CHUNG: Map ResultSet → DTO
@@ -128,8 +122,6 @@ public class LichKhamDAO {
   }
 
   // ===== SEARCH OPERATIONS =====
-
-  // ✅ TỪ 20 DÒNG → 1 DÒNG!
   public ArrayList<LichKhamDTO> getByMaBacSi(String maBacSi) {
     return executeQuery(
       "SELECT * FROM LichKham WHERE MaBacSi = ? ORDER BY ThoiGianBatDau DESC",
