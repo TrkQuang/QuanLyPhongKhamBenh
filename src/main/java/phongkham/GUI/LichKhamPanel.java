@@ -82,19 +82,16 @@ public class LichKhamPanel extends JPanel {
 
     // Button panel
     JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-    JButton btnChiTiet = new JButton("Chi tiết");
     JButton btnXacNhan = new JButton("Xác nhận");
     JButton btnBatDau = new JButton("Bắt đầu khám");
     JButton btnHoanThanh = new JButton("Hoàn thành");
     JButton btnHuy = new JButton("Hủy lịch");
 
-    btnChiTiet.addActionListener(e -> showChiTiet());
     btnXacNhan.addActionListener(e -> xacNhanLichKham());
     btnBatDau.addActionListener(e -> batDauKham());
     btnHoanThanh.addActionListener(e -> hoanThanhKham());
     btnHuy.addActionListener(e -> huyLichKham());
 
-    btnPanel.add(btnChiTiet);
     btnPanel.add(btnXacNhan);
     btnPanel.add(btnBatDau);
     btnPanel.add(btnHoanThanh);

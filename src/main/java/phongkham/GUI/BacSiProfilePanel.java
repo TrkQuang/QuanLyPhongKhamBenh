@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+
+import phongkham.BUS.BacSiBUS;
 import phongkham.DTO.BacSiDTO;
 
 public class BacSiProfilePanel extends JPanel {
@@ -205,7 +207,8 @@ public class BacSiProfilePanel extends JPanel {
 
     private void initData() {
         listBacSi = new ArrayList<>();
-        listBacSi.add(new BacSiDTO("BS001", "Trần Quang Hữu", "Nội Khoa", "0987654321", "huu@pk.com", "MK01"));
+        BacSiBUS bus = new BacSiBUS();
+        listBacSi = bus.getAll();
     }
 
     private JTextField createTextField() {

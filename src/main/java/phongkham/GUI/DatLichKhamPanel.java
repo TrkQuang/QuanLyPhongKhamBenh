@@ -203,7 +203,7 @@ public class DatLichKhamPanel extends JPanel {
     BacSi.removeAllItems();
     BacSiBUS bsBUS = new BacSiBUS();
     ArrayList<BacSiDTO> list = new ArrayList<>();
-    // list = bsBUS.getAll();
+    list = bsBUS.getAll();
     if (list != null && !list.isEmpty()) {
       for (BacSiDTO bs : list) {
         BacSi.addItem(bs.getMaBacSi() + " - " + bs.getHoTen());
@@ -321,7 +321,6 @@ public class DatLichKhamPanel extends JPanel {
     dialog.setLayout(new BorderLayout());
     dialog.setSize(400, 250);
     dialog.setLocationRelativeTo(this);
-    dialog.setVisible(true);
     //panel thông tin tiền :))
     JPanel info = new JPanel(new GridLayout(2, 1, 5, 5));
     JLabel lblTitle = createLabel("XÁC NHẬN THANH TOÁN");
@@ -361,6 +360,7 @@ public class DatLichKhamPanel extends JPanel {
     dialog.add(info, BorderLayout.NORTH);
     dialog.add(pick, BorderLayout.CENTER);
     dialog.add(btnPanel, BorderLayout.SOUTH);
+    dialog.setVisible(true);
     return kq[0];
   }
 

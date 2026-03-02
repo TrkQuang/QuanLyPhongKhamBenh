@@ -9,7 +9,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import phongkham.DTO.BacSiDTO;
 import phongkham.DTO.KhoaDTO;
-
+import phongkham.BUS.BacSiBUS;
+import phongkham.BUS.KhoaBUS;
 public class KhoaPanel extends JPanel {
 
     private final Color PRIMARY_COLOR = new Color(37, 99, 235);
@@ -20,6 +21,8 @@ public class KhoaPanel extends JPanel {
     private ArrayList<BacSiDTO> listBacSi;
     private JPanel listContainer;
     private JTextField txtSearch;
+    private KhoaBUS Khoabus = new KhoaBUS();
+    private BacSiBUS BSBus = new BacSiBUS();
 
     public KhoaPanel() {
         initData(); // Luôn khởi tạo dữ liệu trước khi vẽ giao diện
@@ -166,12 +169,18 @@ public class KhoaPanel extends JPanel {
     }
 
     private void initData() {
-        listKhoa = new ArrayList<>();
-        listKhoa.add(new KhoaDTO("KHOA_NOI", "Khoa Nội Tổng Hợp"));
-        listKhoa.add(new KhoaDTO("KHOA_NGOAI", "Khoa Ngoại Chấn Thương"));
-
-        listBacSi = new ArrayList<>();
-        listBacSi.add(new BacSiDTO("BS01", "Trần Quang Hữu", "Nội", "098...", "email...", "KHOA_NOI"));
+        loadDataKhoa();
+        loadDataBacSi();
+    }
+    private void loadDataKhoa() {
+        ArrayList<KhoaDTO> list = new ArrayList<>();
+        list = Khoabus.getAll();
+        listKhoa = list;
+    }
+    private void loadDataBacSi() {
+        ArrayList<BacSiDTO> list = new ArrayList<>();
+        list = BSBus.getAll();
+        listBacSi = list;
     }
 
     private JButton createButton(String text, Color bg) {
