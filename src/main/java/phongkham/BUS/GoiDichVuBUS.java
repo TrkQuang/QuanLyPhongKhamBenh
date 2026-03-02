@@ -1,5 +1,6 @@
 package phongkham.BUS;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import phongkham.dao.GoiDichVuDAO;
 import phongkham.DTO.GoiDichVuDTO;
@@ -23,8 +24,8 @@ public class GoiDichVuBUS {
             System.out.println("Khong duoc de trong du lieu!");
             return false;
         }
-
-        if (g.getGiaDichVu() <= 0) {
+        BigDecimal zero = new BigDecimal(0);
+        if (g.getGiaDichVu().compareTo(zero) < 0) {
             System.out.println("Gia dich vu phai lon hon 0!");
             return false;
         }
@@ -34,7 +35,7 @@ public class GoiDichVuBUS {
             return false;
         }
 
-        return dao.insert(g);
+        return dao.insertGoiDichVu(g);
     }
 
     public boolean update(GoiDichVuDTO g) {
@@ -44,7 +45,7 @@ public class GoiDichVuBUS {
             return false;
         }
 
-        return dao.update(g);
+        return dao.updateGoiDichVu(g);
     }
 
     public boolean delete(String maGoi) {
@@ -54,7 +55,7 @@ public class GoiDichVuBUS {
             return false;
         }
 
-        return dao.delete(maGoi);
+        return dao.deleteMaGoi(maGoi);
     }
 
     public ArrayList<GoiDichVuDTO> searchByTen(String ten) {

@@ -102,7 +102,7 @@ public class DonThuocBUS {
         if (!donThuocDAO.exists(maDonThuoc))
             return "Ma don thuoc khong ton tai!";
 
-        boolean result = donThuocDAO.deleteDonThuoc(maDonThuoc);
+        boolean result = donThuocDAO.deleteMaDonThuoc(maDonThuoc);
 
         if (result) {
             loadData();

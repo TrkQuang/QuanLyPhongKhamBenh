@@ -19,7 +19,7 @@ public class CTDonThuocBUS {
     // Thêm chi tiết đơn thuốc
     public boolean insert(CTDonThuocDTO ct) {
 
-        if (ct.gettMaCTDonThuoc().trim().isEmpty() ||
+        if (ct.getMaCTDonThuoc().trim().isEmpty() ||
             ct.getMaDonThuoc().trim().isEmpty() ||
             ct.getMaThuoc().trim().isEmpty()) {
 
@@ -32,7 +32,7 @@ public class CTDonThuocBUS {
             return false;
         }
 
-        if (dao.existsMaCTDonThuoc(ct.gettMaCTDonThuoc())) {
+        if (dao.existsMaCTDonThuoc(ct.getMaCTDonThuoc())) {
             System.out.println("Mã chi tiết đã tồn tại!");
             return false;
         }
@@ -43,7 +43,7 @@ public class CTDonThuocBUS {
     // Cập nhật
     public boolean update(CTDonThuocDTO ct) {
 
-        if (!dao.existsMaCTDonThuoc(ct.gettMaCTDonThuoc())) {
+        if (!dao.existsMaCTDonThuoc(ct.getMaCTDonThuoc())) {
             System.out.println("Không tìm thấy mã chi tiết để cập nhật!");
             return false;
         }
