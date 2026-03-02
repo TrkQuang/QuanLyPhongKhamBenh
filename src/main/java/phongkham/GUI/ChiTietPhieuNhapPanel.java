@@ -11,7 +11,6 @@ import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
 
-import phongkham.dao.CTPhieuNhapDAO;
 import phongkham.dao.PhieuNhapDAO;
 import phongkham.dao.ThuocDAO;
 import phongkham.BUS.CTPhieuNhapBUS;
