@@ -33,7 +33,7 @@ public class CTPhieuNhapDAO {
     }
 
     public boolean Insert(CTPhieuNhapDTO ctpn){
-        String sqp ="INSERT INTO ChiTietPhieuNhap(MaCTPN, MaPhieuNhap, MaThuoc, SoLuongNhap, DonGiaNhap, HanSuDung) VALUE (?, ?, ?, ?, ?, ?)";
+        String sqp ="INSERT INTO ChiTietPhieuNhap(MaCTPN, MaPhieuNhap, MaThuoc, SoLuongNhap, DonGiaNhap, HanSuDung) VALUES (?, ?, ?, ?, ?, ?)";
         try(Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sqp);){
                 ps.setString(1,ctpn.getMaCTPN());
@@ -41,7 +41,11 @@ public class CTPhieuNhapDAO {
                 ps.setString(3, ctpn.getMaThuoc());
                 ps.setInt(4, ctpn.getSoLuongNhap());
                 ps.setBigDecimal(5, ctpn.getDonGiaNhap());
-                ps.setObject(6, ctpn.getHanSuDung());
+                if (ctpn.getHanSuDung() != null) {
+                    ps.setObject(6, ctpn.getHanSuDung());
+                } else {
+                    ps.setNull(6, java.sql.Types.DATE);
+                }
                 return ps.executeUpdate() > 0;
         }catch(SQLException e){
             e.printStackTrace();
@@ -125,8 +129,21 @@ public class CTPhieuNhapDAO {
         }
         return list;
     }
+    public boolean deleteByMaPhieuNhap(String maPhieuNhap) {
+        String sql = "DELETE FROM ChiTietPhieuNhap WHERE MaPhieuNhap=?";
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
 
-    
+            ps.setString(1, maPhieuNhap);
+            ps.executeUpdate();
+            return true;
+
+        } catch (Exception e) {
+            System.err.println("❌ Lỗi xóa chi tiết: " + e.getMessage());
+            return false;
+        }
+    }
+
 
 }
 

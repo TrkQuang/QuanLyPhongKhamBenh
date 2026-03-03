@@ -27,7 +27,7 @@ public class HoaDonKhamBUS {
         if (from == null || to == null) return new ArrayList<>();
 
         LocalDateTime f = from.atStartOfDay();
-        LocalDateTime t = to.atTime(23, 59, 59);
+        LocalDateTime t = to.atStartOfDay();
 
         return hdDAO.filterByDate(f, t);
     }
@@ -49,7 +49,7 @@ public class HoaDonKhamBUS {
             // --- Filter Date ---
             if (match && from != null && to != null && hd.getNgayThanhToan() != null) {
                 LocalDateTime f = from.atStartOfDay();
-                LocalDateTime t = to.atTime(23, 59, 59);
+                LocalDateTime t = to.atStartOfDay();
                 if (hd.getNgayThanhToan().isBefore(f) ||
                     hd.getNgayThanhToan().isAfter(t)) {
                     match = false;

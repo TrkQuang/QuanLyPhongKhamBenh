@@ -40,7 +40,28 @@ public class PhieuNhapBUS {
   }
 
   public boolean delete(String maPhieuNhap) {
-    return dao.delete(maPhieuNhap);
+
+      PhieuNhapDTO pn = dao.getById(maPhieuNhap);
+
+      if (pn == null) {
+          System.err.println("❌ Không tìm thấy phiếu nhập!");
+          return false;
+      }
+
+      // ❌ Không cho hủy nếu đã nhập kho
+      if ("DA_NHAP".equals(pn.getTrangThai())) {
+          System.err.println("❌ Không thể hủy phiếu đã nhập!");
+          return false;
+      }
+
+      // ❌ Không hủy nếu đã hủy rồi
+      if ("DA_HUY".equals(pn.getTrangThai())) {
+          System.err.println("⚠️ Phiếu đã bị hủy trước đó!");
+          return false;
+      }
+
+      // ✅ Cập nhật trạng thái thành DA_HUY
+      return dao.capNhatTrangThai(maPhieuNhap, "DA_HUY");
   }
 
   public boolean capNhatTrangThai(String maPhieuNhap, String trangThaiMoi) {

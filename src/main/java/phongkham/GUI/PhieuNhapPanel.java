@@ -170,21 +170,36 @@ public class PhieuNhapPanel extends JPanel {
 
   // ✅ TẠO LABEL TRẠNG THÁI với màu sắc
   private JLabel createTrangThaiLabel(String trangThai) {
-    String text = "Chờ duyệt";
-    Color color = new Color(255, 165, 0); // Cam
+      String text;
+      Color color;
 
-    if ("DA_DUYET".equals(trangThai)) {
-      text = "Đã duyệt";
-      color = new Color(16, 185, 129); // Xanh
-    } else if ("DA_HUY".equals(trangThai)) {
-      text = "Đã hủy";
-      color = new Color(239, 68, 68); // Đỏ
-    }
+      switch (trangThai) {
+          case "DA_NHAP":
+              text = "Đã nhập";
+              color = new Color(34, 197, 94); // Xanh lá
+              break;
 
-    JLabel lbl = new JLabel(text);
-    lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
-    lbl.setForeground(color);
-    return lbl;
+          case "DA_DUYET":
+              text = "Đã duyệt";
+              color = new Color(59, 130, 246); // Xanh dương
+              break;
+
+          case "DA_HUY":
+              text = "Đã hủy";
+              color = new Color(239, 68, 68); // Đỏ
+              break;
+
+          case "CHO_DUYET":
+          default:
+              text = "Chờ duyệt";
+              color = new Color(255, 165, 0); // Cam
+              break;
+      }
+
+      JLabel lbl = new JLabel(text);
+      lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
+      lbl.setForeground(color);
+      return lbl;
   }
 
   // ✅ TẠO PANEL NÚT BẤM
@@ -210,7 +225,7 @@ public class PhieuNhapPanel extends JPanel {
     panel.add(btnChiTiet);
 
     // Nút "Duyệt" (chỉ hiện nếu CHO_DUYET)
-    if ("CHO_DUYET".equals(trangThai)) {
+    if ("CHUA_DUYET".equals(trangThai)) {
       JButton btnDuyet = createButton("Duyệt", new Color(16, 185, 129));
       btnDuyet.addActionListener(e -> {
         if (confirm("Xác nhận duyệt phiếu nhập này?")) {
@@ -229,20 +244,25 @@ public class PhieuNhapPanel extends JPanel {
     }
 
     // Nút "Xóa" (chỉ hiện nếu KHÔNG PHẢI DA_DUYET)
-    if (!"DA_DUYET".equals(trangThai)) {
+    // Chỉ cho xóa khi chưa nhập và chưa hủy
+  if (!"DA_NHAP".equals(trangThai) && 
+      !"DA_HUY".equals(trangThai)) {
+
       JButton btnXoa = createButton("Xóa", new Color(239, 68, 68));
+
       btnXoa.addActionListener(e -> {
-        if (confirm("Xác nhận xóa phiếu nhập này?")) {
-          if (bus.delete(pn.getMaPhieuNhap())) {
-            JOptionPane.showMessageDialog(this, "✅ Đã xóa thành công!");
-            loadData();
-          } else {
-            JOptionPane.showMessageDialog(this, "❌ Lỗi khi xóa!");
+          if (confirm("Xác nhận hủy phiếu nhập này?")) {
+              if (bus.delete(pn.getMaPhieuNhap())) {
+                  JOptionPane.showMessageDialog(this, "✅ Đã hủy thành công!");
+                  loadData();
+              } else {
+                  JOptionPane.showMessageDialog(this, "❌ Không thể hủy phiếu!");
+              }
           }
-        }
       });
+
       panel.add(btnXoa);
-    }
+  }
 
     return panel;
   }

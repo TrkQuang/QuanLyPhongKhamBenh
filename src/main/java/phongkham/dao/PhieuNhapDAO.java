@@ -221,4 +221,22 @@ public class PhieuNhapDAO {
     }
     return 0;
   }
+
+  // ===== CẬP NHẬT TỔNG TIỀN =====
+  public boolean updateTongTien(String maPN, java.math.BigDecimal tongTien) {
+
+      boolean success = executeUpdate(
+          "UPDATE PhieuNhap SET TongTienNhap = ? WHERE MaPhieuNhap = ?",
+          tongTien,
+          maPN
+      );
+
+      if (success) {
+          System.out.println("✅ Cập nhật tổng tiền phiếu: " + maPN);
+      } else {
+          System.err.println("⚠️ Không tìm thấy phiếu để cập nhật tổng tiền: " + maPN);
+      }
+
+      return success;
+  }
 }

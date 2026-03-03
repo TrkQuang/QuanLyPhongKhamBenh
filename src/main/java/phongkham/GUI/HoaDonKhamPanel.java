@@ -2,11 +2,18 @@ package phongkham.GUI;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+
+import com.toedter.calendar.JDateChooser;
+
+import java.util.Date;
 
 import phongkham.DTO.HoaDonKhamDTO;
 import phongkham.BUS.HoaDonKhamBUS;
@@ -19,9 +26,11 @@ public class HoaDonKhamPanel extends JPanel {
   private JTable dataTable;
   private DefaultTableModel tableModel;
   private JLabel lbInfo;
+  private JDateChooser dateFrom;
+  private JDateChooser dateTo;
 
-  private HoaDonKhamDAO hdDAO = new HoaDonKhamDAO();
   private ArrayList<HoaDonKhamDTO> fullList = new ArrayList<>();
+  private HoaDonKhamBUS hdBUS = new HoaDonKhamBUS();
 
   private int currentPage = 1;
   private final int rowsPerPage = 10;
@@ -37,7 +46,7 @@ public class HoaDonKhamPanel extends JPanel {
     // KHỐI CENTER: Chứa bảng dữ liệu
     add(createTablePanel(), BorderLayout.CENTER);
 
-    fullList = hdDAO.getAll();
+    fullList = hdBUS.getAll();
     loadDataToTable();
   }
 
@@ -71,57 +80,65 @@ public class HoaDonKhamPanel extends JPanel {
   }
 
   private JPanel createSearchPanel() {
-    // Sử dụng FlowLayout với khoảng cách ngang 10px để tiết kiệm diện tích
+
     JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 15));
     panel.setBackground(Color.WHITE);
     panel.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230)));
 
-        txtTimKiem = new JTextField(12);
-        txtTuNgay = new JTextField(8);
-        txtDenNgay = new JTextField(8);
+    txtTimKiem = new JTextField(12);
 
-    // Khởi tạo các nút bấm với màu sắc phân biệt
+    // Dùng JDateChooser thay vì JTextField
+    dateFrom = new JDateChooser();
+    dateFrom.setDateFormatString("dd/MM/yyyy");
+    dateFrom.setPreferredSize(new Dimension(120, 25));
+
+    dateTo = new JDateChooser();
+    dateTo.setDateFormatString("dd/MM/yyyy");
+    dateTo.setPreferredSize(new Dimension(120, 25));
+
     btFind = createStyledButton(
-      "Tìm kiếm",
-      new Color(37, 99, 235),
-      Color.WHITE
+            "Tìm kiếm",
+            new Color(37, 99, 235),
+            Color.WHITE
     );
+
     btReload = createStyledButton(
-      "Làm mới",
-      new Color(107, 114, 128),
-      Color.WHITE
+            "Làm mới",
+            new Color(107, 114, 128),
+            Color.WHITE
     );
+
     btExport = createStyledButton(
-      "Xuất PDF",
-      new Color(220, 38, 38),
-      Color.WHITE
-    ); // Màu đỏ cho PDF
+            "Xuất PDF",
+            new Color(220, 38, 38),
+            Color.WHITE
+    );
 
-        panel.add(new JLabel("Tìm mã:"));
-        panel.add(txtTimKiem);
-        panel.add(new JLabel("Từ ngày:"));
-        panel.add(txtTuNgay);
-        panel.add(new JLabel("Đến ngày:"));
-        panel.add(txtDenNgay);
-        panel.add(btFind);
-        panel.add(btReload);
-        panel.add(btExport);
+    panel.add(new JLabel("Tìm mã:"));
+    panel.add(txtTimKiem);
 
-    // Gán sự kiện
+    panel.add(new JLabel("Từ ngày:"));
+    panel.add(dateFrom);
+
+    panel.add(new JLabel("Đến ngày:"));
+    panel.add(dateTo);
+
+    panel.add(btFind);
+    panel.add(btReload);
+    panel.add(btExport);
+
     btFind.addActionListener(this::btFindAction);
     btReload.addActionListener(this::btReloadAction);
 
-    // Sự kiện xuất PDF hóa đơn đơn giản
     btExport.addActionListener(e -> {
-      phongkham.Utils.PdfExport.exportTable(dataTable, "Hóa đơn khám");
+        phongkham.Utils.PdfExport.exportTable(dataTable, "Hóa đơn khám");
     });
 
-    // Ép chiều cao panel lên 70px để thoải mái không gian
     panel.setPreferredSize(new Dimension(panel.getPreferredSize().width, 70));
     panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
 
     return panel;
-  }
+}
 
   private JScrollPane createTablePanel() {
     String[] cols = {
@@ -234,25 +251,46 @@ public class HoaDonKhamPanel extends JPanel {
   }
 
   private void btFindAction(ActionEvent e) {
-    String key = txtTimKiem.getText().trim();
-    if (key.isEmpty()) {
-      fullList = hdDAO.getAll();
-    } else {
-      fullList.clear();
-      HoaDonKhamDTO hd = hdDAO.Search(key);
-      if (hd != null) fullList.add(hd);
-      else JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn!");
-    }
-    currentPage = 1;
-    loadDataToTable();
-  }
 
-  private void btReloadAction(ActionEvent e) {
-    txtTimKiem.setText("");
-    txtTuNgay.setText("");
-    txtDenNgay.setText("");
-    fullList = hdDAO.getAll();
+    String key = txtTimKiem.getText().trim();
+
+    Date dFrom = dateFrom.getDate();
+    Date dTo = dateTo.getDate();
+
+    LocalDate fromDate = null;
+    LocalDate toDate = null;
+
+    if (dFrom != null) {
+        fromDate = dFrom.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+    }
+
+    if (dTo != null) {
+        toDate = dTo.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+    }
+
+    // Gọi BUS (không gọi DAO trực tiếp nữa)
+    fullList = hdBUS.searchAndFilter(key, fromDate, toDate);
+
+    if (fullList.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "Không tìm thấy kết quả!");
+    }
+
     currentPage = 1;
     loadDataToTable();
-  }
+}
+  private void btReloadAction(ActionEvent e) {
+
+    txtTimKiem.setText("");
+    dateFrom.setDate(null);
+    dateTo.setDate(null);
+
+    fullList = hdBUS.getAll();
+
+    currentPage = 1;
+    loadDataToTable();
+}
 }

@@ -212,7 +212,7 @@ public class HoaDonKhamDAO {
   }
   public ArrayList<HoaDonKhamDTO> filterByDate(LocalDateTime from, LocalDateTime to) {
     ArrayList<HoaDonKhamDTO> list = new ArrayList<>();
-    String sql = "SELECT * FROM HoaDonKham WHERE NgayThanhToan BETWEEN ? AND ?";
+    String sql = "SELECT * FROM HoaDonKham WHERE NgayThanhToan BETWEEN ? AND ? ";
 
     try (
         Connection conn = DBConnection.getConnection();
