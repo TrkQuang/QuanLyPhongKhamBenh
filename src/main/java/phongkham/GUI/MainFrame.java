@@ -43,6 +43,7 @@ public class MainFrame extends JFrame {
     addPanel("HOADONKHAM", new HoaDonKhamPanel());
     addPanel("BACSI_PROFILE", new BacSiProfilePanel());
     addPanel("QUANLYKHOA", new KhoaPanel());
+    addPanel("QUANLYTHUOC", new QuanLyThuocPanel());
     addPanel("LICHLAMVIEC", new LichLamViecPanel());
 
     add(contentPanel, BorderLayout.CENTER);
