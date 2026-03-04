@@ -22,6 +22,7 @@ public class SidebarPanel extends JPanel {
     { "Hóa đơn khám", "HOADONKHAM" },
     { "Hồ sơ bác sĩ", "BACSI_PROFILE" },
     { "Quản lý khoa", "QUANLYKHOA" },
+    { "Quản lý thuốc", "QUANLYTHUOC"},
     { "Đăng ký ca làm", "LICHLAMVIEC" },
     { "Liên hệ", "CONTACT" },
     { "Về chúng tôi", "ABOUT" },
