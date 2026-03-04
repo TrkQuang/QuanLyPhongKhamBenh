@@ -1,52 +1,230 @@
 package phongkham.GUI;
 
+import com.toedter.calendar.JDateChooser;
 import java.awt.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.border.LineBorder;
+import phongkham.BUS.BacSiBUS;
+import phongkham.BUS.LichLamViecBUS;
+import phongkham.DTO.BacSiDTO;
+import phongkham.DTO.LichLamViecDTO;
 
 public class LichLamViecPanel extends JPanel {
 
-    private final Color BG_COLOR = new Color(245, 247, 250);
+    private final Color PRIMARY = new Color(37, 99, 235);
+    private final Color BG = new Color(245, 247, 250);
+    private final Color SUCCESS = new Color(34, 197, 94);
+    private final Color DANGER = new Color(239, 68, 68);
 
-    private JTable table;
-    private DefaultTableModel model;
-    private JComboBox<String> cbThu, cbCa;
-    private String tenBacSiDangNhap = "Trần Quang Hữu";
+    private JDateChooser dateChooser;
+    private JPanel pnlSang, pnlChieu, pnlToi;
+    private LichLamViecBUS llvBUS = new LichLamViecBUS();
+    private BacSiBUS bsBUS = new BacSiBUS();
+
+    private String maBacSiDangNhap = "BS001";
 
     public LichLamViecPanel() {
         initComponents();
+        loadData();
     }
 
     private void initComponents() {
         setLayout(new BorderLayout(20, 20));
-        setBackground(BG_COLOR);
-        setBorder(new EmptyBorder(20, 20, 20, 20));
+        setBackground(BG);
+        setBorder(new EmptyBorder(25, 25, 25, 25));
 
-        JLabel lblTitle = new JLabel("ĐĂNG KÝ CA LÀM VIỆC - BS: " + tenBacSiDangNhap);
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        add(lblTitle, BorderLayout.NORTH);
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setOpaque(false);
 
-        JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 15));
-        cbThu = new JComboBox<>(new String[] { "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu" });
-        cbCa = new JComboBox<>(new String[] { "Ca 1", "Ca 2" });
-        JButton btnDangKy = new JButton("Gửi Đăng Ký");
-        btnDangKy.addActionListener(e -> dangKyCa());
+        JLabel lblTitle = new JLabel("Lịch Làm Việc");
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        lblTitle.setForeground(new Color(30, 41, 59));
+        topPanel.add(lblTitle, BorderLayout.WEST);
 
-        inputPanel.add(cbThu);
-        inputPanel.add(cbCa);
-        inputPanel.add(btnDangKy);
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        filterPanel.setOpaque(false);
 
-        model = new DefaultTableModel(new String[] { "Thứ", "Ca", "Trạng thái" }, 0);
-        table = new JTable(model);
+        JLabel lblDate = new JLabel("Ngày:");
+        lblDate.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        filterPanel.add(lblDate);
 
-        JPanel center = new JPanel(new BorderLayout());
-        center.add(inputPanel, BorderLayout.NORTH);
-        center.add(new JScrollPane(table), BorderLayout.CENTER);
-        add(center, BorderLayout.CENTER);
+        dateChooser = new JDateChooser(new Date());
+        dateChooser.setDateFormatString("yyyy-MM-dd");
+        dateChooser.setPreferredSize(new Dimension(160, 35));
+        dateChooser.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        dateChooser.addPropertyChangeListener("date", e -> loadData());
+        filterPanel.add(dateChooser);
+
+        topPanel.add(filterPanel, BorderLayout.EAST);
+        add(topPanel, BorderLayout.NORTH);
+
+        JPanel gridPanel = new JPanel(new GridLayout(1, 3, 20, 0));
+        gridPanel.setOpaque(false);
+
+        pnlSang = createShiftColumn("Sáng");
+        pnlChieu = createShiftColumn("Chiều");
+        pnlToi = createShiftColumn("Tối");
+
+        gridPanel.add(pnlSang);
+        gridPanel.add(pnlChieu);
+        gridPanel.add(pnlToi);
+
+        add(gridPanel, BorderLayout.CENTER);
     }
 
-    private void dangKyCa() {
-        model.addRow(new Object[] { cbThu.getSelectedItem(), cbCa.getSelectedItem(), "Chờ duyệt" });
+    private JPanel createShiftColumn(String title) {
+        JPanel col = new JPanel(new BorderLayout());
+        col.setBackground(Color.WHITE);
+        col.setBorder(new LineBorder(new Color(226, 232, 240), 1, true));
+
+        JLabel lblHeader = new JLabel("CA " + title.toUpperCase(), SwingConstants.CENTER);
+        lblHeader.setOpaque(true);
+        lblHeader.setBackground(new Color(248, 250, 252));
+        lblHeader.setForeground(new Color(71, 85, 105));
+        lblHeader.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblHeader.setPreferredSize(new Dimension(0, 50));
+        lblHeader.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(226, 232, 240)));
+        col.add(lblHeader, BorderLayout.NORTH);
+
+        JPanel list = new JPanel();
+        list.setLayout(new BoxLayout(list, BoxLayout.Y_AXIS));
+        list.setBackground(Color.WHITE);
+        list.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        JScrollPane scroll = new JScrollPane(list);
+        scroll.setBorder(null);
+        col.add(scroll, BorderLayout.CENTER);
+
+        JButton btnAdd = new JButton("+ Đăng ký ca " + title);
+        styleButton(btnAdd, PRIMARY);
+        btnAdd.addActionListener(e -> dangKy(title));
+        col.add(btnAdd, BorderLayout.SOUTH);
+
+        return col;
+    }
+
+    private void loadData() {
+        if (dateChooser.getDate() == null)
+            return;
+
+        String dateStr = new SimpleDateFormat("yyyy-MM-dd").format(dateChooser.getDate());
+        clearColumns();
+
+        for (LichLamViecDTO llv : llvBUS.getAll()) {
+            if (llv.getNgayLam() != null && llv.getNgayLam().startsWith(dateStr)) {
+                JPanel card = createCard(llv);
+
+                if (llv.getCaLam().equalsIgnoreCase("Sang"))
+                    getListPnl(pnlSang).add(card);
+                else if (llv.getCaLam().equalsIgnoreCase("Chieu"))
+                    getListPnl(pnlChieu).add(card);
+                else if (llv.getCaLam().equalsIgnoreCase("Toi"))
+                    getListPnl(pnlToi).add(card);
+
+                JPanel spacer = new JPanel();
+                spacer.setMaximumSize(new Dimension(0, 10));
+                spacer.setOpaque(false);
+
+                if (llv.getCaLam().equalsIgnoreCase("Sang"))
+                    getListPnl(pnlSang).add(spacer);
+                else if (llv.getCaLam().equalsIgnoreCase("Chieu"))
+                    getListPnl(pnlChieu).add(spacer);
+                else if (llv.getCaLam().equalsIgnoreCase("Toi"))
+                    getListPnl(pnlToi).add(spacer);
+            }
+        }
+
+        repaint();
+        revalidate();
+    }
+
+    private JPanel createCard(LichLamViecDTO llv) {
+        JPanel card = new JPanel(new BorderLayout(10, 0));
+        card.setBackground(new Color(248, 250, 252));
+        card.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(new Color(226, 232, 240), 1, true),
+                new EmptyBorder(12, 12, 12, 12)));
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
+
+        BacSiDTO bs = bsBUS.getById(llv.getMaBacSi());
+        String tenBS = (bs != null) ? bs.getHoTen() : "Bác sĩ";
+
+        JLabel lblName = new JLabel(
+                "<html><b>BS. " + tenBS + "</b><br><font color='gray'>Mã ca: "
+                        + llv.getMaLichLam() + "</font></html>");
+        lblName.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        card.add(lblName, BorderLayout.CENTER);
+
+        JPanel actions = new JPanel(new GridLayout(2, 1, 0, 5));
+        actions.setOpaque(false);
+
+        JButton btnDuyet = new JButton("Duyệt");
+        JButton btnHuy = new JButton("Hủy");
+        styleMiniBtn(btnDuyet, SUCCESS);
+        styleMiniBtn(btnHuy, DANGER);
+
+        btnDuyet.addActionListener(e -> JOptionPane.showMessageDialog(this, "Đã duyệt lịch của " + tenBS));
+
+        btnHuy.addActionListener(e -> {
+            if (llvBUS.delete(llv.getMaLichLam())) {
+                JOptionPane.showMessageDialog(this, "Đã hủy ca làm.");
+                loadData();
+            }
+        });
+
+        actions.add(btnDuyet);
+        actions.add(btnHuy);
+        card.add(actions, BorderLayout.EAST);
+
+        return card;
+    }
+
+    private void dangKy(String ca) {
+        String caDb = ca.equals("Sáng") ? "Sang"
+                : (ca.equals("Chiều") ? "Chieu" : "Toi");
+
+        String dateStr = new SimpleDateFormat("yyyy-MM-dd").format(dateChooser.getDate());
+
+        LichLamViecDTO llv = new LichLamViecDTO();
+        llv.setMaLichLam("L" + System.currentTimeMillis() % 10000);
+        llv.setMaBacSi(maBacSiDangNhap);
+        llv.setNgayLam(dateStr);
+        llv.setCaLam(caDb);
+
+        if (llvBUS.add(llv)) {
+            loadData();
+        }
+    }
+
+    private void styleButton(JButton btn, Color bg) {
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(bg);
+        btn.setFocusPainted(false);
+        btn.setPreferredSize(new Dimension(0, 45));
+        btn.setBorderPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+
+    private void styleMiniBtn(JButton btn, Color fg) {
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        btn.setForeground(fg);
+        btn.setBackground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setBorder(new LineBorder(fg, 1, true));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+
+    private JPanel getListPnl(JPanel col) {
+        return (JPanel) ((JScrollPane) col.getComponent(1)).getViewport().getView();
+    }
+
+    private void clearColumns() {
+        getListPnl(pnlSang).removeAll();
+        getListPnl(pnlChieu).removeAll();
+        getListPnl(pnlToi).removeAll();
     }
 }
