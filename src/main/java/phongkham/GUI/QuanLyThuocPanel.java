@@ -152,12 +152,6 @@ public class QuanLyThuocPanel extends JPanel{
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         panel.setOpaque(false);
 
-        JButton btnChiTiet = createButton("Chi tiết", new Color(59, 130, 246));
-        btnChiTiet.addActionListener(e ->
-                JOptionPane.showMessageDialog(this, "Xem chi tiết thuốc: " + t.getTenThuoc())
-        );
-        panel.add(btnChiTiet);
-
         JButton btnSua = createButton("Sửa", new Color(255, 165, 0));
         btnSua.addActionListener(e ->
                 JOptionPane.showMessageDialog(this, "Chức năng sửa đang phát triển")
