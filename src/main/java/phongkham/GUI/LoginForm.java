@@ -3,7 +3,9 @@ package phongkham.GUI;
 import com.formdev.flatlaf.FlatLightLaf;
 import java.awt.*;
 import javax.swing.*;
+import phongkham.BUS.BacSiBUS;
 import phongkham.BUS.UsersBUS;
+import phongkham.DTO.BacSiDTO;
 import phongkham.DTO.UsersDTO;
 import phongkham.Utils.Session;
 
@@ -83,9 +85,18 @@ public class LoginForm extends JFrame {
     }
 
     Session.login(user);
-    JOptionPane.showMessageDialog(this, "Đăng nhập thành công!");
 
-    new MainFrame().setVisible(true);
+    // ✅ Tìm maBacSi bằng email
+    BacSiBUS bacSiBUS = new BacSiBUS();
+    BacSiDTO bacSi = bacSiBUS.getByEmail(user.getEmail());
+    if (bacSi != null) {
+      Session.setCurrentBacSiID(bacSi.getMaBacSi());
+    }
+
+    // ✅ Mở MainFrame và tự động chuyển đến trang chọn ca làm việc
+    MainFrame mainFrame = new MainFrame();
+    mainFrame.setVisible(true);
+    mainFrame.showPanel("LICHLAMVIEC");
     dispose();
   }
 
