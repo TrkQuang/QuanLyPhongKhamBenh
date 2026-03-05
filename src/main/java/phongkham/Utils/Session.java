@@ -10,6 +10,7 @@ public class Session {
 
   public static UsersDTO currentUser = null;
   private static Set<String> currentPermissions = null; 
+  public static String currentBacSiID = null;
 
   /**
    * Đăng nhập: lưu user + TỰ ĐỘNG load permissions
@@ -29,15 +30,15 @@ public class Session {
     }
 
     System.out.println(
-      "✓ Loaded " +
-        currentPermissions.size() +
-        " permissions for " +
-        user.getUsername()
-    );
+        "✓ Loaded " +
+            currentPermissions.size() +
+            " permissions for " +
+            user.getUsername());
   }
 
   public static void logout() {
     currentUser = null;
+    currentBacSiID = null;
     currentPermissions = null;
   }
 
@@ -47,6 +48,14 @@ public class Session {
 
   public static String getCurrentUserID() {
     return currentUser != null ? currentUser.getUserID() : null;
+  }
+
+  public static void setCurrentBacSiID(String maBacSi) {
+    currentBacSiID = maBacSi;
+  }
+
+  public static String getCurrentBacSiID() {
+    return currentBacSiID;
   }
 
   public static String getCurrentUsername() {
@@ -75,8 +84,7 @@ public class Session {
     System.out.println("========== SESSION INFO ==========");
     System.out.println("User: " + currentUser.getUsername());
     System.out.println(
-      "Permissions (" + currentPermissions.size() + "): " + currentPermissions
-    );
+        "Permissions (" + currentPermissions.size() + "): " + currentPermissions);
     System.out.println("==================================");
   }
 }

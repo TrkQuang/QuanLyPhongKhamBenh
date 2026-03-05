@@ -24,6 +24,7 @@ public class LichLamViecDAO {
                 l.setMaBacSi(rs.getString("MaBacSi"));
                 l.setNgayLam(rs.getString("NgayLam"));
                 l.setCaLam(rs.getString("CaLam"));
+                l.setTrangThai(rs.getString("TrangThai"));
                 ds.add(l);
             }
         } catch (SQLException e) {
@@ -46,6 +47,7 @@ public class LichLamViecDAO {
                     l.setMaBacSi(rs.getString("MaBacSi"));
                     l.setNgayLam(rs.getString("NgayLam"));
                     l.setCaLam(rs.getString("CaLam"));
+                    l.setTrangThai(rs.getString("TrangThai"));
                     ds.add(l);
                 }
             }
@@ -56,7 +58,7 @@ public class LichLamViecDAO {
     }
 
     public boolean insert(LichLamViecDTO l) {
-        String sql = "INSERT INTO LichLamViec (MaLichLam, MaBacSi, NgayLam, CaLam) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO LichLamViec (MaLichLam, MaBacSi, NgayLam, CaLam, TrangThai) VALUES (?, ?, ?, ?, ?)";
         try (Connection c = DBConnection.getConnection();
                 PreparedStatement ps = c.prepareStatement(sql)) {
 
@@ -64,6 +66,7 @@ public class LichLamViecDAO {
             ps.setString(2, l.getMaBacSi());
             ps.setString(3, l.getNgayLam());
             ps.setString(4, l.getCaLam());
+            ps.setString(5, l.getTrangThai());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -73,14 +76,15 @@ public class LichLamViecDAO {
     }
 
     public boolean update(LichLamViecDTO l) {
-        String sql = "UPDATE LichLamViec SET MaBacSi=?, NgayLam=?, CaLam=? WHERE MaLichLam=?";
+        String sql = "UPDATE LichLamViec SET MaBacSi=?, NgayLam=?, CaLam=?, TrangThai=? WHERE MaLichLam=?";
         try (Connection c = DBConnection.getConnection();
                 PreparedStatement ps = c.prepareStatement(sql)) {
 
             ps.setString(1, l.getMaBacSi());
             ps.setString(2, l.getNgayLam());
             ps.setString(3, l.getCaLam());
-            ps.setString(4, l.getMaLichLam());
+            ps.setString(4, l.getTrangThai());
+            ps.setString(5, l.getMaLichLam());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
