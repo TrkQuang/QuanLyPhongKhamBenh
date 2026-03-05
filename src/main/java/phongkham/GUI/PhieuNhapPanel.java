@@ -7,10 +7,6 @@ import javax.swing.*;
 import phongkham.BUS.PhieuNhapBUS;
 import phongkham.DTO.PhieuNhapDTO;
 
-/**
- * PhieuNhapPanel - TỐI ƯU (Không HTML)
- * Từ 258 dòng → 160 dòng (-38%)
- */
 public class PhieuNhapPanel extends JPanel {
 
   private JTextField txtTimKiem;

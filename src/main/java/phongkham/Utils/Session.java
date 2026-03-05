@@ -9,7 +9,7 @@ import phongkham.DTO.UsersDTO;
 public class Session {
 
   public static UsersDTO currentUser = null;
-  private static Set<String> currentPermissions = null; // ✅ Đổi sang Set
+  private static Set<String> currentPermissions = null; 
 
   /**
    * Đăng nhập: lưu user + TỰ ĐỘNG load permissions
