@@ -14,7 +14,6 @@ public class DonThuocBUS {
         donThuocDAO = new DonThuocDAO();
         loadData();
     }
-
     // ================= LOAD DATA =================
     public void loadData() {
         dsDonThuoc = donThuocDAO.getAll();
