@@ -11,7 +11,7 @@ public class RolePermissionsDAO {
   // Thêm mới
   public boolean insert(RolePermissionsDTO rolePermissions) {
     String sql =
-      "INSERT INTO RolePermissions (MaRole, MaPermission, MoTa, Active) VALUES (?, ?, ?, ?)";
+      "INSERT INTO RolePermissions (MaRole, MaPermission, Active) VALUES (?, ?, ?)";
 
     try (
       Connection conn = DBConnection.getConnection();
@@ -19,8 +19,7 @@ public class RolePermissionsDAO {
     ) {
       pstmt.setInt(1, rolePermissions.getMaRole());
       pstmt.setInt(2, rolePermissions.getMaPermission());
-      pstmt.setString(3, rolePermissions.getMoTa());
-      pstmt.setBoolean(4, rolePermissions.isActive());
+      pstmt.setBoolean(3, rolePermissions.isActive());
 
       int rowsInserted = pstmt.executeUpdate();
       return rowsInserted > 0;
@@ -35,7 +34,7 @@ public class RolePermissionsDAO {
   // Cập nhật
   public boolean update(RolePermissionsDTO rolePermissions) {
     String sql =
-      "UPDATE RolePermissions SET MaRole = ?, MaPermission = ?, MoTa = ?, Active = ? WHERE MaRolePermissions = ?";
+      "UPDATE RolePermissions SET MaRole = ?, MaPermission = ?, Active = ? WHERE MaRolePermissions = ?";
 
     try (
       Connection conn = DBConnection.getConnection();
@@ -43,9 +42,8 @@ public class RolePermissionsDAO {
     ) {
       pstmt.setInt(1, rolePermissions.getMaRole());
       pstmt.setInt(2, rolePermissions.getMaPermission());
-      pstmt.setString(3, rolePermissions.getMoTa());
-      pstmt.setBoolean(4, rolePermissions.isActive());
-      pstmt.setInt(5, rolePermissions.getMaRolePermissions());
+      pstmt.setBoolean(3, rolePermissions.isActive());
+      pstmt.setInt(4, rolePermissions.getMaRolePermissions());
 
       int rowsUpdated = pstmt.executeUpdate();
       return rowsUpdated > 0;
@@ -75,9 +73,9 @@ public class RolePermissionsDAO {
   // Lấy theo ID
   public RolePermissionsDTO getById(int maRolePermissions) {
     String sql =
-      "SELECT rp.*, r.TenRole, p.TenPermission " +
+      "SELECT rp.*, r.TenVaiTro, p.TenPermission " +
       "FROM RolePermissions rp " +
-      "LEFT JOIN Roles r ON rp.MaRole = r.MaRole " +
+      "LEFT JOIN Roles r ON rp.MaRole = r.STT " +
       "LEFT JOIN Permissions p ON rp.MaPermission = p.MaPermission " +
       "WHERE rp.MaRolePermissions = ?";
 
@@ -103,9 +101,9 @@ public class RolePermissionsDAO {
   public List<RolePermissionsDTO> getAll() {
     List<RolePermissionsDTO> list = new ArrayList<>();
     String sql =
-      "SELECT rp.*, r.TenRole, p.TenPermission " +
+      "SELECT rp.*, r.TenVaiTro, p.TenPermission " +
       "FROM RolePermissions rp " +
-      "LEFT JOIN Roles r ON rp.MaRole = r.MaRole " +
+      "LEFT JOIN Roles r ON rp.MaRole = r.STT " +
       "LEFT JOIN Permissions p ON rp.MaPermission = p.MaPermission";
 
     try (
@@ -128,9 +126,9 @@ public class RolePermissionsDAO {
   public List<RolePermissionsDTO> getByRole(int maRole) {
     List<RolePermissionsDTO> list = new ArrayList<>();
     String sql =
-      "SELECT rp.*, r.TenRole, p.TenPermission " +
+      "SELECT rp.*, r.TenVaiTro, p.TenPermission " +
       "FROM RolePermissions rp " +
-      "LEFT JOIN Roles r ON rp.MaRole = r.MaRole " +
+      "LEFT JOIN Roles r ON rp.MaRole = r.STT " +
       "LEFT JOIN Permissions p ON rp.MaPermission = p.MaPermission " +
       "WHERE rp.MaRole = ? AND rp.Active = 1";
 
@@ -221,10 +219,35 @@ public class RolePermissionsDAO {
     dto.setMaRolePermissions(rs.getInt("MaRolePermissions"));
     dto.setMaRole(rs.getInt("MaRole"));
     dto.setMaPermission(rs.getInt("MaPermission"));
-    dto.setTenRole(rs.getString("TenRole"));
+    dto.setTenRole(rs.getString("TenVaiTro"));
     dto.setTenPermission(rs.getString("TenPermission"));
-    dto.setMoTa(rs.getString("MoTa"));
     dto.setActive(rs.getBoolean("Active"));
     return dto;
+  }
+
+  // ========== METHODS CHO QuanLyPhanQuyenPanel ==========
+
+  /**
+   * Xóa tất cả Permission của một Role
+   * @param roleId - Mã Role (int)
+   * @return true nếu thành công
+   */
+  public boolean deleteByRoleId(int roleId) {
+    String sql = "DELETE FROM RolePermissions WHERE MaRole = ?";
+
+    try (
+      Connection conn = DBConnection.getConnection();
+      PreparedStatement pstmt = conn.prepareStatement(sql)
+    ) {
+      pstmt.setInt(1, roleId);
+      int rowsDeleted = pstmt.executeUpdate();
+      System.out.println(
+        "✅ Xóa " + rowsDeleted + " RolePermission của Role " + roleId
+      );
+      return true; // Trả về true ngay cả khi không có gì để xóa
+    } catch (SQLException e) {
+      System.err.println("❌ Lỗi deleteByRoleId: " + e.getMessage());
+      return false;
+    }
   }
 }

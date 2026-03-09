@@ -1,6 +1,7 @@
 package phongkham.BUS;
 
 import java.util.List;
+import java.util.ArrayList;
 import phongkham.DTO.RolePermissionsDTO;
 import phongkham.dao.RolePermissionsDAO;
 
@@ -107,5 +108,40 @@ public class RolePermissionsBUS {
 
     // ✅ Gọi 1 hàm DAO duy nhất xử lý toàn bộ logic
     return rolePermissionsDAO.replacePermissionsForRole(maRole, permissionIds);
+  }
+
+  // ========== WRAPPER METHODS CHO QuanLyPhanQuyenPanel ==========
+
+  /**
+   * Lấy permissions theo role (String wrapper)
+   * @param roleId - Mã Role dạng String
+   * @return List<RolePermissionsDTO>
+   */
+  public ArrayList<RolePermissionsDTO> getPermissionsByRole(String roleId) {
+    ArrayList<RolePermissionsDTO> result = new ArrayList<>();
+
+    try {
+      int maRole = Integer.parseInt(roleId);
+      result = new ArrayList<>(getPermissionsByRole(maRole));
+    } catch (NumberFormatException e) {
+      System.err.println("Loi parse roleId: " + roleId);
+    }
+
+    return result;
+  }
+
+  /**
+   * Xóa tất cả Permission của một Role
+   * @param roleId - Mã Role dạng String
+   * @return true nếu thành công
+   */
+  public boolean deleteAllPermissionsByRole(String roleId) {
+    try {
+      int maRole = Integer.parseInt(roleId);
+      return rolePermissionsDAO.deleteByRoleId(maRole);
+    } catch (NumberFormatException e) {
+      System.err.println("❌ Lỗi parse roleId: " + roleId);
+      return false;
+    }
   }
 }

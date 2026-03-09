@@ -1,4 +1,5 @@
 package phongkham.gui;
+
 import java.awt.*;
 import java.util.List;
 import javax.swing.*;
@@ -147,6 +148,10 @@ public class ChiTietHDThuocPanel extends JPanel {
 
     if (hd != null) {
       String trangThai = hd.getTrangThaiThanhToan();
+      String trangThaiLay =
+        hd.getTrangThaiLayThuoc() != null
+          ? hd.getTrangThaiLayThuoc()
+          : "ĐANG CHỜ LẤY";
 
       if ("Chưa thanh toán".equals(trangThai)) {
         JButton btnThem = createStyledButton(
@@ -184,6 +189,19 @@ public class ChiTietHDThuocPanel extends JPanel {
         btnThanhToan.addActionListener(e -> thanhToanHoaDon());
         rightPanel.add(btnThanhToan);
       }
+
+      // Nút hoàn thành lấy thuốc - chỉ hiển thị khi đã thanh toán và đang chờ lấy
+      if (
+        "Đã thanh toán".equals(trangThai) && "ĐANG CHỜ LẤY".equals(trangThaiLay)
+      ) {
+        JButton btnHoanThanhLayThuoc = createStyledButton(
+          "✓ Hoàn thành lấy thuốc",
+          new Color(34, 197, 94),
+          Color.WHITE
+        );
+        btnHoanThanhLayThuoc.addActionListener(e -> hoanThanhLayThuoc());
+        rightPanel.add(btnHoanThanhLayThuoc);
+      }
     }
 
     panel.add(rightPanel, BorderLayout.EAST);
@@ -206,7 +224,14 @@ public class ChiTietHDThuocPanel extends JPanel {
 
     HoaDonThuocDTO hd = hdBUS.getHoaDonThuocDetail(maHoaDon);
     if (hd != null) {
-      lblTrangThai.setText("Trạng thái: " + hd.getTrangThaiThanhToan());
+      String trangThaiTT = hd.getTrangThaiThanhToan();
+      String trangThaiLay =
+        hd.getTrangThaiLayThuoc() != null
+          ? hd.getTrangThaiLayThuoc()
+          : "ĐANG CHỜ LẤY";
+      lblTrangThai.setText(
+        "Thanh toán: " + trangThaiTT + " | Lấy thuốc: " + trangThaiLay
+      );
     }
 
     List<CTHDThuocDTO> details = bus.getDetailsByInvoice(maHoaDon);
@@ -458,6 +483,39 @@ public class ChiTietHDThuocPanel extends JPanel {
         loadData();
       } else {
         JOptionPane.showMessageDialog(this, "Thanh toán thất bại!");
+      }
+    }
+  }
+
+  private void hoanThanhLayThuoc() {
+    int confirm = JOptionPane.showConfirmDialog(
+      this,
+      "Xác nhận bệnh nhân đã lấy thuốc?\n" +
+        "Số lượng thuốc sẽ được trừ khỏi kho.",
+      "Xác nhận",
+      JOptionPane.YES_NO_OPTION
+    );
+    if (confirm == JOptionPane.YES_OPTION) {
+      if (hdBUS.completePickup(maHoaDon)) {
+        JOptionPane.showMessageDialog(
+          this,
+          "Hoàn thành lấy thuốc và trừ kho thành công!",
+          "Thành công",
+          JOptionPane.INFORMATION_MESSAGE
+        );
+        loadData();
+        // Refresh parent panel
+        if (parentPanel != null) {
+          parentPanel.refreshData();
+        }
+      } else {
+        JOptionPane.showMessageDialog(
+          this,
+          "Không thể hoàn thành lấy thuốc!\n" +
+            "Kiểm tra số lượng thuốc tồn kho.",
+          "Lỗi",
+          JOptionPane.ERROR_MESSAGE
+        );
       }
     }
   }

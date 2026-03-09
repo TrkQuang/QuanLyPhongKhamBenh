@@ -1,89 +1,91 @@
 package phongkham.BUS;
 
 import java.util.ArrayList;
-import phongkham.dao.CTDonThuocDAO;
 import phongkham.DTO.CTDonThuocDTO;
+import phongkham.dao.CTDonThuocDAO;
 
 public class CTDonThuocBUS {
+
   private CTDonThuocDAO dao;
 
-    public CTDonThuocBUS() {
-        dao = new CTDonThuocDAO();
+  public CTDonThuocBUS() {
+    dao = new CTDonThuocDAO();
+  }
+
+  // Lấy toàn bộ danh sách
+  public ArrayList<CTDonThuocDTO> getAll() {
+    return dao.getAll();
+  }
+
+  // Thêm chi tiết đơn thuốc
+  public boolean insert(CTDonThuocDTO ct) {
+    if (
+      ct.getMaCTDonThuoc().trim().isEmpty() ||
+      ct.getMaDonThuoc().trim().isEmpty() ||
+      ct.getMaThuoc().trim().isEmpty()
+    ) {
+      System.out.println("Không được để trống dữ liệu!");
+      return false;
     }
 
-    // Lấy toàn bộ danh sách
-    public ArrayList<CTDonThuocDTO> getAll() {
-        return dao.getAll();
+    if (ct.getSoluong() <= 0) {
+      System.out.println("Số lượng phải lớn hơn 0!");
+      return false;
     }
 
-    // Thêm chi tiết đơn thuốc
-    public boolean insert(CTDonThuocDTO ct) {
-
-        if (ct.getMaCTDonThuoc().trim().isEmpty() ||
-            ct.getMaDonThuoc().trim().isEmpty() ||
-            ct.getMaThuoc().trim().isEmpty()) {
-
-            System.out.println("Không được để trống dữ liệu!");
-            return false;
-        }
-
-        if (ct.getSoluong() <= 0) {
-            System.out.println("Số lượng phải lớn hơn 0!");
-            return false;
-        }
-
-        if (dao.existsMaCTDonThuoc(ct.getMaCTDonThuoc())) {
-            System.out.println("Mã chi tiết đã tồn tại!");
-            return false;
-        }
-
-        return dao.insertCTDonThuoc(ct);
+    if (dao.existsMaCTDonThuoc(ct.getMaCTDonThuoc())) {
+      System.out.println("Mã chi tiết đã tồn tại!");
+      return false;
     }
 
-    // Cập nhật
-    public boolean update(CTDonThuocDTO ct) {
+    return dao.insertCTDonThuoc(ct);
+  }
 
-        if (!dao.existsMaCTDonThuoc(ct.getMaCTDonThuoc())) {
-            System.out.println("Không tìm thấy mã chi tiết để cập nhật!");
-            return false;
-        }
+  // Alias add() cho GUI
+  public boolean add(CTDonThuocDTO ct) {
+    return insert(ct);
+  }
 
-        if (ct.getSoluong() <= 0) {
-            System.out.println("Số lượng phải lớn hơn 0!");
-            return false;
-        }
-
-        return dao.updateCTDonThuoc(ct);
+  // Cập nhật
+  public boolean update(CTDonThuocDTO ct) {
+    if (!dao.existsMaCTDonThuoc(ct.getMaCTDonThuoc())) {
+      System.out.println("Không tìm thấy mã chi tiết để cập nhật!");
+      return false;
     }
 
-    // Xóa
-    public boolean delete(String maCT) {
-
-        if (!dao.existsMaCTDonThuoc(maCT)) {
-            System.out.println("Mã chi tiết không tồn tại!");
-            return false;
-        }
-
-        return dao.deleteMaCTDonThuoc(maCT);
+    if (ct.getSoluong() <= 0) {
+      System.out.println("Số lượng phải lớn hơn 0!");
+      return false;
     }
 
-    // Lọc theo mã đơn thuốc
-    public ArrayList<CTDonThuocDTO> getByMaDonThuoc(String maDonThuoc) {
-        return dao.getByMaDonThuoc(maDonThuoc);
+    return dao.updateCTDonThuoc(ct);
+  }
+
+  // Xóa
+  public boolean delete(String maCT) {
+    if (!dao.existsMaCTDonThuoc(maCT)) {
+      System.out.println("Mã chi tiết không tồn tại!");
+      return false;
     }
 
-    // Tìm kiếm theo mã thuốc
-    public ArrayList<CTDonThuocDTO> searchByMaThuoc(String maThuoc) {
+    return dao.deleteMaCTDonThuoc(maCT);
+  }
 
-        ArrayList<CTDonThuocDTO> result = new ArrayList<>();
+  // Lọc theo mã đơn thuốc
+  public ArrayList<CTDonThuocDTO> getByMaDonThuoc(String maDonThuoc) {
+    return dao.getByMaDonThuoc(maDonThuoc);
+  }
 
-        for (CTDonThuocDTO ct : dao.getAll()) {
-            if (ct.getMaThuoc().toLowerCase()
-                  .contains(maThuoc.toLowerCase())) {
-                result.add(ct);
-            }
-        }
+  // Tìm kiếm theo mã thuốc
+  public ArrayList<CTDonThuocDTO> searchByMaThuoc(String maThuoc) {
+    ArrayList<CTDonThuocDTO> result = new ArrayList<>();
 
-        return result;
+    for (CTDonThuocDTO ct : dao.getAll()) {
+      if (ct.getMaThuoc().toLowerCase().contains(maThuoc.toLowerCase())) {
+        result.add(ct);
+      }
     }
+
+    return result;
+  }
 }

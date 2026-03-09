@@ -33,4 +33,43 @@ public class UsersRolesBUS {
   public ArrayList<UsersRolesDTO> getRolesByUser(String userID) {
     return urlDAO.getRolesByUser(userID);
   }
+
+  // ========== WRAPPER METHODS CHO QuanLyPhanQuyenPanel ==========
+
+  /**
+   * Kiểm tra User đã có Role chưa
+   * @param userId - Mã User
+   * @param roleId - Mã Role
+   * @return true nếu đã có
+   */
+  public boolean hasUserRole(String userId, String roleId) {
+    ArrayList<UsersRolesDTO> roles = getRolesByUser(userId);
+    for (UsersRolesDTO ur : roles) {
+      if (ur.getRole_ID().equals(roleId)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Gán Role cho User - trả về boolean
+   * @param userRole - UsersRolesDTO
+   * @return true nếu thành công
+   */
+  public boolean addUserRole(UsersRolesDTO userRole) {
+    String result = assignRole(userRole.getUser_ID(), userRole.getRole_ID());
+    return result.equals("Gán vai trò thành công");
+  }
+
+  /**
+   * Xóa Role khỏi User - trả về boolean
+   * @param userId - Mã User
+   * @param roleId - Mã Role
+   * @return true nếu thành công
+   */
+  public boolean deleteUserRole(String userId, String roleId) {
+    String result = deleteRole(userId, roleId);
+    return result.equals("Xóa vai trò thành công");
+  }
 }

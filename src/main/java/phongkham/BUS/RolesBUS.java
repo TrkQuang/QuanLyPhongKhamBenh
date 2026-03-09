@@ -56,4 +56,37 @@ public class RolesBUS {
   public RolesDTO getById(String STT) {
     return rolesDAO.getById(STT);
   }
+
+  // ========== WRAPPER METHODS CHO QuanLyPhanQuyenPanel ==========
+
+  /**
+   * Lấy Role theo ID (alias cho getById)
+   */
+  public RolesDTO getRoleById(String roleId) {
+    return getById(roleId);
+  }
+
+  /**
+   * Thêm Role - trả về boolean
+   */
+  public boolean addRole(RolesDTO role) {
+    String result = insertRoles(role);
+    return result.equals("Thêm thành công");
+  }
+
+  /**
+   * Cập nhật Role - trả về boolean
+   */
+  public boolean updateRole(RolesDTO role) {
+    String result = updateRoles(role);
+    return result.equals("Cập nhật thành công");
+  }
+
+  /**
+   * Xóa Role - trả về boolean
+   */
+  public boolean deleteRole(String roleId) {
+    String result = deleteRoles(roleId);
+    return result.equals("Xóa thành công");
+  }
 }

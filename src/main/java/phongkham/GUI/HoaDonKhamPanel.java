@@ -3,7 +3,6 @@ package phongkham.gui;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -17,11 +16,10 @@ import java.util.Date;
 
 import phongkham.DTO.HoaDonKhamDTO;
 import phongkham.BUS.HoaDonKhamBUS;
-import phongkham.dao.HoaDonKhamDAO;
 
 public class HoaDonKhamPanel extends JPanel {
 
-  private JTextField txtTimKiem, txtTuNgay, txtDenNgay;
+  private JTextField txtTimKiem;
   private JButton btFind, btReload, btExport;
   private JTable dataTable;
   private DefaultTableModel tableModel;

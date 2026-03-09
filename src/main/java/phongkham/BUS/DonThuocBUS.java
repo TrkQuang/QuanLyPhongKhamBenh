@@ -3,129 +3,134 @@ package phongkham.BUS;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import phongkham.dao.DonThuocDAO;
 import phongkham.DTO.DonThuocDTO;
+import phongkham.dao.DonThuocDAO;
 
 public class DonThuocBUS {
-    private DonThuocDAO donThuocDAO;
-    private ArrayList<DonThuocDTO> dsDonThuoc;
 
-    public DonThuocBUS() {
-        donThuocDAO = new DonThuocDAO();
-        loadData();
-    }
-    // ================= LOAD DATA =================
-    public void loadData() {
-        dsDonThuoc = donThuocDAO.getAll();
-    }
+  private DonThuocDAO donThuocDAO;
+  private ArrayList<DonThuocDTO> dsDonThuoc;
 
-    public ArrayList<DonThuocDTO> getAll() {
-        return dsDonThuoc;
-    }
+  public DonThuocBUS() {
+    donThuocDAO = new DonThuocDAO();
+    loadData();
+  }
 
-    // ================= TU SINH MA =================
-    public String generateMaDonThuoc() {
-        int max = 0;
+  // ================= LOAD DATA =================
+  public void loadData() {
+    dsDonThuoc = donThuocDAO.getAll();
+  }
 
-        for (DonThuocDTO dt : dsDonThuoc) {
-            try {
-                int so = Integer.parseInt(dt.getMaDonThuoc().replace("DT", ""));
-                if (so > max) max = so;
-            } catch (Exception e) {
+  public ArrayList<DonThuocDTO> getAll() {
+    return dsDonThuoc;
+  }
 
-            }
-        }
+  // ================= TU SINH MA =================
+  public String generateMaDonThuoc() {
+    int max = 0;
 
-        return String.format("DT%03d", max + 1);
+    for (DonThuocDTO dt : dsDonThuoc) {
+      try {
+        int so = Integer.parseInt(dt.getMaDonThuoc().replace("DT", ""));
+        if (so > max) max = so;
+      } catch (Exception e) {}
     }
 
-    // ================= VALIDATE =================
-    private String validate(DonThuocDTO dt) {
+    return String.format("DT%03d", max + 1);
+  }
 
-        if (dt.getMaHoSo() == null || dt.getMaHoSo().trim().isEmpty())
-            return "Ma ho so khong duoc de trong!";
+  // ================= VALIDATE =================
+  private String validate(DonThuocDTO dt) {
+    if (
+      dt.getMaHoSo() == null || dt.getMaHoSo().trim().isEmpty()
+    ) return "Ma ho so khong duoc de trong!";
 
-        if (dt.getNgayKeDon() == null || dt.getNgayKeDon().trim().isEmpty())
-            return "Ngay ke don khong duoc de trong!";
+    if (
+      dt.getNgayKeDon() == null || dt.getNgayKeDon().trim().isEmpty()
+    ) return "Ngay ke don khong duoc de trong!";
 
-        // Kiem tra dinh dang ngay yyyy-MM-dd
-        try {
-            LocalDate.parse(dt.getNgayKeDon());
-        } catch (DateTimeParseException e) {
-            return "Ngay ke don phai dung dinh dang yyyy-MM-dd!";
-        }
-
-        return null; 
+    // Kiem tra dinh dang ngay yyyy-MM-dd
+    try {
+      LocalDate.parse(dt.getNgayKeDon());
+    } catch (DateTimeParseException e) {
+      return "Ngay ke don phai dung dinh dang yyyy-MM-dd!";
     }
 
-    // ================= THEM =================
-    public String insert(DonThuocDTO dt) {
+    return null;
+  }
 
-        String error = validate(dt);
-        if (error != null) return error;
+  // ================= THEM =================
+  public String insert(DonThuocDTO dt) {
+    String error = validate(dt);
+    if (error != null) return error;
 
-        if (donThuocDAO.exists(dt.getMaDonThuoc()))
-            return "Ma don thuoc da ton tai!";
+    if (
+      donThuocDAO.exists(dt.getMaDonThuoc())
+    ) return "Ma don thuoc da ton tai!";
 
-        boolean result = donThuocDAO.insertDonThuoc(dt);
+    boolean result = donThuocDAO.insertDonThuoc(dt);
 
-        if (result) {
-            dsDonThuoc.add(dt);
-            return "Them thanh cong!";
-        }
-
-        return "Them that bai!";
+    if (result) {
+      dsDonThuoc.add(dt);
+      return "Them thanh cong!";
     }
 
-    // ================= CAP NHAT =================
-    public String update(DonThuocDTO dt) {
+    return "Them that bai!";
+  }
 
-        String error = validate(dt);
-        if (error != null) return error;
+  // Method add() trả về boolean cho GUI (wrapper của insert)
+  public boolean add(DonThuocDTO dt) {
+    String result = insert(dt);
+    return result != null && result.contains("thanh cong");
+  }
 
-        if (!donThuocDAO.exists(dt.getMaDonThuoc()))
-            return "Ma don thuoc khong ton tai!";
+  // ================= CAP NHAT =================
+  public String update(DonThuocDTO dt) {
+    String error = validate(dt);
+    if (error != null) return error;
 
-        boolean result = donThuocDAO.updateDonThuoc(dt);
+    if (
+      !donThuocDAO.exists(dt.getMaDonThuoc())
+    ) return "Ma don thuoc khong ton tai!";
 
-        if (result) {
-            loadData(); // reload lai cache
-            return "Cap nhat thanh cong!";
-        }
+    boolean result = donThuocDAO.updateDonThuoc(dt);
 
-        return "Cap nhat that bai!";
-    }
-    // ================= XOA =================
-    public String delete(String maDonThuoc) {
-
-        if (!donThuocDAO.exists(maDonThuoc))
-            return "Ma don thuoc khong ton tai!";
-
-        boolean result = donThuocDAO.deleteMaDonThuoc(maDonThuoc);
-
-        if (result) {
-            loadData();
-            return "Xoa thanh cong!";
-        }
-
-        return "Xoa that bai!";
+    if (result) {
+      loadData(); // reload lai cache
+      return "Cap nhat thanh cong!";
     }
 
-    // ================= TIM THEO MA =================
-    public DonThuocDTO searchTheoMa(String maDonThuoc) {
-        return donThuocDAO.searchTheoMa(maDonThuoc);
+    return "Cap nhat that bai!";
+  }
+
+  // ================= XOA =================
+  public String delete(String maDonThuoc) {
+    if (!donThuocDAO.exists(maDonThuoc)) return "Ma don thuoc khong ton tai!";
+
+    boolean result = donThuocDAO.deleteMaDonThuoc(maDonThuoc);
+
+    if (result) {
+      loadData();
+      return "Xoa thanh cong!";
     }
 
-    // ================= TIM THEO MA HO SO =================
-    public ArrayList<DonThuocDTO> searchTheoMaHoSo(String maHoSo) {
+    return "Xoa that bai!";
+  }
 
-        ArrayList<DonThuocDTO> result = new ArrayList<>();
+  // ================= TIM THEO MA =================
+  public DonThuocDTO searchTheoMa(String maDonThuoc) {
+    return donThuocDAO.searchTheoMa(maDonThuoc);
+  }
 
-        for (DonThuocDTO dt : dsDonThuoc) {
-            if (dt.getMaHoSo().equalsIgnoreCase(maHoSo)) {
-                result.add(dt);
-            }
-        }
-        return result;
+  // ================= TIM THEO MA HO SO =================
+  public ArrayList<DonThuocDTO> searchTheoMaHoSo(String maHoSo) {
+    ArrayList<DonThuocDTO> result = new ArrayList<>();
+
+    for (DonThuocDTO dt : dsDonThuoc) {
+      if (dt.getMaHoSo().equalsIgnoreCase(maHoSo)) {
+        result.add(dt);
+      }
     }
+    return result;
+  }
 }

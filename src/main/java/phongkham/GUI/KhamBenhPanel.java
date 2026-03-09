@@ -1,7 +1,6 @@
 package phongkham.gui;
 
 import java.awt.*;
-import java.awt.event.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -491,8 +490,10 @@ public class KhamBenhPanel extends JPanel {
       }
 
       // 2. Nếu có thuốc -> Insert DonThuoc và ChiTietDonThuoc
+      String maDonThuoc = null;
       if (modelDonThuoc.getRowCount() > 0) {
-        String maDonThuoc = generateMaDonThuoc();
+        // Tự động sinh mã đơn thuốc (DT01, DT02, ...)
+        maDonThuoc = donThuocBUS.generateMaDonThuoc();
 
         // Insert DonThuoc
         DonThuocDTO donThuoc = new DonThuocDTO();
@@ -537,7 +538,18 @@ public class KhamBenhPanel extends JPanel {
         }
       }
 
-      JOptionPane.showMessageDialog(this, "✅ Lưu khám bệnh thành công!");
+      // Hiển thị thông báo thành công
+      String message = "✅ Lưu khám bệnh thành công!";
+      if (maDonThuoc != null) {
+        message += "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━";
+        message += "\n📋 MÃ ĐƠN THUỐC: " + maDonThuoc;
+        message += "\n━━━━━━━━━━━━━━━━━━━━━━━━━━";
+        message += "\n\n📢 Vui lòng ra quầy thuốc để:";
+        message += "\n   • Xuất trình mã đơn thuốc";
+        message += "\n   • Lấy thuốc theo đơn";
+        message += "\n   • Thanh toán bằng TIỀN MẶT";
+      }
+      JOptionPane.showMessageDialog(this, message);
 
       // Refresh
       loadDanhSachHoSoChoKham();
@@ -570,9 +582,5 @@ public class KhamBenhPanel extends JPanel {
     modelDonThuoc.setRowCount(0);
 
     tableDanhSachHS.clearSelection();
-  }
-
-  private String generateMaDonThuoc() {
-    return "DT" + System.currentTimeMillis();
   }
 }

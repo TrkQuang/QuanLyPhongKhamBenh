@@ -5,12 +5,13 @@ import java.time.LocalDateTime;
 public class HoaDonThuocDTO {
 
   private String maHoaDon;
-  private Integer maDonThuoc;
+  private String maDonThuoc;
   private LocalDateTime ngayLap;
   private double tongTien;
   private String ghiChu;
   private String trangThaiThanhToan;
   private LocalDateTime ngayThanhToan;
+  private String trangThaiLayThuoc; // ĐANG CHỜ LẤY, ĐÃ HOÀN THÀNH
   private String tenBenhNhan;
   private String sdtBenhNhan;
   private boolean active;
@@ -19,17 +20,19 @@ public class HoaDonThuocDTO {
   public HoaDonThuocDTO() {
     this.ngayLap = LocalDateTime.now();
     this.trangThaiThanhToan = "Chưa thanh toán";
+    this.trangThaiLayThuoc = "ĐANG CHỜ LẤY";
     this.active = true;
   }
 
   public HoaDonThuocDTO(
     String maHoaDon,
-    Integer maDonThuoc,
+    String maDonThuoc,
     LocalDateTime ngayLap,
     double tongTien,
     String ghiChu,
     String trangThaiThanhToan,
     LocalDateTime ngayThanhToan,
+    String trangThaiLayThuoc,
     String tenBenhNhan,
     String sdtBenhNhan,
     boolean active
@@ -41,6 +44,7 @@ public class HoaDonThuocDTO {
     this.ghiChu = ghiChu;
     this.trangThaiThanhToan = trangThaiThanhToan;
     this.ngayThanhToan = ngayThanhToan;
+    this.trangThaiLayThuoc = trangThaiLayThuoc;
     this.tenBenhNhan = tenBenhNhan;
     this.sdtBenhNhan = sdtBenhNhan;
     this.active = active;
@@ -48,7 +52,7 @@ public class HoaDonThuocDTO {
 
   // Insert
   public HoaDonThuocDTO(
-    Integer maDonThuoc,
+    String maDonThuoc,
     String tenBenhNhan,
     String sdtBenhNhan
   ) {
@@ -58,6 +62,7 @@ public class HoaDonThuocDTO {
     this.ngayLap = LocalDateTime.now();
     this.tongTien = 0;
     this.trangThaiThanhToan = "Chưa thanh toán";
+    this.trangThaiLayThuoc = "ĐANG CHỜ LẤY";
     this.active = true;
   }
 
@@ -70,11 +75,11 @@ public class HoaDonThuocDTO {
     this.maHoaDon = maHoaDon;
   }
 
-  public Integer getMaDonThuoc() {
+  public String getMaDonThuoc() {
     return maDonThuoc;
   }
 
-  public void setMaDonThuoc(Integer maDonThuoc) {
+  public void setMaDonThuoc(String maDonThuoc) {
     this.maDonThuoc = maDonThuoc;
   }
 
@@ -140,6 +145,14 @@ public class HoaDonThuocDTO {
 
   public void setActive(boolean active) {
     this.active = active;
+  }
+
+  public String getTrangThaiLayThuoc() {
+    return trangThaiLayThuoc;
+  }
+
+  public void setTrangThaiLayThuoc(String trangThaiLayThuoc) {
+    this.trangThaiLayThuoc = trangThaiLayThuoc;
   }
 
   @Override

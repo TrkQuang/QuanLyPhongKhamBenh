@@ -8,23 +8,53 @@ import phongkham.db.DBConnection;
 
 public class CTHDThuocDAO {
 
+  // Tự động sinh mã chi tiết hóa đơn
+  public String generateMaCTHD() {
+    String sql =
+      "SELECT MaCTHDThuoc FROM CTHDThuoc ORDER BY MaCTHDThuoc DESC LIMIT 1";
+    try (
+      Connection conn = DBConnection.getConnection();
+      Statement stmt = conn.createStatement();
+      ResultSet rs = stmt.executeQuery(sql)
+    ) {
+      if (rs.next()) {
+        String lastMa = rs.getString("MaCTHDThuoc");
+        // Giả sử mã có dạng CTHD001, CTHD002, ...
+        if (lastMa != null && lastMa.startsWith("CTHD")) {
+          int num = Integer.parseInt(lastMa.substring(4));
+          return String.format("CTHD%03d", num + 1);
+        }
+      }
+    } catch (SQLException e) {
+      System.err.println("Lỗi sinh mã chi tiết HD: " + e.getMessage());
+    }
+    // Nếu chưa có, bắt đầu từ CTHD001
+    return "CTHD001";
+  }
+
   // Thêm mới
   public boolean insert(CTHDThuocDTO cthd) {
+    // Tự động sinh mã nếu chưa có
+    if (cthd.getMaCTHDThuoc() == null || cthd.getMaCTHDThuoc().isEmpty()) {
+      cthd.setMaCTHDThuoc(generateMaCTHD());
+    }
+
     String sql =
-      "INSERT INTO CTHDThuoc (MaHoaDon, MaThuoc, SoLuong, DonGia, ThanhTien, GhiChu, Active) " +
-      "VALUES (?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO CTHDThuoc (MaCTHDThuoc, MaHoaDon, MaThuoc, SoLuong, DonGia, ThanhTien, GhiChu, Active) " +
+      "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
     try (
       Connection conn = DBConnection.getConnection();
       PreparedStatement pstmt = conn.prepareStatement(sql)
     ) {
-      pstmt.setString(1, cthd.getMaHoaDon());
-      pstmt.setString(2, cthd.getMaThuoc());
-      pstmt.setInt(3, cthd.getSoLuong());
-      pstmt.setDouble(4, cthd.getDonGia());
-      pstmt.setDouble(5, cthd.getThanhTien());
-      pstmt.setString(6, cthd.getGhiChu());
-      pstmt.setBoolean(7, cthd.isActive());
+      pstmt.setString(1, cthd.getMaCTHDThuoc());
+      pstmt.setString(2, cthd.getMaHoaDon());
+      pstmt.setString(3, cthd.getMaThuoc());
+      pstmt.setInt(4, cthd.getSoLuong());
+      pstmt.setDouble(5, cthd.getDonGia());
+      pstmt.setDouble(6, cthd.getThanhTien());
+      pstmt.setString(7, cthd.getGhiChu());
+      pstmt.setBoolean(8, cthd.isActive());
 
       int rowsInserted = pstmt.executeUpdate();
       return rowsInserted > 0;

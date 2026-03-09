@@ -1,39 +1,43 @@
 package phongkham.DTO;
 
 public class UsersRolesDTO {
-    private String user_id;
-    private String role_id;
 
-    public UsersRolesDTO(){}
+  private String user_id;
+  private String role_id;
 
-    public UsersRolesDTO(RolesDTO rl, UsersDTO us){
-        this.role_id = rl.getSTT();
-        this.user_id = us.getUserID();
-    }
+  public UsersRolesDTO() {}
 
-    public UsersRolesDTO(String user_id, String role_id){
-        this.role_id = user_id;
-        this.user_id = user_id;
-    }
+  public UsersRolesDTO(RolesDTO rl, UsersDTO us) {
+    this.role_id = rl.getSTT();
+    this.user_id = us.getUserID();
+  }
 
-    public String getRole_ID(){ return this.role_id;}
-    public String getUser_ID(){ return this.user_id;}
-   
+  public UsersRolesDTO(String user_id, String role_id) {
+    this.user_id = user_id;
+    this.role_id = role_id;
+  }
 
-    public void setRole_ID(String role_id){ 
-        this.role_id = role_id; 
-    }
+  public String getRole_ID() {
+    return this.role_id;
+  }
 
-    public void setUser_ID(String user_id){
-         this.user_id = user_id; 
-    }
+  public String getUser_ID() {
+    return this.user_id;
+  }
 
-    public void setRole_ID(RolesDTO rl) {
-        this.role_id = rl.getSTT();
-    }
+  public void setRole_ID(String role_id) {
+    this.role_id = role_id;
+  }
 
-    public void setUser_ID(UsersDTO us){
-        this.user_id = us.getUserID();
-    }
+  public void setUser_ID(String user_id) {
+    this.user_id = user_id;
+  }
 
+  public void setRole_ID(RolesDTO rl) {
+    this.role_id = rl.getSTT();
+  }
+
+  public void setUser_ID(UsersDTO us) {
+    this.user_id = us.getUserID();
+  }
 }

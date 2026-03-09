@@ -84,6 +84,11 @@ public class RolesDAO {
   public RolesDTO getById(String STT) {
     String sql = "SELECT * FROM Roles WHERE STT=?";
     RolesDTO rltemp = null;
+
+    System.out.println(
+      "🔍 [RolesDAO] Searching for Role with STT: '" + STT + "'"
+    );
+
     try (
       Connection c = DBConnection.getConnection();
       PreparedStatement ps = c.prepareStatement(sql);
@@ -95,6 +100,24 @@ public class RolesDAO {
         rltemp.setSTT(rs.getString("STT"));
         rltemp.setTenVaiTro(rs.getString("TenVaiTro"));
         rltemp.setMoTa(rs.getString("MoTa"));
+        System.out.println("  ✅ Found: " + rltemp.getTenVaiTro());
+      } else {
+        System.out.println("  ❌ No role found with STT: '" + STT + "'");
+
+        // Debug: Show all available roles
+        Statement stmt = c.createStatement();
+        ResultSet allRoles = stmt.executeQuery(
+          "SELECT STT, TenVaiTro FROM Roles"
+        );
+        System.out.println("  📋 Available roles in database:");
+        while (allRoles.next()) {
+          System.out.println(
+            "     - STT: '" +
+              allRoles.getString("STT") +
+              "' | " +
+              allRoles.getString("TenVaiTro")
+          );
+        }
       }
     } catch (SQLException e) {
       e.printStackTrace();

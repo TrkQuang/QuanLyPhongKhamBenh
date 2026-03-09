@@ -11,6 +11,29 @@ import phongkham.db.DBConnection;
 
 public class ThuocDAO {
 
+  // Tự động sinh mã thuốc
+  public String generateMaThuoc() {
+    String sql = "SELECT MaThuoc FROM Thuoc ORDER BY MaThuoc DESC LIMIT 1";
+    try (
+      Connection conn = DBConnection.getConnection();
+      Statement stmt = conn.createStatement();
+      ResultSet rs = stmt.executeQuery(sql)
+    ) {
+      if (rs.next()) {
+        String lastMa = rs.getString("MaThuoc");
+        // Mã có dạng DT01, DT02, DT03...
+        if (lastMa != null && lastMa.startsWith("T")) {
+          int num = Integer.parseInt(lastMa.substring(2));
+          return String.format("T%02d", num + 1);
+        }
+      }
+    } catch (SQLException e) {
+      System.err.println("Lỗi sinh mã thuốc: " + e.getMessage());
+    }
+    // Nếu chưa có thuốc nào, bắt đầu từ DT10
+    return "T10";
+  }
+
   //lấy tất cả thuốc
   public ArrayList<ThuocDTO> getAllThuoc() {
     ArrayList<ThuocDTO> ds = new ArrayList<>();
@@ -40,6 +63,11 @@ public class ThuocDAO {
 
   //thêm thuốc mới
   public boolean insertThuoc(ThuocDTO t) {
+    // Tự động sinh mã nếu chưa có
+    if (t.getMaThuoc() == null || t.getMaThuoc().trim().isEmpty()) {
+      t.setMaThuoc(generateMaThuoc());
+    }
+
     String sql = "INSERT INTO Thuoc VALUES (?,?,?,?,?,?)";
     try (
       Connection conn = DBConnection.getConnection();
@@ -188,6 +216,48 @@ public class ThuocDAO {
       }
     } catch (SQLException e) {
       System.err.println("Lỗi tìm thuốc theo hoạt chất" + e.getMessage());
+    }
+    return ds;
+  }
+
+  // Trừ số lượng tồn kho (cho giao thuốc)
+  public boolean truSoLuongTon(String maThuoc, int soLuongTru) {
+    String sql =
+      "UPDATE Thuoc SET SoLuongTon = SoLuongTon - ? WHERE MaThuoc = ?";
+    try (
+      Connection conn = DBConnection.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql)
+    ) {
+      ps.setInt(1, soLuongTru);
+      ps.setString(2, maThuoc);
+      return ps.executeUpdate() > 0;
+    } catch (SQLException e) {
+      System.err.println("Lỗi trừ số lượng tồn: " + e.getMessage());
+      return false;
+    }
+  }
+
+  // Lấy thuốc còn tồn kho (SoLuongTon > 0)
+  public ArrayList<ThuocDTO> getThuocConTon() {
+    ArrayList<ThuocDTO> ds = new ArrayList<>();
+    String sql = "SELECT * FROM Thuoc WHERE SoLuongTon > 0 ORDER BY TenThuoc";
+    try (
+      Connection conn = DBConnection.getConnection();
+      Statement stmt = conn.createStatement();
+      ResultSet rs = stmt.executeQuery(sql)
+    ) {
+      while (rs.next()) {
+        ThuocDTO t = new ThuocDTO();
+        t.setMaThuoc(rs.getString("MaThuoc"));
+        t.setTenThuoc(rs.getString("TenThuoc"));
+        t.setHoatChat(rs.getString("HoatChat"));
+        t.setDonViTinh(rs.getString("DonViTinh"));
+        t.setDonGiaBan(rs.getFloat("DonGiaBan"));
+        t.setSoLuongTon(rs.getInt("SoLuongTon"));
+        ds.add(t);
+      }
+    } catch (SQLException e) {
+      System.err.println("Lỗi lấy thuốc còn tồn: " + e.getMessage());
     }
     return ds;
   }

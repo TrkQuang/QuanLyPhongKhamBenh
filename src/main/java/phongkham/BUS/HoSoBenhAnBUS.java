@@ -32,8 +32,12 @@ public class HoSoBenhAnBUS {
       }
     }
     if (hs.getGioiTinh() != null && !hs.getGioiTinh().isEmpty()) {
-      if (!hs.getGioiTinh().equals("Nam") && !hs.getGioiTinh().equals("Nữ")) {
-        return "Giới tính chỉ được là 'Nam' hoặc 'Nữ'";
+      if (
+        !hs.getGioiTinh().equals("Nam") &&
+        !hs.getGioiTinh().equals("Nữ") &&
+        !hs.getGioiTinh().equals("Nu")
+      ) {
+        return "Giới tính chỉ được là 'Nam', 'Nữ' hoặc 'Nu'";
       }
     }
     return null; // Hợp lệ
@@ -115,45 +119,69 @@ public class HoSoBenhAnBUS {
       maBacSi
     );
   }
-  
+
   public boolean updateTrangThai(String MaHS, String trangThai) {
-    if(MaHS == null || MaHS.trim().isEmpty()) {
-        System.out.println("Mã hồ sơ k đc trống");
-        return false;
+    if (MaHS == null || MaHS.trim().isEmpty()) {
+      System.out.println("Mã hồ sơ k đc trống");
+      return false;
     }
-    if(!isValidTrangThai(trangThai)) {
-        System.out.println("Trạng thái không hợp lệ!");
-        return false;
+    if (!isValidTrangThai(trangThai)) {
+      System.out.println("Trạng thái không hợp lệ!");
+      return false;
     }
     return hsDAO.updateTrangThai(MaHS, trangThai);
   }
 
   public boolean delete(String maHS) {
-    if(maHS == null || maHS.trim().isEmpty()) {
-        System.out.println("Mã hồ sơ không được rỗng");
-        return false;
+    if (maHS == null || maHS.trim().isEmpty()) {
+      System.out.println("Mã hồ sơ không được rỗng");
+      return false;
     }
     return hsDAO.delete(maHS);
   }
 
   //các hàm tìm kiếm, lọc
   public HoSoBenhAnDTO getByMaLichKham(String MaLichKham) {
-    if(MaLichKham == null || MaLichKham.trim().isEmpty()) {
-        return null;
+    if (MaLichKham == null || MaLichKham.trim().isEmpty()) {
+      return null;
     }
     return hsDAO.getByMaLichKham(MaLichKham);
   }
 
   public ArrayList<HoSoBenhAnDTO> getBySDT(String sdt) {
-    if(sdt == null || sdt.trim().isEmpty()) {
+    if (sdt == null || sdt.trim().isEmpty()) {
       System.out.println("Số điện thoại không được rỗng");
       return null;
     }
     boolean valid = isValidPhoneNumber(sdt);
-    if(valid) {
-        ArrayList<HoSoBenhAnDTO> list = hsDAO.getBySoDienThoai(sdt);
-        return list;
+    if (valid) {
+      ArrayList<HoSoBenhAnDTO> list = hsDAO.getBySoDienThoai(sdt);
+      return list;
     }
     return null;
+  }
+
+  // Lấy hồ sơ theo trạng thái
+  public ArrayList<HoSoBenhAnDTO> getByTrangThai(String trangThai) {
+    if (!isValidTrangThai(trangThai)) {
+      System.out.println("Trạng thái không hợp lệ: " + trangThai);
+      return new ArrayList<>();
+    }
+    return hsDAO.getByTrangThai(trangThai);
+  }
+
+  // Alias cho getByMaHoSo để phù hợp với cách gọi trong GUI
+  public HoSoBenhAnDTO getById(String maHS) {
+    return getByMaHoSo(maHS);
+  }
+
+  // Cập nhật toàn bộ hồ sơ
+  public boolean update(HoSoBenhAnDTO hs) {
+    String valid = validateInsert(hs);
+    if (valid != null) {
+      System.out.println("Validation error: " + valid);
+      return false;
+    }
+    return hsDAO.update(hs);
   }
 }

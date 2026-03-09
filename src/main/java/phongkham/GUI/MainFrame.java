@@ -9,7 +9,7 @@ public class MainFrame extends JFrame {
 
   private CardLayout cardLayout;
   private JPanel contentPanel;
-  private SidePanel sidePanel; // ✅ Dùng SidePanel có kiểm tra quyền
+  private SidePanel sidePanel;
 
   public MainFrame() {
     setTitle("Phòng Khám Đa Khoa");
@@ -44,7 +44,10 @@ public class MainFrame extends JFrame {
     addPanel("BACSI_PROFILE", new BacSiProfilePanel());
     addPanel("QUANLYKHOA", new KhoaPanel());
     addPanel("QUANLYTHUOC", new QuanLyThuocPanel());
+    addPanel("PHANQUYEN", new QuanLyPhanQuyenPanel());
+    addPanel("DASHBOARD", new DashboardPanel());
     addPanel("LICHLAMVIEC", new LichLamViecPanel());
+    addPanel("MUATHUOC", new BanThuocPanel());
 
     add(contentPanel, BorderLayout.CENTER);
     showPanel("HOME");
@@ -143,34 +146,37 @@ public class MainFrame extends JFrame {
     // Reload menu theo quyền
     sidePanel.loadMenu();
 
-    // ✅ DEBUG: In ra permissions
-    System.out.println("===== DEBUG PERMISSIONS =====");
-    System.out.println("Username: " + Session.getCurrentUsername());
-    System.out.println(
-      "Has ADMIN_VIEW: " + Session.hasPermission("ADMIN_VIEW")
-    );
-    System.out.println(
-      "Has NHATHUOC_VIEW: " + Session.hasPermission("NHATHUOC_VIEW")
-    );
-    System.out.println(
-      "Has BACSI_VIEW: " + Session.hasPermission("BACSI_VIEW")
-    );
-    System.out.println("=============================");
+    // Chuyển trang theo vai trò
+    String targetPanel = "HOME";
+    String userRole = "Guest";
 
-    // Chuyển trang theo quyền
-    if (Session.hasPermission("ADMIN_VIEW")) {
-      System.out.println("→ Chuyển đến QUANLYKHOA (Admin)");
-      showPanel("QUANLYKHOA");
-    } else if (Session.hasPermission("NHATHUOC_VIEW")) {
-      System.out.println("→ Chuyển đến QUANLYTHUOC (Nhà thuốc)");
-      showPanel("QUANLYTHUOC");
-    } else if (Session.hasPermission("BACSI_VIEW")) {
-      System.out.println("→ Chuyển đến LICHLAMVIEC (Bác sĩ)");
-      showPanel("LICHLAMVIEC");
-    } else {
-      System.out.println("→ Chuyển đến HOME (Guest)");
-      showPanel("HOME");
+    if (
+      Session.hasPermission("DASHBOARD_VIEW") ||
+      Session.hasPermission("KHOA_VIEW") ||
+      Session.hasPermission("PHANQUYEN_VIEW")
+    ) {
+      // Admin → Dashboard
+      targetPanel = "DASHBOARD";
+      userRole = "Admin";
+    } else if (
+      Session.hasPermission("LICHLAMVIEC_VIEW") ||
+      Session.hasPermission("KHAMBENH_CREATE")
+    ) {
+      // Bác sĩ → Lịch làm việc
+      targetPanel = "LICHLAMVIEC";
+      userRole = "Bác sĩ";
+    } else if (
+      Session.hasPermission("THUOC_VIEW") && !Session.hasPermission("KHOA_VIEW")
+    ) {
+      // Nhà thuốc → Quản lý thuốc
+      targetPanel = "QUANLYTHUOC";
+      userRole = "Nhà thuốc";
     }
+
+    System.out.println(
+      "🎯 Vai trò: " + userRole + " → Chuyển đến: " + targetPanel
+    );
+    showPanel(targetPanel);
 
     revalidate();
     repaint();

@@ -9,7 +9,7 @@ public class PermissionsDAO {
 
   public ArrayList<PermissionsDTO> getAllPermisson() {
     ArrayList<PermissionsDTO> ds = new ArrayList<>();
-    String sql = "SELECT * FROM Permisson";
+    String sql = "SELECT * FROM Permissions";
     try (
       Connection c = DBConnection.getConnection();
       Statement stm = c.createStatement();
@@ -36,8 +36,8 @@ public class PermissionsDAO {
       "SELECT p.TenPermission " +
       "FROM Users u " +
       "JOIN UsersRoles ur ON u.UserID = ur.user_id " +
-      "JOIN Roles r ON ur.role_id = r.RoleID " +
-      "JOIN RolePermissions rp ON r.RoleID = rp.maRole " +
+      "JOIN Roles r ON ur.role_id = r.STT " +
+      "JOIN RolePermissions rp ON r.STT = rp.maRole " +
       "JOIN Permissions p ON rp.maPermission = p.MaPermission " +
       "WHERE u.UserID = ? AND p.Active = 1";
 
@@ -57,5 +57,43 @@ public class PermissionsDAO {
     }
 
     return list;
+  }
+
+  // ========== METHODS CHO QuanLyPhanQuyenPanel ==========
+
+  /**
+   * Wrapper cho getAllPermisson (fix typo)
+   * @return ArrayList<PermissionsDTO>
+   */
+  public ArrayList<PermissionsDTO> getAllPermissions() {
+    return getAllPermisson();
+  }
+
+  /**
+   * Lấy Permission theo ID
+   * @param permissionId - Mã Permission
+   * @return PermissionsDTO hoặc null
+   */
+  public PermissionsDTO getPermissionById(String permissionId) {
+    String sql = "SELECT * FROM Permissions WHERE MaPermission = ?";
+    try (
+      Connection c = DBConnection.getConnection();
+      PreparedStatement ps = c.prepareStatement(sql)
+    ) {
+      ps.setString(1, permissionId);
+      ResultSet rs = ps.executeQuery();
+
+      if (rs.next()) {
+        PermissionsDTO perm = new PermissionsDTO();
+        perm.setMaPermission(rs.getInt("MaPermission"));
+        perm.setTenPermission(rs.getString("TenPermission"));
+        perm.setMoTa(rs.getString("MoTa"));
+        perm.setActive(rs.getBoolean("Active"));
+        return perm;
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    return null;
   }
 }

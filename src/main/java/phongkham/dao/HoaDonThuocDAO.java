@@ -9,25 +9,61 @@ import phongkham.db.DBConnection;
 
 public class HoaDonThuocDAO {
 
+  // Tự động sinh mã hóa đơn
+  public String generateMaHoaDon() {
+    String sql =
+      "SELECT MaHoaDon FROM HoaDonThuoc ORDER BY MaHoaDon DESC LIMIT 1";
+    try (
+      Connection conn = DBConnection.getConnection();
+      Statement stmt = conn.createStatement();
+      ResultSet rs = stmt.executeQuery(sql)
+    ) {
+      if (rs.next()) {
+        String lastMa = rs.getString("MaHoaDon");
+        // Giả sử mã có dạng HDT001, HDT002, ...
+        if (lastMa != null && lastMa.startsWith("HDT")) {
+          int num = Integer.parseInt(lastMa.substring(3));
+          return String.format("HDT%03d", num + 1);
+        }
+      }
+    } catch (SQLException e) {
+      System.err.println("Lỗi sinh mã hóa đơn: " + e.getMessage());
+    }
+    // Nếu chưa có hóa đơn nào, bắt đầu từ HDT001
+    return "HDT001";
+  }
+
   // Thêm mới
   public boolean insert(HoaDonThuocDTO hoaDon) {
+    // Tự động sinh mã nếu chưa có
+    if (hoaDon.getMaHoaDon() == null || hoaDon.getMaHoaDon().isEmpty()) {
+      hoaDon.setMaHoaDon(generateMaHoaDon());
+    }
+
     String sql =
-      "INSERT INTO HoaDonThuoc (MaDonThuoc, NgayLap, TongTien, GhiChu, TrangThaiThanhToan, NgayThanhToan, TenBenhNhan, SdtBenhNhan, Active) " +
-      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO HoaDonThuoc (MaHoaDon, MaDonThuoc, NgayLap, TongTien, GhiChu, TrangThaiThanhToan, NgayThanhToan, TrangThaiLayThuoc, TenBenhNhan, SdtBenhNhan, Active) " +
+      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     try (
       Connection conn = DBConnection.getConnection();
       PreparedStatement pstmt = conn.prepareStatement(sql)
     ) {
-      pstmt.setObject(1, hoaDon.getMaDonThuoc());
-      pstmt.setObject(2, hoaDon.getNgayLap());
-      pstmt.setDouble(3, hoaDon.getTongTien());
-      pstmt.setString(4, hoaDon.getGhiChu());
-      pstmt.setString(5, hoaDon.getTrangThaiThanhToan());
-      pstmt.setObject(6, hoaDon.getNgayThanhToan());
-      pstmt.setString(7, hoaDon.getTenBenhNhan());
-      pstmt.setString(8, hoaDon.getSdtBenhNhan());
-      pstmt.setBoolean(9, hoaDon.isActive());
+      pstmt.setString(1, hoaDon.getMaHoaDon());
+      pstmt.setObject(2, hoaDon.getMaDonThuoc());
+      pstmt.setObject(3, hoaDon.getNgayLap());
+      pstmt.setDouble(4, hoaDon.getTongTien());
+      pstmt.setString(5, hoaDon.getGhiChu());
+      pstmt.setString(6, hoaDon.getTrangThaiThanhToan());
+      pstmt.setObject(7, hoaDon.getNgayThanhToan());
+      pstmt.setString(
+        8,
+        hoaDon.getTrangThaiLayThuoc() != null
+          ? hoaDon.getTrangThaiLayThuoc()
+          : "ĐANG CHỜ LẤY"
+      );
+      pstmt.setString(9, hoaDon.getTenBenhNhan());
+      pstmt.setString(10, hoaDon.getSdtBenhNhan());
+      pstmt.setBoolean(11, hoaDon.isActive());
 
       int rowsInserted = pstmt.executeUpdate();
       return rowsInserted > 0;
@@ -41,7 +77,7 @@ public class HoaDonThuocDAO {
   public boolean update(HoaDonThuocDTO hoaDon) {
     String sql =
       "UPDATE HoaDonThuoc SET MaDonThuoc = ?, NgayLap = ?, TongTien = ?, GhiChu = ?, " +
-      "TrangThaiThanhToan = ?, NgayThanhToan = ?, TenBenhNhan = ?, SdtBenhNhan = ?, Active = ? " +
+      "TrangThaiThanhToan = ?, NgayThanhToan = ?, TrangThaiLayThuoc = ?, TenBenhNhan = ?, SdtBenhNhan = ?, Active = ? " +
       "WHERE MaHoaDon = ?";
 
     try (
@@ -54,10 +90,11 @@ public class HoaDonThuocDAO {
       pstmt.setString(4, hoaDon.getGhiChu());
       pstmt.setString(5, hoaDon.getTrangThaiThanhToan());
       pstmt.setObject(6, hoaDon.getNgayThanhToan());
-      pstmt.setString(7, hoaDon.getTenBenhNhan());
-      pstmt.setString(8, hoaDon.getSdtBenhNhan());
-      pstmt.setBoolean(9, hoaDon.isActive());
-      pstmt.setString(10, hoaDon.getMaHoaDon());
+      pstmt.setString(7, hoaDon.getTrangThaiLayThuoc());
+      pstmt.setString(8, hoaDon.getTenBenhNhan());
+      pstmt.setString(9, hoaDon.getSdtBenhNhan());
+      pstmt.setBoolean(10, hoaDon.isActive());
+      pstmt.setString(11, hoaDon.getMaHoaDon());
 
       int rowsUpdated = pstmt.executeUpdate();
       return rowsUpdated > 0;
@@ -233,15 +270,14 @@ public class HoaDonThuocDAO {
   private HoaDonThuocDTO mapResultSetToDTO(ResultSet rs) throws SQLException {
     HoaDonThuocDTO dto = new HoaDonThuocDTO();
     dto.setMaHoaDon(rs.getString("MaHoaDon"));
-
-    Object maDonThuoc = rs.getObject("MaDonThuoc");
-    dto.setMaDonThuoc(maDonThuoc != null ? (Integer) maDonThuoc : null);
+    dto.setMaDonThuoc(rs.getString("MaDonThuoc"));
 
     dto.setNgayLap(rs.getObject("NgayLap", LocalDateTime.class));
     dto.setTongTien(rs.getDouble("TongTien"));
     dto.setGhiChu(rs.getString("GhiChu"));
     dto.setTrangThaiThanhToan(rs.getString("TrangThaiThanhToan"));
     dto.setNgayThanhToan(rs.getObject("NgayThanhToan", LocalDateTime.class));
+    dto.setTrangThaiLayThuoc(rs.getString("TrangThaiLayThuoc"));
     dto.setTenBenhNhan(rs.getString("TenBenhNhan"));
     dto.setSdtBenhNhan(rs.getString("SdtBenhNhan"));
     dto.setActive(rs.getBoolean("Active"));

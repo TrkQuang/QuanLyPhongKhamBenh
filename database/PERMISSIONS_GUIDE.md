@@ -59,21 +59,6 @@ PHANQUYEN_VIEW      - Xem phân quyền
 PHANQUYEN_EDIT      - Sửa phân quyền
 ```
 
-### 🏨 **Nhóm LỄ TÂN**
-
-```
-BENHNHAN_VIEW       - Xem bệnh nhân
-BENHNHAN_ADD        - Thêm bệnh nhân
-BENHNHAN_EDIT       - Sửa bệnh nhân
-LICHKHAM_VIEW       - Xem lịch khám
-LICHKHAM_ADD        - Đặt lịch khám
-LICHKHAM_EDIT       - Sửa lịch khám
-HOADONKHAM_VIEW     - Xem hóa đơn khám
-HOADONKHAM_ADD      - Tạo hóa đơn khám
-```
-
----
-
 ## 👥 Phân quyền theo Role
 
 ### 🔴 **ROLE 1: ADMIN**
@@ -97,13 +82,6 @@ HOADONKHAM_ADD      - Tạo hóa đơn khám
 - ✅ Quản lý phiếu nhập (CRUD)
 - ✅ Tạo hóa đơn bán thuốc
 - ❌ Không xem hồ sơ bệnh án
-
-### 🔵 **ROLE 4: LỄ TÂN**
-
-- ✅ Đặt lịch khám cho bệnh nhân
-- ✅ Quản lý thông tin bệnh nhân
-- ✅ Tạo hóa đơn khám
-- ❌ Không khám bệnh, không kê đơn
 
 ---
 
@@ -157,7 +135,7 @@ if (Session.hasPermission("ADMIN_VIEW")) {
 | Menu Item            | Permission cần                | Role có quyền    |
 | -------------------- | ----------------------------- | ---------------- |
 | 🩺 Khám bệnh         | BACSI_VIEW                    | Bác sĩ           |
-| 📋 Lịch khám         | BACSI_VIEW hoặc LICHKHAM_VIEW | Bác sĩ, Lễ tân   |
+| 📋 Lịch khám         | BACSI_VIEW hoặc LICHKHAM_VIEW | Bác sĩ  |
 | 💊 Quản lý thuốc     | NHATHUOC_VIEW                 | Nhà thuốc, Admin |
 | 📦 Phiếu nhập        | NHATHUOC_VIEW                 | Nhà thuốc, Admin |
 | 🧾 Hóa đơn bán thuốc | NHATHUOC_VIEW                 | Nhà thuốc        |
