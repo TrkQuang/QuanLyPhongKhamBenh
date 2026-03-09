@@ -1,18 +1,15 @@
-package phongkham.GUI;
+package phongkham.gui;
 
 import com.formdev.flatlaf.FlatLightLaf;
 import java.awt.*;
 import javax.swing.*;
 import phongkham.Utils.Session;
 
-/**
- * MainFrame - SIÊU ĐƠN GIẢN
- * CHỈ 80 DÒNG!
- */
 public class MainFrame extends JFrame {
 
   private CardLayout cardLayout;
   private JPanel contentPanel;
+  private SidePanel sidePanel; // ✅ Dùng SidePanel có kiểm tra quyền
 
   public MainFrame() {
     setTitle("Phòng Khám Đa Khoa");
@@ -21,11 +18,12 @@ public class MainFrame extends JFrame {
     setLocationRelativeTo(null);
     setLayout(new BorderLayout());
 
-    // ===== HEADER (1 dòng!) =====
+    // ===== HEADER =====
     add(createHeader(), BorderLayout.NORTH);
 
-    // ===== SIDEBAR (1 dòng!) =====
-    add(new SidebarPanel(this), BorderLayout.WEST);
+    // ===== SIDEBAR (SidePanel có kiểm tra quyền) =====
+    sidePanel = new SidePanel(this);
+    add(sidePanel, BorderLayout.WEST);
 
     // ===== CONTENT =====
     cardLayout = new CardLayout();
@@ -40,7 +38,9 @@ public class MainFrame extends JFrame {
     addPanel("PHIEUNHAP", new PhieuNhapPanel());
     addPanel("DATLICHKHAM", new DatLichKhamPanel());
     addPanel("QUANLYLICHKHAM", new LichKhamPanel());
+    addPanel("KHAMBENH", new KhamBenhPanel());
     addPanel("HOADONKHAM", new HoaDonKhamPanel());
+    addPanel("HOADONTHUOC", new HoaDonThuocPanel());
     addPanel("BACSI_PROFILE", new BacSiProfilePanel());
     addPanel("QUANLYKHOA", new KhoaPanel());
     addPanel("QUANLYTHUOC", new QuanLyThuocPanel());
@@ -56,46 +56,56 @@ public class MainFrame extends JFrame {
     p.setBackground(Color.WHITE);
     p.setPreferredSize(new Dimension(0, 70));
     p.setBorder(
-        BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230)));
+      BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 230))
+    );
 
     // Left
     JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 15));
     left.setBackground(Color.WHITE);
     left.add(
-        new JLabel("⚕  Phòng Khám Bệnh") {
-          {
-            setFont(new Font("Segoe UI", Font.BOLD, 20));
-            setForeground(new Color(37, 99, 235));
-          }
-        });
+      new JLabel("⚕  Phòng Khám Bệnh") {
+        {
+          setFont(new Font("Segoe UI", Font.BOLD, 20));
+          setForeground(new Color(37, 99, 235));
+        }
+      }
+    );
     p.add(left, BorderLayout.WEST);
 
     // Right
     JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 15));
     right.setBackground(Color.WHITE);
     right.add(
-        new JLabel("HOTLINE: 1900-8888") {
+      new JLabel("HOTLINE: 1900-8888") {
+        {
+          setFont(new Font("Segoe UI", Font.BOLD, 14));
+          setForeground(new Color(37, 99, 235));
+        }
+      }
+    );
+
+    // ✅ Hiển thị username hoặc Hello!
+    if (Session.isLoggedIn()) {
+      right.add(
+        new JLabel("👤 " + Session.getCurrentUsername()) {
           {
             setFont(new Font("Segoe UI", Font.BOLD, 14));
             setForeground(new Color(37, 99, 235));
           }
-        });
+        }
+      );
+    } else {
+      right.add(
+        new JLabel("👋 Hello!") {
+          {
+            setFont(new Font("Segoe UI", Font.BOLD, 14));
+            setForeground(new Color(37, 99, 235));
+          }
+        }
+      );
+    }
 
-    JButton btn = new JButton("⚙ Đăng nhập");
-    btn.setForeground(new Color(37, 99, 235));
-    btn.setBackground(Color.WHITE);
-    btn.setBorder(
-        BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(37, 99, 235)),
-            BorderFactory.createEmptyBorder(8, 15, 8, 15)));
-    btn.setFocusPainted(false);
-    btn.addActionListener(e -> {
-      new LoginForm().setVisible(true);
-      dispose();
-    });
-    right.add(btn);
     p.add(right, BorderLayout.EAST);
-
     return p;
   }
 
@@ -109,11 +119,94 @@ public class MainFrame extends JFrame {
     cardLayout.show(contentPanel, name);
   }
 
+  /**
+   * ✅ Hiển thị form đăng nhập
+   */
+  public void showLogin() {
+    this.setVisible(false);
+    LoginForm loginForm = new LoginForm();
+    loginForm.setMainFrame(this);
+    loginForm.setVisible(true);
+  }
+
+  /**
+   * ✅ Callback sau khi đăng nhập thành công
+   */
+  public void onLoginSuccess() {
+    // Refresh UI
+    getContentPane().removeAll();
+    setLayout(new BorderLayout());
+    add(createHeader(), BorderLayout.NORTH);
+    add(sidePanel, BorderLayout.WEST);
+    add(contentPanel, BorderLayout.CENTER);
+
+    // Reload menu theo quyền
+    sidePanel.loadMenu();
+
+    // ✅ DEBUG: In ra permissions
+    System.out.println("===== DEBUG PERMISSIONS =====");
+    System.out.println("Username: " + Session.getCurrentUsername());
+    System.out.println(
+      "Has ADMIN_VIEW: " + Session.hasPermission("ADMIN_VIEW")
+    );
+    System.out.println(
+      "Has NHATHUOC_VIEW: " + Session.hasPermission("NHATHUOC_VIEW")
+    );
+    System.out.println(
+      "Has BACSI_VIEW: " + Session.hasPermission("BACSI_VIEW")
+    );
+    System.out.println("=============================");
+
+    // Chuyển trang theo quyền
+    if (Session.hasPermission("ADMIN_VIEW")) {
+      System.out.println("→ Chuyển đến QUANLYKHOA (Admin)");
+      showPanel("QUANLYKHOA");
+    } else if (Session.hasPermission("NHATHUOC_VIEW")) {
+      System.out.println("→ Chuyển đến QUANLYTHUOC (Nhà thuốc)");
+      showPanel("QUANLYTHUOC");
+    } else if (Session.hasPermission("BACSI_VIEW")) {
+      System.out.println("→ Chuyển đến LICHLAMVIEC (Bác sĩ)");
+      showPanel("LICHLAMVIEC");
+    } else {
+      System.out.println("→ Chuyển đến HOME (Guest)");
+      showPanel("HOME");
+    }
+
+    revalidate();
+    repaint();
+    this.setVisible(true);
+
+    JOptionPane.showMessageDialog(
+      this,
+      "Đăng nhập thành công!\nChào mừng " + Session.getCurrentUsername(),
+      "Thông báo",
+      JOptionPane.INFORMATION_MESSAGE
+    );
+  }
+
+  /**
+   * ✅ Callback khi đăng xuất
+   */
+  public void onLogout() {
+    JOptionPane.showMessageDialog(
+      this,
+      "Đã đăng xuất!",
+      "Thông báo",
+      JOptionPane.INFORMATION_MESSAGE
+    );
+
+    // Đóng MainFrame
+    this.dispose();
+
+    // Mở LoginForm
+    LoginForm loginForm = new LoginForm();
+    loginForm.setVisible(true);
+  }
+
   public static void main(String[] args) {
     try {
       UIManager.setLookAndFeel(new FlatLightLaf());
-    } catch (Exception e) {
-    }
+    } catch (Exception e) {}
     SwingUtilities.invokeLater(() -> new MainFrame().setVisible(true));
   }
 }

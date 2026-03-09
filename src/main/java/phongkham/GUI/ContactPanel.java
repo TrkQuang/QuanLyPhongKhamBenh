@@ -1,5 +1,4 @@
-package phongkham.GUI;
-
+package phongkham.gui;
 import java.awt.*;
 import javax.swing.*;
 

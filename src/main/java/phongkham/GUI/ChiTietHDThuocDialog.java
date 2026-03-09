@@ -1,5 +1,4 @@
-package phongkham.GUI;
-
+package phongkham.gui;
 import javax.swing.*;
 import java.awt.*;
 import phongkham.DTO.HoaDonThuocDTO;

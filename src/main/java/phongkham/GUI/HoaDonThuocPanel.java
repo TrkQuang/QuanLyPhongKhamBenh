@@ -1,5 +1,5 @@
-package phongkham.GUI;
-
+package phongkham.gui;
+import com.toedter.calendar.JDateChooser;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.time.LocalDate;
@@ -12,9 +12,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import com.toedter.calendar.JDateChooser;
-import phongkham.DTO.HoaDonThuocDTO;
 import phongkham.BUS.HoaDonThuocBUS;
+import phongkham.DTO.HoaDonThuocDTO;
 
 public class HoaDonThuocPanel extends JPanel {
 
@@ -119,7 +118,9 @@ public class HoaDonThuocPanel extends JPanel {
     btFind.addActionListener(this::btFindAction);
     btReload.addActionListener(this::btReloadAction);
     btView.addActionListener(this::btViewAction);
-    btExport.addActionListener(e -> phongkham.Utils.PdfExport.exportTable(dataTable, "Hóa đơn bán thuốc"));
+    btExport.addActionListener(e ->
+      phongkham.Utils.PdfExport.exportTable(dataTable, "Hóa đơn bán thuốc")
+    );
 
     panel.setPreferredSize(new Dimension(panel.getPreferredSize().width, 70));
     panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
@@ -128,7 +129,15 @@ public class HoaDonThuocPanel extends JPanel {
   }
 
   private JScrollPane createTablePanel() {
-    String[] cols = {"Mã hóa đơn", "Mã đơn thuốc", "Ngày lập", "Tên bệnh nhân", "SĐT", "Tổng tiền", "Trạng thái"};
+    String[] cols = {
+      "Mã hóa đơn",
+      "Mã đơn thuốc",
+      "Ngày lập",
+      "Tên bệnh nhân",
+      "SĐT",
+      "Tổng tiền",
+      "Trạng thái",
+    };
     tableModel = new DefaultTableModel(cols, 0) {
       @Override
       public boolean isCellEditable(int row, int column) {
@@ -222,7 +231,12 @@ public class HoaDonThuocPanel extends JPanel {
         }
       );
     }
-    lbInfo.setText("Trang " + currentPage + " / " + Math.max(1, (int) Math.ceil((double) total / ROWS_PER_PAGE)));
+    lbInfo.setText(
+      "Trang " +
+        currentPage +
+        " / " +
+        Math.max(1, (int) Math.ceil((double) total / ROWS_PER_PAGE))
+    );
   }
 
   private void btFindAction(ActionEvent e) {
@@ -246,8 +260,9 @@ public class HoaDonThuocPanel extends JPanel {
       boolean match = true;
 
       if (!key.isEmpty()) {
-        match = String.valueOf(hd.getMaHoaDon()).contains(key) ||
-                hd.getTenBenhNhan().toLowerCase().contains(key.toLowerCase());
+        match =
+          String.valueOf(hd.getMaHoaDon()).contains(key) ||
+          hd.getTenBenhNhan().toLowerCase().contains(key.toLowerCase());
       }
 
       if (match && fromDate != null && toDate != null) {
@@ -282,16 +297,23 @@ public class HoaDonThuocPanel extends JPanel {
   private void btViewAction(ActionEvent e) {
     int row = dataTable.getSelectedRow();
     if (row == -1) {
-      JOptionPane.showMessageDialog(this, "Vui lòng chọn một hóa đơn để xem chi tiết!");
+      JOptionPane.showMessageDialog(
+        this,
+        "Vui lòng chọn một hóa đơn để xem chi tiết!"
+      );
       return;
     }
 
-    int maHoaDon = (int) dataTable.getValueAt(row, 0);
+    String maHoaDon = (String) dataTable.getValueAt(row, 0);
     HoaDonThuocDTO hd = hdBUS.getHoaDonThuocDetail(maHoaDon);
 
     if (hd != null) {
       JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
-      ChiTietHDThuocDialog dialog = new ChiTietHDThuocDialog(parentFrame, hd, this);
+      ChiTietHDThuocDialog dialog = new ChiTietHDThuocDialog(
+        parentFrame,
+        hd,
+        this
+      );
       dialog.setVisible(true);
     }
   }

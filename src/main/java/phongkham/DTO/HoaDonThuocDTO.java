@@ -3,141 +3,166 @@ package phongkham.DTO;
 import java.time.LocalDateTime;
 
 public class HoaDonThuocDTO {
-    private int maHoaDon;
-    private Integer maDonThuoc; 
-    private LocalDateTime ngayLap;
-    private double tongTien;
-    private String ghiChu;
-    private String trangThaiThanhToan;
-    private LocalDateTime ngayThanhToan;
-    private String tenBenhNhan;
-    private String sdtBenhNhan;
-    private boolean active;
 
-    // Constructor 
-    public HoaDonThuocDTO() {
-        this.ngayLap = LocalDateTime.now();
-        this.trangThaiThanhToan = "Chưa thanh toán";
-        this.active = true;
-    }
+  private String maHoaDon;
+  private Integer maDonThuoc;
+  private LocalDateTime ngayLap;
+  private double tongTien;
+  private String ghiChu;
+  private String trangThaiThanhToan;
+  private LocalDateTime ngayThanhToan;
+  private String tenBenhNhan;
+  private String sdtBenhNhan;
+  private boolean active;
 
-    public HoaDonThuocDTO(int maHoaDon, Integer maDonThuoc, LocalDateTime ngayLap, 
-                          double tongTien, String ghiChu, String trangThaiThanhToan, 
-                          LocalDateTime ngayThanhToan, String tenBenhNhan, String sdtBenhNhan, boolean active) {
-        this.maHoaDon = maHoaDon;
-        this.maDonThuoc = maDonThuoc;
-        this.ngayLap = ngayLap;
-        this.tongTien = tongTien;
-        this.ghiChu = ghiChu;
-        this.trangThaiThanhToan = trangThaiThanhToan;
-        this.ngayThanhToan = ngayThanhToan;
-        this.tenBenhNhan = tenBenhNhan;
-        this.sdtBenhNhan = sdtBenhNhan;
-        this.active = active;
-    }
+  // Constructor
+  public HoaDonThuocDTO() {
+    this.ngayLap = LocalDateTime.now();
+    this.trangThaiThanhToan = "Chưa thanh toán";
+    this.active = true;
+  }
 
-    // Insert
-    public HoaDonThuocDTO(Integer maDonThuoc, String tenBenhNhan, String sdtBenhNhan) {
-        this.maDonThuoc = maDonThuoc;
-        this.tenBenhNhan = tenBenhNhan;
-        this.sdtBenhNhan = sdtBenhNhan;
-        this.ngayLap = LocalDateTime.now();
-        this.tongTien = 0;
-        this.trangThaiThanhToan = "Chưa thanh toán";
-        this.active = true;
-    }
+  public HoaDonThuocDTO(
+    String maHoaDon,
+    Integer maDonThuoc,
+    LocalDateTime ngayLap,
+    double tongTien,
+    String ghiChu,
+    String trangThaiThanhToan,
+    LocalDateTime ngayThanhToan,
+    String tenBenhNhan,
+    String sdtBenhNhan,
+    boolean active
+  ) {
+    this.maHoaDon = maHoaDon;
+    this.maDonThuoc = maDonThuoc;
+    this.ngayLap = ngayLap;
+    this.tongTien = tongTien;
+    this.ghiChu = ghiChu;
+    this.trangThaiThanhToan = trangThaiThanhToan;
+    this.ngayThanhToan = ngayThanhToan;
+    this.tenBenhNhan = tenBenhNhan;
+    this.sdtBenhNhan = sdtBenhNhan;
+    this.active = active;
+  }
 
-    // Getters và Setters
-    public int getMaHoaDon() {
-        return maHoaDon;
-    }
+  // Insert
+  public HoaDonThuocDTO(
+    Integer maDonThuoc,
+    String tenBenhNhan,
+    String sdtBenhNhan
+  ) {
+    this.maDonThuoc = maDonThuoc;
+    this.tenBenhNhan = tenBenhNhan;
+    this.sdtBenhNhan = sdtBenhNhan;
+    this.ngayLap = LocalDateTime.now();
+    this.tongTien = 0;
+    this.trangThaiThanhToan = "Chưa thanh toán";
+    this.active = true;
+  }
 
-    public void setMaHoaDon(int maHoaDon) {
-        this.maHoaDon = maHoaDon;
-    }
+  // Getters và Setters
+  public String getMaHoaDon() {
+    return maHoaDon;
+  }
 
-    public Integer getMaDonThuoc() {
-        return maDonThuoc;
-    }
+  public void setMaHoaDon(String maHoaDon) {
+    this.maHoaDon = maHoaDon;
+  }
 
-    public void setMaDonThuoc(Integer maDonThuoc) {
-        this.maDonThuoc = maDonThuoc;
-    }
+  public Integer getMaDonThuoc() {
+    return maDonThuoc;
+  }
 
-    public LocalDateTime getNgayLap() {
-        return ngayLap;
-    }
+  public void setMaDonThuoc(Integer maDonThuoc) {
+    this.maDonThuoc = maDonThuoc;
+  }
 
-    public void setNgayLap(LocalDateTime ngayLap) {
-        this.ngayLap = ngayLap;
-    }
+  public LocalDateTime getNgayLap() {
+    return ngayLap;
+  }
 
-    public double getTongTien() {
-        return tongTien;
-    }
+  public void setNgayLap(LocalDateTime ngayLap) {
+    this.ngayLap = ngayLap;
+  }
 
-    public void setTongTien(double tongTien) {
-        this.tongTien = tongTien;
-    }
+  public double getTongTien() {
+    return tongTien;
+  }
 
-    public String getGhiChu() {
-        return ghiChu;
-    }
+  public void setTongTien(double tongTien) {
+    this.tongTien = tongTien;
+  }
 
-    public void setGhiChu(String ghiChu) {
-        this.ghiChu = ghiChu;
-    }
+  public String getGhiChu() {
+    return ghiChu;
+  }
 
-    public String getTrangThaiThanhToan() {
-        return trangThaiThanhToan;
-    }
+  public void setGhiChu(String ghiChu) {
+    this.ghiChu = ghiChu;
+  }
 
-    public void setTrangThaiThanhToan(String trangThaiThanhToan) {
-        this.trangThaiThanhToan = trangThaiThanhToan;
-    }
+  public String getTrangThaiThanhToan() {
+    return trangThaiThanhToan;
+  }
 
-    public LocalDateTime getNgayThanhToan() {
-        return ngayThanhToan;
-    }
+  public void setTrangThaiThanhToan(String trangThaiThanhToan) {
+    this.trangThaiThanhToan = trangThaiThanhToan;
+  }
 
-    public void setNgayThanhToan(LocalDateTime ngayThanhToan) {
-        this.ngayThanhToan = ngayThanhToan;
-    }
+  public LocalDateTime getNgayThanhToan() {
+    return ngayThanhToan;
+  }
 
-    public String getTenBenhNhan() {
-        return tenBenhNhan;
-    }
+  public void setNgayThanhToan(LocalDateTime ngayThanhToan) {
+    this.ngayThanhToan = ngayThanhToan;
+  }
 
-    public void setTenBenhNhan(String tenBenhNhan) {
-        this.tenBenhNhan = tenBenhNhan;
-    }
+  public String getTenBenhNhan() {
+    return tenBenhNhan;
+  }
 
-    public String getSdtBenhNhan() {
-        return sdtBenhNhan;
-    }
+  public void setTenBenhNhan(String tenBenhNhan) {
+    this.tenBenhNhan = tenBenhNhan;
+  }
 
-    public void setSdtBenhNhan(String sdtBenhNhan) {
-        this.sdtBenhNhan = sdtBenhNhan;
-    }
+  public String getSdtBenhNhan() {
+    return sdtBenhNhan;
+  }
 
-    public boolean isActive() {
-        return active;
-    }
+  public void setSdtBenhNhan(String sdtBenhNhan) {
+    this.sdtBenhNhan = sdtBenhNhan;
+  }
 
-    public void setActive(boolean active) {
-        this.active = active;
-    }
+  public boolean isActive() {
+    return active;
+  }
 
-    @Override
-    public String toString() {
-        return "HoaDonThuocDTO{" +
-                "maHoaDon=" + maHoaDon +
-                ", maDonThuoc=" + maDonThuoc +
-                ", ngayLap=" + ngayLap +
-                ", tongTien=" + tongTien +
-                ", tenBenhNhan='" + tenBenhNhan + '\'' +
-                ", trangThaiThanhToan='" + trangThaiThanhToan + '\'' +
-                ", active=" + active +
-                '}';
-    }
+  public void setActive(boolean active) {
+    this.active = active;
+  }
+
+  @Override
+  public String toString() {
+    return (
+      "HoaDonThuocDTO{" +
+      "maHoaDon=" +
+      maHoaDon +
+      ", maDonThuoc=" +
+      maDonThuoc +
+      ", ngayLap=" +
+      ngayLap +
+      ", tongTien=" +
+      tongTien +
+      ", tenBenhNhan='" +
+      tenBenhNhan +
+      '\'' +
+      ", trangThaiThanhToan='" +
+      trangThaiThanhToan +
+      '\'' +
+      ", active=" +
+      active +
+      '}'
+    );
+  }
 }

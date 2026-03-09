@@ -2,7 +2,7 @@
 
 ## 🎯 TỔNG QUAN
 
-**6 thành viên làm 21 module** - mỗi người làm đầy đủ **3 tầng**: DAO + BUS + GUI  
+**6 thành viên làm 21 module** - mỗi người làm đầy đủ **3 tầng**: DAO + BUS + gui  
 **Phân chia**: 3 người × 4 module (19%) + 3 người × 3 module (14%) = **Cân bằng tối ưu**
 
 ---

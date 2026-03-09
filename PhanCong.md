@@ -4,7 +4,7 @@
 
 - **Số thành viên team**: 6 người
 - **Tổng số module**: 21 module (16 cũ + 5 phân quyền)
-- **Phân chia công việc**: Mỗi thành viên làm **đầy đủ 3 tầng (Gui bus dao )** (DTO-DAO-BUS-GUI) cho các module được giao
+- **Phân chia công việc**: Mỗi thành viên làm **đầy đủ 3 tầng (gui bus dao )** (DTO-DAO-BUS-gui) cho các module được giao
 - **Phân chia mới**: 3 người x 4 module + 3 người x 3 module = 21 module
 
 ## 📋 DANH SÁCH CÁC MODULE THEO DATABASE SCHEMA
@@ -55,10 +55,10 @@
 
 **Công việc cần làm**:
 
-- `UsersDTO.java` - `UsersDAO.java` - `UsersBUS.java` - `UsersGUI.java`
-- `BacSiDTO.java` - `BacSiDAO.java` - `BacSiBUS.java` - `BacSiGUI.java`
-- `LichLamViecDTO.java` - `LichLamViecDAO.java` - `LichLamViecBUS.java` - `LichLamViecGUI.java`
-- `KhoaDTO.java` - `KhoaDAO.java` - `KhoaBUS.java` - `KhoaGUI.java`
+- `UsersDTO.java` - `UsersDAO.java` - `UsersBUS.java` - `Usersgui.java`
+- `BacSiDTO.java` - `BacSiDAO.java` - `BacSiBUS.java` - `BacSigui.java`
+- `LichLamViecDTO.java` - `LichLamViecDAO.java` - `LichLamViecBUS.java` - `LichLamViecgui.java`
+- `KhoaDTO.java` - `KhoaDAO.java` - `KhoaBUS.java` - `Khoagui.java`
 
 ---
 
@@ -75,10 +75,10 @@
 
 **Công việc cần làm**:
 
-- `RolesDTO.java` - `RolesDAO.java` - `RolesBUS.java` - `RolesGUI.java`
-- `LichKhamDTO.java` - `LichKhamDAO.java` - `LichKhamBUS.java` - `LichKhamGUI.java`
-- `PhieuKhamDTO.java` - `PhieuKhamDAO.java` - `PhieuKhamBUS.java` - `PhieuKhamGUI.java`
-- `HoSoBenhAnDTO.java` - `HoSoBenhAnDAO.java` - `HoSoBenhAnBUS.java` - `HoSoBenhAnGUI.java`
+- `RolesDTO.java` - `RolesDAO.java` - `RolesBUS.java` - `Rolesgui.java`
+- `LichKhamDTO.java` - `LichKhamDAO.java` - `LichKhamBUS.java` - `LichKhamgui.java`
+- `PhieuKhamDTO.java` - `PhieuKhamDAO.java` - `PhieuKhamBUS.java` - `PhieuKhamgui.java`
+- `HoSoBenhAnDTO.java` - `HoSoBenhAnDAO.java` - `HoSoBenhAnBUS.java` - `HoSoBenhAngui.java`
 
 ---
 
@@ -95,10 +95,10 @@
 
 **Công việc cần làm**:
 
-- `PermissionsDTO.java` - `PermissionsDAO.java` - `PermissionsBUS.java` - `PermissionsGUI.java`
-- `GoiDichVuDTO.java` - `GoiDichVuDAO.java` - `GoiDichVuBUS.java` - `GoiDichVuGUI.java`
-- `DonThuocDTO.java` - `DonThuocDAO.java` - `DonThuocBUS.java` - `DonThuocGUI.java`
-- `CTDonThuocDTO.java` - `CTDonThuocDAO.java` - `CTDonThuocBUS.java` - `CTDonThuocGUI.java`
+- `PermissionsDTO.java` - `PermissionsDAO.java` - `PermissionsBUS.java` - `Permissionsgui.java`
+- `GoiDichVuDTO.java` - `GoiDichVuDAO.java` - `GoiDichVuBUS.java` - `GoiDichVugui.java`
+- `DonThuocDTO.java` - `DonThuocDAO.java` - `DonThuocBUS.java` - `DonThuocgui.java`
+- `CTDonThuocDTO.java` - `CTDonThuocDAO.java` - `CTDonThuocBUS.java` - `CTDonThuocgui.java`
 
 ---
 
@@ -114,9 +114,9 @@
 
 **Công việc cần làm**:
 
-- `NhaCungCapDTO.java` - `NhaCungCapDAO.java` - `NhaCungCapBUS.java` - `NhaCungCapGUI.java`
-- `ThuocDTO.java` - `ThuocDAO.java` - `ThuocBUS.java` - `ThuocGUI.java`
-- `PhieuNhapDTO.java` - `PhieuNhapDAO.java` - `PhieuNhapBUS.java` - `PhieuNhapGUI.java`
+- `NhaCungCapDTO.java` - `NhaCungCapDAO.java` - `NhaCungCapBUS.java` - `NhaCungCapgui.java`
+- `ThuocDTO.java` - `ThuocDAO.java` - `ThuocBUS.java` - `Thuocgui.java`
+- `PhieuNhapDTO.java` - `PhieuNhapDAO.java` - `PhieuNhapBUS.java` - `PhieuNhapgui.java`
 
 ---
 
@@ -132,9 +132,9 @@
 
 **Công việc cần làm**:
 
-- `UserRolesDTO.java` - `UserRolesDAO.java` - `UserRolesBUS.java` - `UserRolesGUI.java`
-- `HoaDonKhamDTO.java` - `HoaDonKhamDAO.java` - `HoaDonKhamBUS.java` - `HoaDonKhamGUI.java`
-- `CTPhieuNhapDTO.java` - `CTPhieuNhapDAO.java` - `CTPhieuNhapBUS.java` - `CTPhieuNhapGUI.java`
+- `UserRolesDTO.java` - `UserRolesDAO.java` - `UserRolesBUS.java` - `UserRolesgui.java`
+- `HoaDonKhamDTO.java` - `HoaDonKhamDAO.java` - `HoaDonKhamBUS.java` - `HoaDonKhamgui.java`
+- `CTPhieuNhapDTO.java` - `CTPhieuNhapDAO.java` - `CTPhieuNhapBUS.java` - `CTPhieuNhapgui.java`
 
 ---
 
@@ -150,9 +150,9 @@
 
 **Công việc cần làm**:
 
-- `RolePermissionsDTO.java` - `RolePermissionsDAO.java` - `RolePermissionsBUS.java` - `RolePermissionsGUI.java`
-- `HoaDonThuocDTO.java` - `HoaDonThuocDAO.java` - `HoaDonThuocBUS.java` - `HoaDonThuocGUI.java`
-- `CTHDThuocDTO.java` - `CTHDThuocDAO.java` - `CTHDThuocBUS.java` - `CTHDThuocGUI.java`
+- `RolePermissionsDTO.java` - `RolePermissionsDAO.java` - `RolePermissionsBUS.java` - `RolePermissionsgui.java`
+- `HoaDonThuocDTO.java` - `HoaDonThuocDAO.java` - `HoaDonThuocBUS.java` - `HoaDonThuocgui.java`
+- `CTHDThuocDTO.java` - `CTHDThuocDAO.java` - `CTHDThuocBUS.java` - `CTHDThuocgui.java`
 
 ---
 
@@ -243,9 +243,9 @@ Guest → LichKham (KQ) → PhieuKham (KQ) → HoSoBenhAn (KQ)
 
 3. **BUS** (Business Logic)
    - Xử lý nghiệp vụ, validation phức tạp
-   - Gọi DAO, trả kết quả cho GUI
+   - Gọi DAO, trả kết quả cho gui
 
-4. **GUI** (Graphical User Interface)
+4. **gui** (Graphical User Interface)
    - Thiết kế giao diện Swing/JavaFX
    - Kết nối với BUS, xử lý sự kiện
 
@@ -268,7 +268,7 @@ Guest → LichKham (KQ) → PhieuKham (KQ) → HoSoBenhAn (KQ)
 - Hoàn thành logic nghiệp vụ
 - Test tích hợp DTO-DAO-BUS
 
-### **GIAI ĐOẠN 4 (Tuần 7-8): Phát triển tầng GUI**
+### **GIAI ĐOẠN 4 (Tuần 7-8): Phát triển tầng gui**
 
 - Thiết kế giao diện, kết nối BUS
 - Test chức năng end-to-end
@@ -293,7 +293,7 @@ Guest → LichKham (KQ) → PhieuKham (KQ) → HoSoBenhAn (KQ)
 
 - **3 thành viên** (Quang Hữu, Kỳ Quang, Bảo Trí) làm **4 module** = 57.15% tổng công việc
 - **3 thành viên** (Như Quỳnh, Thành Nhân, Minh Triết) làm **3 module** = 42.85% tổng công việc
-- Tất cả đều tham gia đều các tầng DTO-DAO-BUS-GUI
+- Tất cả đều tham gia đều các tầng DTO-DAO-BUS-gui
 
 ---
 

@@ -1,5 +1,4 @@
-package phongkham.GUI;
-
+package phongkham.gui;
 import com.toedter.calendar.JDateChooser;
 import java.awt.*;
 import java.math.BigDecimal;

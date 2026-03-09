@@ -1,6 +1,6 @@
 # Quản Lý Phòng Khám Bệnh (Java)
 
-Dự án Java quản lý phòng khám theo mô hình phân lớp (GUI → BUS → DAO → DB), sử dụng JDBC + MySQL.
+Dự án Java quản lý phòng khám theo mô hình phân lớp (gui → BUS → DAO → DB), sử dụng JDBC + MySQL.
 
 ## Công nghệ
 
@@ -18,7 +18,7 @@ Thư viện nằm trong thư mục `lib/`:
 
 ## Kiến trúc (3 lớp)
 
-- **GUI** (`phongkham.GUI`): giao diện (Frame/Dialog/Panel), bắt sự kiện, validate cơ bản.
+- **gui** (`phongkham.gui`): giao diện (Frame/Dialog/Panel), bắt sự kiện, validate cơ bản.
 - **BUS** (`phongkham.BUS`): xử lý nghiệp vụ, điều phối luồng, không viết SQL.
 - **DAO** (`phongkham.DAO`): truy cập dữ liệu (CRUD) qua JDBC.
 - **DB** (`phongkham.DB`): quản lý kết nối DB.
@@ -26,7 +26,7 @@ Thư viện nằm trong thư mục `lib/`:
 
 Luồng chuẩn:
 
-- `GUI` → `BUS` → `DAO` → `DB`
+- `gui` → `BUS` → `DAO` → `DB`
 
 ## Cấu trúc thư mục
 
@@ -36,7 +36,7 @@ QuanLyPhongKhamBenh/
 │   └── qlpk_db.sql              # script tạo CSDL
 ├── lib/                         # các file .jar
 ├── src/main/java/phongkham/
-│   ├── GUI/                     # giao diện
+│   ├── gui/                     # giao diện
 │   ├── BUS/                     # nghiệp vụ
 │   ├── DAO/                     # truy cập dữ liệu
 │   ├── DB/                      # kết nối DB
@@ -47,7 +47,7 @@ QuanLyPhongKhamBenh/
 
 Tài liệu chi tiết theo từng tầng:
 
-- GUI: `src/main/java/phongkham/GUI/Readme.md`
+- gui: `src/main/java/phongkham/gui/Readme.md`
 - BUS: `src/main/java/phongkham/BUS/Readme.md`
 - DAO: `src/main/java/phongkham/DAO/Readme.md`
 - DB: `src/main/java/phongkham/DB/Readme.md`
@@ -83,11 +83,11 @@ Thêm các file trong `lib/` vào classpath/build path của IDE.
 
 Chạy class `phongkham.Main`.
 
-> Hiện tại `Main.java` đang là khung trống; khi thêm GUI, `Main` sẽ là nơi khởi tạo và hiển thị màn hình chính.
+> Hiện tại `Main.java` đang là khung trống; khi thêm gui, `Main` sẽ là nơi khởi tạo và hiển thị màn hình chính.
 
 ## Gợi ý đóng góp / phát triển tiếp
 
-- Hoàn thiện `GUI/` (tạo các màn hình, điều hướng)
+- Hoàn thiện `gui/` (tạo các màn hình, điều hướng)
 - Implement các lớp `DAO` (hiện có nhiều file khung)
 - Implement logic trong các lớp `BUS`
 - Tách cấu hình DB ra file `.properties` hoặc biến môi trường

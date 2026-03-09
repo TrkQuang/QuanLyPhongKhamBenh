@@ -1,15 +1,8 @@
-package phongkham.GUI;
-
+package phongkham.gui;
 import java.awt.*;
 import javax.swing.*;
 
-/**
- * ServicePanel - CỰC KỲ ĐƠN GIẢN
- * Từ 120 dòng → 50 dòng (-58%)
- */
 public class ServicePanel extends JPanel {
-
-  // ✅ Định nghĩa dịch vụ bằng mảng - DỄ HIỂU!
   private static final String[] SERVICES = {
     "Khám Tổng Quát",
     "Tiêm Chủng",

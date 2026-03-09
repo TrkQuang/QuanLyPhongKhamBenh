@@ -1,12 +1,7 @@
-package phongkham.GUI;
-
+package phongkham.gui;
 import java.awt.*;
 import javax.swing.*;
 
-/**
- * AboutPanel - ĐƠN GIẢN, CĂNG GIỮA
- * CHỈ 50 DÒNG!
- */
 public class AboutPanel extends JPanel {
 
   public AboutPanel() {

@@ -84,7 +84,7 @@ Trong project này, `DAO` thường làm việc với:
 ## Những việc KHÔNG nên đặt trong DAO
 
 - Validate nghiệp vụ (vd: “tồn kho phải đủ”, “không được trùng lịch”) → để `BUS`
-- Hiển thị UI / thông báo (JOptionPane, JTable, …) → để `GUI`
+- Hiển thị UI / thông báo (JOptionPane, JTable, …) → để `gui`
 
 ## Best practices (nên theo để code sạch và an toàn)
 

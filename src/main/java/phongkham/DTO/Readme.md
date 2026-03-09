@@ -2,7 +2,7 @@
 
 ## Ví dụ ngắn (một file DTO trông thường sẽ như vầy)
 
-> Mục tiêu: DTO là “gói dữ liệu” dùng để truyền giữa GUI ↔ BUS ↔ DAO. DTO không chứa SQL và cũng không chứa nghiệp vụ phức tạp.
+> Mục tiêu: DTO là “gói dữ liệu” dùng để truyền giữa gui ↔ BUS ↔ DAO. DTO không chứa SQL và cũng không chứa nghiệp vụ phức tạp.
 
 ```java
 package phongkham.DTO;
@@ -53,7 +53,7 @@ public class ThuocDTO {
 `DTO` (Data Transfer Object) là tầng mô hình dữ liệu đơn giản, dùng để:
 
 - Biểu diễn dữ liệu của 1 “thực thể” (Bác sĩ, Thuốc, Phiếu khám, …)
-- Truyền dữ liệu qua lại giữa các tầng `GUI` ↔ `BUS` ↔ `DAO`
+- Truyền dữ liệu qua lại giữa các tầng `gui` ↔ `BUS` ↔ `DAO`
 - Giúp code rõ ràng hơn thay vì truyền nhiều tham số rời rạc
 
 ## Quy ước đặt tên
@@ -72,7 +72,7 @@ public class ThuocDTO {
 
 - SQL / thao tác DB (để `DAO`)
 - Logic nghiệp vụ phức tạp (để `BUS`)
-- Code UI (để `GUI`)
+- Code UI (để `gui`)
 
 ## Gợi ý cách map giữa DAO và DTO
 

@@ -1,143 +1,168 @@
 package phongkham.DTO;
 
 public class CTHDThuocDTO {
-    private int maCTHDThuoc;
-    private int maHoaDon;
-    private int maThuoc;
-    private String tenThuoc;
-    private String donVi;
-    private int soLuong;
-    private double donGia;
-    private double thanhTien;
-    private String ghiChu;
-    private boolean active;
 
-    // Constructor
-    public CTHDThuocDTO() {
-        this.active = true;
-    }
+  private String maCTHDThuoc;
+  private String maHoaDon;
+  private String maThuoc;
+  private String tenThuoc;
+  private String donVi;
+  private int soLuong;
+  private double donGia;
+  private double thanhTien;
+  private String ghiChu;
+  private boolean active;
 
-    public CTHDThuocDTO(int maCTHDThuoc, int maHoaDon, int maThuoc, String tenThuoc, 
-                        String donVi, int soLuong, double donGia, double thanhTien, String ghiChu, boolean active) {
-        this.maCTHDThuoc = maCTHDThuoc;
-        this.maHoaDon = maHoaDon;
-        this.maThuoc = maThuoc;
-        this.tenThuoc = tenThuoc;
-        this.donVi = donVi;
-        this.soLuong = soLuong;
-        this.donGia = donGia;
-        this.thanhTien = thanhTien;
-        this.ghiChu = ghiChu;
-        this.active = active;
-    }
+  // Constructor
+  public CTHDThuocDTO() {
+    this.active = true;
+  }
 
-    // Insert
-    public CTHDThuocDTO(int maHoaDon, int maThuoc, int soLuong, double donGia) {
-        this.maHoaDon = maHoaDon;
-        this.maThuoc = maThuoc;
-        this.soLuong = soLuong;
-        this.donGia = donGia;
-        this.thanhTien = soLuong * donGia;
-        this.active = true;
-    }
+  public CTHDThuocDTO(
+    String maCTHDThuoc,
+    String maHoaDon,
+    String maThuoc,
+    String tenThuoc,
+    String donVi,
+    int soLuong,
+    double donGia,
+    double thanhTien,
+    String ghiChu,
+    boolean active
+  ) {
+    this.maCTHDThuoc = maCTHDThuoc;
+    this.maHoaDon = maHoaDon;
+    this.maThuoc = maThuoc;
+    this.tenThuoc = tenThuoc;
+    this.donVi = donVi;
+    this.soLuong = soLuong;
+    this.donGia = donGia;
+    this.thanhTien = thanhTien;
+    this.ghiChu = ghiChu;
+    this.active = active;
+  }
 
-    // Getters và Setters
-    public int getMaCTHDThuoc() {
-        return maCTHDThuoc;
-    }
+  // Insert
+  public CTHDThuocDTO(
+    String maHoaDon,
+    String maThuoc,
+    int soLuong,
+    double donGia
+  ) {
+    this.maHoaDon = maHoaDon;
+    this.maThuoc = maThuoc;
+    this.soLuong = soLuong;
+    this.donGia = donGia;
+    this.thanhTien = soLuong * donGia;
+    this.active = true;
+  }
 
-    public void setMaCTHDThuoc(int maCTHDThuoc) {
-        this.maCTHDThuoc = maCTHDThuoc;
-    }
+  // Getters và Setters
+  public String getMaCTHDThuoc() {
+    return maCTHDThuoc;
+  }
 
-    public int getMaHoaDon() {
-        return maHoaDon;
-    }
+  public void setMaCTHDThuoc(String maCTHDThuoc) {
+    this.maCTHDThuoc = maCTHDThuoc;
+  }
 
-    public void setMaHoaDon(int maHoaDon) {
-        this.maHoaDon = maHoaDon;
-    }
+  public String getMaHoaDon() {
+    return maHoaDon;
+  }
 
-    public int getMaThuoc() {
-        return maThuoc;
-    }
+  public void setMaHoaDon(String maHoaDon) {
+    this.maHoaDon = maHoaDon;
+  }
 
-    public void setMaThuoc(int maThuoc) {
-        this.maThuoc = maThuoc;
-    }
+  public String getMaThuoc() {
+    return maThuoc;
+  }
 
-    public String getTenThuoc() {
-        return tenThuoc;
-    }
+  public void setMaThuoc(String maThuoc) {
+    this.maThuoc = maThuoc;
+  }
 
-    public void setTenThuoc(String tenThuoc) {
-        this.tenThuoc = tenThuoc;
-    }
+  public String getTenThuoc() {
+    return tenThuoc;
+  }
 
-    public String getDonVi() {
-        return donVi;
-    }
+  public void setTenThuoc(String tenThuoc) {
+    this.tenThuoc = tenThuoc;
+  }
 
-    public void setDonVi(String donVi) {
-        this.donVi = donVi;
-    }
+  public String getDonVi() {
+    return donVi;
+  }
 
-    public int getSoLuong() {
-        return soLuong;
-    }
+  public void setDonVi(String donVi) {
+    this.donVi = donVi;
+  }
 
-    public void setSoLuong(int soLuong) {
-        this.soLuong = soLuong;
-        calculateThanhTien();
-    }
+  public int getSoLuong() {
+    return soLuong;
+  }
 
-    public double getDonGia() {
-        return donGia;
-    }
+  public void setSoLuong(int soLuong) {
+    this.soLuong = soLuong;
+    calculateThanhTien();
+  }
 
-    public void setDonGia(double donGia) {
-        this.donGia = donGia;
-        calculateThanhTien();
-    }
+  public double getDonGia() {
+    return donGia;
+  }
 
-    public double getThanhTien() {
-        return thanhTien;
-    }
+  public void setDonGia(double donGia) {
+    this.donGia = donGia;
+    calculateThanhTien();
+  }
 
-    public void setThanhTien(double thanhTien) {
-        this.thanhTien = thanhTien;
-    }
+  public double getThanhTien() {
+    return thanhTien;
+  }
 
-    public String getGhiChu() {
-        return ghiChu;
-    }
+  public void setThanhTien(double thanhTien) {
+    this.thanhTien = thanhTien;
+  }
 
-    public void setGhiChu(String ghiChu) {
-        this.ghiChu = ghiChu;
-    }
+  public String getGhiChu() {
+    return ghiChu;
+  }
 
-    public boolean isActive() {
-        return active;
-    }
+  public void setGhiChu(String ghiChu) {
+    this.ghiChu = ghiChu;
+  }
 
-    public void setActive(boolean active) {
-        this.active = active;
-    }
+  public boolean isActive() {
+    return active;
+  }
 
-    // Tính thành tiền (logic đơn giản của entity)
-    private void calculateThanhTien() {
-        this.thanhTien = this.soLuong * this.donGia;
-    }
+  public void setActive(boolean active) {
+    this.active = active;
+  }
 
-    @Override 
-    public String toString() {
-        return "CTHDThuocDTO{" +
-                "maCTHDThuoc=" + maCTHDThuoc +
-                ", maHoaDon=" + maHoaDon +
-                ", tenThuoc='" + tenThuoc + '\'' +
-                ", soLuong=" + soLuong +
-                ", donGia=" + donGia +
-                ", thanhTien=" + thanhTien +
-                '}';
-    }
+  // Tính thành tiền (logic đơn giản của entity)
+  private void calculateThanhTien() {
+    this.thanhTien = this.soLuong * this.donGia;
+  }
+
+  @Override
+  public String toString() {
+    return (
+      "CTHDThuocDTO{" +
+      "maCTHDThuoc=" +
+      maCTHDThuoc +
+      ", maHoaDon=" +
+      maHoaDon +
+      ", tenThuoc='" +
+      tenThuoc +
+      '\'' +
+      ", soLuong=" +
+      soLuong +
+      ", donGia=" +
+      donGia +
+      ", thanhTien=" +
+      thanhTien +
+      '}'
+    );
+  }
 }

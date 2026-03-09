@@ -2,7 +2,7 @@ package phongkham;
 
 import com.formdev.flatlaf.FlatLightLaf;
 import javax.swing.*;
-import phongkham.GUI.LoginForm;
+import phongkham.gui.LoginForm;
 
 public class Main {
 

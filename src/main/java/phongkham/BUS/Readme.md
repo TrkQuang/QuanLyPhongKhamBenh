@@ -2,7 +2,7 @@
 
 ## Ví dụ ngắn (một file BUS trông thường sẽ như vầy)
 
-> Mục tiêu: BUS đứng giữa GUI ↔ DAO/DB, xử lý nghiệp vụ/validate và gọi DAO để thao tác dữ liệu.
+> Mục tiêu: BUS đứng giữa gui ↔ DAO/DB, xử lý nghiệp vụ/validate và gọi DAO để thao tác dữ liệu.
 
 ```java
 package phongkham.BUS;
@@ -33,10 +33,10 @@ public class ThuocBUS {
 
 `BUS` (Business) là tầng nghiệp vụ của ứng dụng. Tầng này:
 
-- Nhận dữ liệu từ `GUI` (hoặc `Main`) và chuẩn hoá/kiểm tra (validation).
+- Nhận dữ liệu từ `gui` (hoặc `Main`) và chuẩn hoá/kiểm tra (validation).
 - Thực thi logic nghiệp vụ (quy tắc, ràng buộc, tính toán, trạng thái).
 - Gọi `DAO` để truy xuất/ghi dữ liệu xuống DB.
-- Trả kết quả về cho `GUI` (dữ liệu, boolean, message tuỳ thiết kế).
+- Trả kết quả về cho `gui` (dữ liệu, boolean, message tuỳ thiết kế).
 
 Trong project này, cấu trúc thường là:
 
@@ -63,7 +63,7 @@ Trong project này, cấu trúc thường là:
 ## Những việc KHÔNG nên đặt trong BUS
 
 - Viết câu SQL trực tiếp (nên nằm trong `DAO`)
-- Code giao diện (JTable, JFrame, JOptionPane…) (nên nằm trong `GUI`)
+- Code giao diện (JTable, JFrame, JOptionPane…) (nên nằm trong `gui`)
 
 ## Gợi ý chữ ký hàm thường gặp
 
@@ -81,12 +81,12 @@ Tuỳ file hiện tại đang viết theo kiểu nào, nhưng thường BUS sẽ
 
 ## Luồng gọi điển hình
 
-1. GUI tạo `DTO` từ dữ liệu người dùng nhập
-2. GUI gọi `BUS.add(dto)`
+1. gui tạo `DTO` từ dữ liệu người dùng nhập
+2. gui gọi `BUS.add(dto)`
 3. BUS validate + xử lý logic
 4. BUS gọi `DAO.insert(dto)`
 5. DAO chạy SQL qua `DBConnection` và trả kết quả
-6. BUS trả kết quả về GUI
+6. BUS trả kết quả về gui
 
 ## Note
 
