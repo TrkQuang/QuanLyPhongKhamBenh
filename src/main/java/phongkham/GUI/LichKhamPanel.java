@@ -1,4 +1,5 @@
 package phongkham.gui;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
@@ -183,53 +184,6 @@ public class LichKhamPanel extends JPanel {
       };
       tableModel.addRow(row);
     }
-  }
-
-  private void showChiTiet() {
-    int selectedRow = tableLichKham.getSelectedRow();
-    if (selectedRow == -1) {
-      JOptionPane.showMessageDialog(
-        this,
-        "Vui lòng chọn lịch khám cần xem chi tiết!"
-      );
-      return;
-    }
-
-    String maLichKham = tableModel.getValueAt(selectedRow, 0).toString();
-    LichKhamDTO lk = lichKhamBUS.getById(maLichKham);
-
-    if (lk == null) {
-      JOptionPane.showMessageDialog(this, "Không tìm thấy lịch khám!");
-      return;
-    }
-
-    String info =
-      "Mã lịch khám: " +
-      lk.getMaLichKham() +
-      "\n" +
-      "Mã gói: " +
-      lk.getMaGoi() +
-      "\n" +
-      "Mã bác sĩ: " +
-      lk.getMaBacSi() +
-      "\n" +
-      "Thời gian: " +
-      lk.getThoiGianBatDau() +
-      " - " +
-      lk.getThoiGianKetThuc() +
-      "\n" +
-      "Trạng thái: " +
-      lk.getTrangThai() +
-      "\n" +
-      "Mã định danh: " +
-      lk.getMaDinhDanhTam();
-
-    JOptionPane.showMessageDialog(
-      this,
-      info,
-      "Chi tiết lịch khám",
-      JOptionPane.INFORMATION_MESSAGE
-    );
   }
 
   private void huyLichKham() {

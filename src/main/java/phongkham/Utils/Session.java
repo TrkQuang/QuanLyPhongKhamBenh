@@ -8,9 +8,9 @@ import phongkham.DTO.UsersDTO;
 
 public class Session {
 
-  public static UsersDTO currentUser = null;
-  private static Set<String> currentPermissions = null; 
-  public static String currentBacSiID = null;
+  private static UsersDTO currentUser = null;
+  private static Set<String> currentPermissions = null;
+  private static String currentBacSiID = null;
 
   /**
    * Đăng nhập: lưu user + TỰ ĐỘNG load permissions
@@ -30,10 +30,11 @@ public class Session {
     }
 
     System.out.println(
-        "✓ Loaded " +
-            currentPermissions.size() +
-            " permissions for " +
-            user.getUsername());
+      "✓ Loaded " +
+        currentPermissions.size() +
+        " permissions for " +
+        user.getUsername()
+    );
   }
 
   public static void logout() {
@@ -84,7 +85,8 @@ public class Session {
     System.out.println("========== SESSION INFO ==========");
     System.out.println("User: " + currentUser.getUsername());
     System.out.println(
-        "Permissions (" + currentPermissions.size() + "): " + currentPermissions);
+      "Permissions (" + currentPermissions.size() + "): " + currentPermissions
+    );
     System.out.println("==================================");
   }
 }

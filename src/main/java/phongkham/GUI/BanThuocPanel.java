@@ -2,11 +2,9 @@ package phongkham.gui;
 
 import java.awt.*;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import phongkham.BUS.CTHDThuocBUS;
 import phongkham.BUS.HoaDonThuocBUS;
@@ -291,7 +289,6 @@ public class BanThuocPanel extends JPanel {
 
       String maThuoc = (String) tableThuoc.getValueAt(row, 0);
       String tenThuoc = (String) tableThuoc.getValueAt(row, 1);
-      String donVi = (String) tableThuoc.getValueAt(row, 2);
       int tonKho = (int) tableThuoc.getValueAt(row, 4);
 
       if (soLuong > tonKho) {
@@ -318,13 +315,7 @@ public class BanThuocPanel extends JPanel {
 
       if (!found) {
         gioHang.add(
-          new GioHangItem(
-            maThuoc,
-            tenThuoc,
-            donVi,
-            thuoc.getDonGiaBan(),
-            soLuong
-          )
+          new GioHangItem(maThuoc, tenThuoc, thuoc.getDonGiaBan(), soLuong)
         );
       }
 
@@ -490,20 +481,17 @@ public class BanThuocPanel extends JPanel {
 
     String maThuoc;
     String tenThuoc;
-    String donVi;
     float donGia;
     int soLuong;
 
     public GioHangItem(
       String maThuoc,
       String tenThuoc,
-      String donVi,
       float donGia,
       int soLuong
     ) {
       this.maThuoc = maThuoc;
       this.tenThuoc = tenThuoc;
-      this.donVi = donVi;
       this.donGia = donGia;
       this.soLuong = soLuong;
     }

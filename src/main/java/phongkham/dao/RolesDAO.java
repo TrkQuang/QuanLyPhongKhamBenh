@@ -81,47 +81,25 @@ public class RolesDAO {
     return false;
   }
 
-  public RolesDTO getById(String STT) {
+  public RolesDTO getById(String stt) {
     String sql = "SELECT * FROM Roles WHERE STT=?";
-    RolesDTO rltemp = null;
-
-    System.out.println(
-      "🔍 [RolesDAO] Searching for Role with STT: '" + STT + "'"
-    );
-
     try (
       Connection c = DBConnection.getConnection();
       PreparedStatement ps = c.prepareStatement(sql);
     ) {
-      ps.setString(1, STT);
-      ResultSet rs = ps.executeQuery();
-      if (rs.next()) {
-        rltemp = new RolesDTO();
-        rltemp.setSTT(rs.getString("STT"));
-        rltemp.setTenVaiTro(rs.getString("TenVaiTro"));
-        rltemp.setMoTa(rs.getString("MoTa"));
-        System.out.println("  ✅ Found: " + rltemp.getTenVaiTro());
-      } else {
-        System.out.println("  ❌ No role found with STT: '" + STT + "'");
-
-        // Debug: Show all available roles
-        Statement stmt = c.createStatement();
-        ResultSet allRoles = stmt.executeQuery(
-          "SELECT STT, TenVaiTro FROM Roles"
-        );
-        System.out.println("  📋 Available roles in database:");
-        while (allRoles.next()) {
-          System.out.println(
-            "     - STT: '" +
-              allRoles.getString("STT") +
-              "' | " +
-              allRoles.getString("TenVaiTro")
-          );
+      ps.setString(1, stt);
+      try (ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) {
+          RolesDTO rltemp = new RolesDTO();
+          rltemp.setSTT(rs.getString("STT"));
+          rltemp.setTenVaiTro(rs.getString("TenVaiTro"));
+          rltemp.setMoTa(rs.getString("MoTa"));
+          return rltemp;
         }
       }
     } catch (SQLException e) {
       e.printStackTrace();
     }
-    return rltemp;
+    return null;
   }
 }

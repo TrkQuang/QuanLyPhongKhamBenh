@@ -11,6 +11,17 @@ import phongkham.db.DBConnection;
 
 public class ThuocDAO {
 
+  private ThuocDTO mapResultSet(ResultSet rs) throws SQLException {
+    ThuocDTO t = new ThuocDTO();
+    t.setMaThuoc(rs.getString("MaThuoc"));
+    t.setTenThuoc(rs.getString("TenThuoc"));
+    t.setHoatChat(rs.getString("HoatChat"));
+    t.setDonViTinh(rs.getString("DonViTinh"));
+    t.setDonGiaBan(rs.getFloat("DonGiaBan"));
+    t.setSoLuongTon(rs.getInt("SoLuongTon"));
+    return t;
+  }
+
   // Tự động sinh mã thuốc
   public String generateMaThuoc() {
     String sql = "SELECT MaThuoc FROM Thuoc ORDER BY MaThuoc DESC LIMIT 1";
@@ -42,19 +53,9 @@ public class ThuocDAO {
     try (
       Connection conn = DBConnection.getConnection();
       Statement stmt = conn.createStatement();
-      ResultSet rs = stmt.executeQuery(sql);
+      ResultSet rs = stmt.executeQuery(sql)
     ) {
-      while (rs.next()) {
-        ThuocDTO t = new ThuocDTO();
-        t.setMaThuoc(rs.getString("MaThuoc"));
-        t.setTenThuoc(rs.getString("TenThuoc"));
-        t.setHoatChat(rs.getString("HoatChat"));
-        t.setDonViTinh(rs.getString("DonViTinh"));
-        t.setDonGiaBan(rs.getFloat("DonGiaBan"));
-        t.setSoLuongTon(rs.getInt("SoLuongTon"));
-
-        ds.add(t);
-      }
+      while (rs.next()) ds.add(mapResultSet(rs));
     } catch (SQLException e) {
       e.printStackTrace();
     }
@@ -149,16 +150,7 @@ public class ThuocDAO {
     ) {
       ps.setString(1, maThuoc);
       try (ResultSet rs = ps.executeQuery()) {
-        if (rs.next()) {
-          ThuocDTO t = new ThuocDTO();
-          t.setMaThuoc(rs.getString("MaThuoc"));
-          t.setTenThuoc(rs.getString("TenThuoc"));
-          t.setHoatChat(rs.getString("HoatChat"));
-          t.setDonViTinh(rs.getString("DonViTinh"));
-          t.setDonGiaBan(rs.getFloat("DonGiaBan"));
-          t.setSoLuongTon(rs.getInt("SoLuongTon"));
-          return t;
-        }
+        if (rs.next()) return mapResultSet(rs);
       }
     } catch (SQLException e) {
       System.err.println("Lỗi tìm thuốc theo mã: " + e.getMessage());
@@ -167,28 +159,19 @@ public class ThuocDAO {
   }
 
   //tìm theo tên thuốc
-  public ArrayList<ThuocDTO> searchByTenThuoc(String TenThuoc) {
+  public ArrayList<ThuocDTO> searchByTenThuoc(String tenThuoc) {
     ArrayList<ThuocDTO> ds = new ArrayList<>();
     String sql = "SELECT * FROM Thuoc WHERE TenThuoc LIKE ?";
     try (
       Connection conn = DBConnection.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql)
     ) {
-      ps.setString(1, "%" + TenThuoc + "%");
+      ps.setString(1, "%" + tenThuoc + "%");
       try (ResultSet rs = ps.executeQuery()) {
-        while (rs.next()) {
-          ThuocDTO t = new ThuocDTO();
-          t.setMaThuoc(rs.getString("MaThuoc"));
-          t.setTenThuoc(rs.getString("TenThuoc"));
-          t.setHoatChat(rs.getString("HoatChat"));
-          t.setDonViTinh(rs.getString("DonViTinh"));
-          t.setDonGiaBan(rs.getFloat("DonGiaBan"));
-          t.setSoLuongTon(rs.getInt("SoLuongTon"));
-          ds.add(t);
-        }
+        while (rs.next()) ds.add(mapResultSet(rs));
       }
     } catch (SQLException e) {
-      System.err.println("Lỗi tìm thuốc theo tên thuốc" + e.getMessage());
+      System.err.println("Lỗi tìm thuốc theo tên: " + e.getMessage());
     }
     return ds;
   }
@@ -203,19 +186,10 @@ public class ThuocDAO {
     ) {
       ps.setString(1, "%" + hoatChat + "%");
       try (ResultSet rs = ps.executeQuery()) {
-        while (rs.next()) {
-          ThuocDTO t = new ThuocDTO();
-          t.setMaThuoc(rs.getString("MaThuoc"));
-          t.setTenThuoc(rs.getString("TenThuoc"));
-          t.setHoatChat(rs.getString("HoatChat"));
-          t.setDonViTinh(rs.getString("DonViTinh"));
-          t.setDonGiaBan(rs.getFloat("DonGiaBan"));
-          t.setSoLuongTon(rs.getInt("SoLuongTon"));
-          ds.add(t);
-        }
+        while (rs.next()) ds.add(mapResultSet(rs));
       }
     } catch (SQLException e) {
-      System.err.println("Lỗi tìm thuốc theo hoạt chất" + e.getMessage());
+      System.err.println("Lỗi tìm thuốc theo hoạt chất: " + e.getMessage());
     }
     return ds;
   }
@@ -246,16 +220,7 @@ public class ThuocDAO {
       Statement stmt = conn.createStatement();
       ResultSet rs = stmt.executeQuery(sql)
     ) {
-      while (rs.next()) {
-        ThuocDTO t = new ThuocDTO();
-        t.setMaThuoc(rs.getString("MaThuoc"));
-        t.setTenThuoc(rs.getString("TenThuoc"));
-        t.setHoatChat(rs.getString("HoatChat"));
-        t.setDonViTinh(rs.getString("DonViTinh"));
-        t.setDonGiaBan(rs.getFloat("DonGiaBan"));
-        t.setSoLuongTon(rs.getInt("SoLuongTon"));
-        ds.add(t);
-      }
+      while (rs.next()) ds.add(mapResultSet(rs));
     } catch (SQLException e) {
       System.err.println("Lỗi lấy thuốc còn tồn: " + e.getMessage());
     }
@@ -272,43 +237,26 @@ public class ThuocDAO {
     ) {
       ps.setFloat(1, donGiaBan);
       try (ResultSet rs = ps.executeQuery()) {
-        while (rs.next()) {
-          ThuocDTO t = new ThuocDTO();
-          t.setMaThuoc(rs.getString("MaThuoc"));
-          t.setTenThuoc(rs.getString("TenThuoc"));
-          t.setHoatChat(rs.getString("HoatChat"));
-          t.setDonViTinh(rs.getString("DonViTinh"));
-          t.setDonGiaBan(rs.getFloat("DonGiaBan"));
-          t.setSoLuongTon(rs.getInt("SoLuongTon"));
-          ds.add(t);
-        }
+        while (rs.next()) ds.add(mapResultSet(rs));
       }
     } catch (SQLException e) {
-      System.err.println("Lỗi tìm thuốc theo đơn giá bán" + e.getMessage());
+      System.err.println("Lỗi tìm thuốc theo đơn giá bán: " + e.getMessage());
     }
     return ds;
   }
 
   public int getSoLuongTon(String maThuoc) {
-    String sql = "SELECT * FROM Thuoc WHERE MaThuoc = ?";
+    String sql = "SELECT SoLuongTon FROM Thuoc WHERE MaThuoc = ?";
     try (
       Connection c = DBConnection.getConnection();
       PreparedStatement ps = c.prepareStatement(sql)
     ) {
       ps.setString(1, maThuoc);
-      ResultSet rs = ps.executeQuery();
-      if (rs.next()) {
-        ThuocDTO t = new ThuocDTO();
-        t.setMaThuoc(rs.getString("MaThuoc"));
-        t.setTenThuoc(rs.getString("TenThuoc"));
-        t.setHoatChat(rs.getString("HoatChat"));
-        t.setDonViTinh(rs.getString("DonViTinh"));
-        t.setDonGiaBan(rs.getFloat("DonGiaBan"));
-        t.setSoLuongTon(rs.getInt("SoLuongTon"));
-        return t.getSoLuongTon();
+      try (ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) return rs.getInt("SoLuongTon");
       }
     } catch (SQLException e) {
-      System.out.println("ERROR GetSoLuongTon" + e.getMessage());
+      System.err.println("Lỗi lấy số lượng tồn: " + e.getMessage());
     }
     return 0;
   }

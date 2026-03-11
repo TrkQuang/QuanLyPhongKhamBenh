@@ -8,69 +8,49 @@ public class ThuocBUS {
 
   private ThuocDAO thuocDAO = new ThuocDAO();
 
-  //lấy tất cả nhà cung cấp
+  // Validate các trường bắt buộc của thuốc
+  private String validate(ThuocDTO t) {
+    if (t == null) return "Thuốc không được để trống";
+    if (
+      t.getTenThuoc() == null || t.getTenThuoc().trim().isEmpty()
+    ) return "Tên thuốc không được để trống";
+    if (
+      t.getHoatChat() == null || t.getHoatChat().trim().isEmpty()
+    ) return "Hoạt chất không được để trống";
+    if (
+      t.getDonViTinh() == null || t.getDonViTinh().trim().isEmpty()
+    ) return "Đơn vị tính không được để trống";
+    if (t.getDonGiaBan() <= 0) return "Đơn giá bán phải lớn hơn 0";
+    if (t.getSoLuongTon() < 0) return "Số lượng tồn không được âm";
+    return null;
+  }
+
+  // Lấy tất cả thuốc
   public ArrayList<ThuocDTO> list() {
     return thuocDAO.getAllThuoc();
   }
 
-  //thêm thuốc mới
+  // Thêm thuốc mới
   public boolean addThuoc(ThuocDTO t) {
-    if (t == null) {
-      System.err.println("Thuốc không được để trống");
-      return false;
-    }
-    // Không cần kiểm tra mã thuốc nữa, sẽ tự động sinh trong DAO
-    if (t.getTenThuoc() == null || t.getTenThuoc().trim().isEmpty()) {
-      System.err.println("Tên thuốc không được để trống");
-      return false;
-    }
-    if (t.getHoatChat() == null || t.getHoatChat().trim().isEmpty()) {
-      System.err.println("Hoạt chất không được để trống");
-      return false;
-    }
-    if (t.getDonViTinh() == null || t.getDonViTinh().trim().isEmpty()) {
-      System.err.println("Đơn vị tính không được để trống");
-      return false;
-    }
-    if (t.getDonGiaBan() <= 0) {
-      System.err.println("Đơn giá bán không được âm");
-      return false;
-    }
-    if (t.getSoLuongTon() <= 0) {
-      System.err.println("Số lượng tồn không được âm");
+    String error = validate(t);
+    if (error != null) {
+      System.err.println(error);
       return false;
     }
     return thuocDAO.insertThuoc(t);
   }
 
-  //cập nhật thuốc
-  public boolean UpdateThuoc(ThuocDTO t) {
-    if (t == null) {
-      System.err.println("Thuốc không được để trống");
-      return false;
-    }
-    if (t.getMaThuoc() == null || t.getMaThuoc().trim().isEmpty()) {
+  // Cập nhật thuốc
+  public boolean updateThuoc(ThuocDTO t) {
+    if (
+      t != null && (t.getMaThuoc() == null || t.getMaThuoc().trim().isEmpty())
+    ) {
       System.err.println("Mã thuốc không được để trống");
       return false;
     }
-    if (t.getTenThuoc() == null || t.getTenThuoc().trim().isEmpty()) {
-      System.err.println("Tên thuốc không được để trống");
-      return false;
-    }
-    if (t.getHoatChat() == null || t.getHoatChat().trim().isEmpty()) {
-      System.err.println("Hoạt chất không được để trống");
-      return false;
-    }
-    if (t.getDonViTinh() == null || t.getDonViTinh().trim().isEmpty()) {
-      System.err.println("Đơn vị tính không được để trống");
-      return false;
-    }
-    if (t.getDonGiaBan() <= 0) {
-      System.err.println("Đơn giá bán không được âm");
-      return false;
-    }
-    if (t.getSoLuongTon() <= 0) {
-      System.err.println("Số lượng tồn không được âm");
+    String error = validate(t);
+    if (error != null) {
+      System.err.println(error);
       return false;
     }
     return thuocDAO.updateThuoc(t);

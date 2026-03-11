@@ -83,8 +83,11 @@ public class HoSoBenhAnBUS {
 
   public boolean updateHoSo(HoSoBenhAnDTO hs) {
     String valid = validateInsert(hs);
-    if (valid != null) return false;
-    return true;
+    if (valid != null) {
+      System.out.println("Lỗi validation: " + valid);
+      return false;
+    }
+    return hsDAO.update(hs);
   }
 
   // Cập nhật kết quả khám (bác sĩ sử dụng)
@@ -151,14 +154,12 @@ public class HoSoBenhAnBUS {
   public ArrayList<HoSoBenhAnDTO> getBySDT(String sdt) {
     if (sdt == null || sdt.trim().isEmpty()) {
       System.out.println("Số điện thoại không được rỗng");
-      return null;
+      return new ArrayList<>();
     }
-    boolean valid = isValidPhoneNumber(sdt);
-    if (valid) {
-      ArrayList<HoSoBenhAnDTO> list = hsDAO.getBySoDienThoai(sdt);
-      return list;
+    if (!isValidPhoneNumber(sdt)) {
+      return new ArrayList<>();
     }
-    return null;
+    return hsDAO.getBySoDienThoai(sdt);
   }
 
   // Lấy hồ sơ theo trạng thái

@@ -11,6 +11,15 @@ import phongkham.db.DBConnection;
 
 public class DonThuocDAO {
 
+  private DonThuocDTO mapResultSet(ResultSet rs) throws Exception {
+    return new DonThuocDTO(
+      rs.getString("MaDonThuoc"),
+      rs.getString("MaHoSo"),
+      rs.getString("NgayKeDon"),
+      rs.getString("GhiChu")
+    );
+  }
+
   public ArrayList<DonThuocDTO> getAll() {
     ArrayList<DonThuocDTO> ds = new ArrayList<>();
     String sql = "SELECT * FROM DonThuoc";
@@ -20,14 +29,7 @@ public class DonThuocDAO {
       Statement stm = c.createStatement();
       ResultSet rs = stm.executeQuery(sql);
     ) {
-      while (rs.next()) {
-        DonThuocDTO dt = new DonThuocDTO();
-        dt.setMaDonThuoc(rs.getString("MaDonThuoc"));
-        dt.setMaHoSo(rs.getString("MaHoSo"));
-        dt.setNgayKeDon(rs.getString("NgayKeDon"));
-        dt.setGhiChu(rs.getString("GhiChu"));
-        ds.add(dt);
-      }
+      while (rs.next()) ds.add(mapResultSet(rs));
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -92,15 +94,8 @@ public class DonThuocDAO {
       PreparedStatement ps = conn.prepareStatement(sql)
     ) {
       ps.setString(1, maDonThuoc);
-      ResultSet rs = ps.executeQuery();
-
-      if (rs.next()) {
-        return new DonThuocDTO(
-          rs.getString("MaDonThuoc"),
-          rs.getString("MaHoSo"),
-          rs.getString("NgayKeDon"),
-          rs.getString("GhiChu")
-        );
+      try (ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) return mapResultSet(rs);
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -115,9 +110,8 @@ public class DonThuocDAO {
       PreparedStatement ps = c.prepareStatement(sql)
     ) {
       ps.setString(1, maDT);
-      ResultSet rs = ps.executeQuery();
-      if (rs.next()) {
-        return true;
+      try (ResultSet rs = ps.executeQuery()) {
+        return rs.next();
       }
     } catch (SQLException e) {
       e.printStackTrace();

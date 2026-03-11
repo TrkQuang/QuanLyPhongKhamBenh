@@ -4,7 +4,6 @@ import com.toedter.calendar.JDateChooser;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -34,10 +33,6 @@ public class HoaDonThuocPanel extends JPanel {
 
   private ArrayList<HoaDonThuocDTO> fullList;
   private HoaDonThuocBUS hdBUS;
-  private DonThuocBUS donThuocBUS;
-  private CTDonThuocBUS ctDonThuocBUS;
-  private ThuocBUS thuocBUS;
-  private CTHDThuocBUS cthdBUS;
 
   private int currentPage = 1;
   private static final int ROWS_PER_PAGE = 10;
@@ -49,10 +44,6 @@ public class HoaDonThuocPanel extends JPanel {
 
   private void initData() {
     hdBUS = new HoaDonThuocBUS();
-    donThuocBUS = new DonThuocBUS();
-    ctDonThuocBUS = new CTDonThuocBUS();
-    thuocBUS = new ThuocBUS();
-    cthdBUS = new CTHDThuocBUS();
     fullList = new ArrayList<>();
     List<HoaDonThuocDTO> data = hdBUS.getAllHoaDonThuoc();
     if (data != null) {
@@ -270,36 +261,16 @@ public class HoaDonThuocPanel extends JPanel {
     Date dFrom = dateFrom.getDate();
     Date dTo = dateTo.getDate();
 
-    LocalDate fromDate = null;
-    LocalDate toDate = null;
+    LocalDate fromDate =
+      dFrom != null
+        ? dFrom.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+        : null;
+    LocalDate toDate =
+      dTo != null
+        ? dTo.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+        : null;
 
-    if (dFrom != null) {
-      fromDate = dFrom.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-    }
-
-    if (dTo != null) {
-      toDate = dTo.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-    }
-
-    fullList = new ArrayList<>();
-    for (HoaDonThuocDTO hd : hdBUS.getAllHoaDonThuoc()) {
-      boolean match = true;
-
-      if (!key.isEmpty()) {
-        match =
-          String.valueOf(hd.getMaHoaDon()).contains(key) ||
-          hd.getTenBenhNhan().toLowerCase().contains(key.toLowerCase());
-      }
-
-      if (match && fromDate != null && toDate != null) {
-        LocalDate hoaDonDate = hd.getNgayLap().toLocalDate();
-        match = !hoaDonDate.isBefore(fromDate) && !hoaDonDate.isAfter(toDate);
-      }
-
-      if (match) {
-        fullList.add(hd);
-      }
-    }
+    fullList = hdBUS.searchAndFilter(key, fromDate, toDate);
 
     if (fullList.isEmpty()) {
       JOptionPane.showMessageDialog(this, "Không tìm thấy kết quả!");
@@ -414,317 +385,10 @@ public class HoaDonThuocPanel extends JPanel {
   }
 
   private void btTaoDonThuocAction(ActionEvent e) {
-    // Hiển thị dialog nhập mã đơn thuốc
-    JDialog dialog = new JDialog(
+    TaoDonThuocDialog dialog = new TaoDonThuocDialog(
       (Frame) SwingUtilities.getWindowAncestor(this),
-      "Tạo hóa đơn từ đơn thuốc",
-      true
+      this
     );
-    dialog.setLayout(new BorderLayout(10, 10));
-    dialog.setSize(600, 500);
-    dialog.setLocationRelativeTo(this);
-
-    JPanel mainPanel = new JPanel();
-    mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-    mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
-
-    // Panel nhập mã đơn
-    JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-    inputPanel.setBorder(
-      BorderFactory.createTitledBorder("Thông tin đơn thuốc")
-    );
-    JTextField txtMaDon = new JTextField(15);
-    JButton btnTimDon = createButton("Tìm đơn", PRIMARY_COLOR);
-    inputPanel.add(new JLabel("Mã đơn thuốc:"));
-    inputPanel.add(txtMaDon);
-    inputPanel.add(btnTimDon);
-
-    // Panel hiển thị thông tin đơn
-    JPanel infoPanel = new JPanel(new GridLayout(3, 2, 10, 10));
-    infoPanel.setBorder(BorderFactory.createTitledBorder("Thông tin"));
-    JLabel lblNgayKe = new JLabel("-");
-    JLabel lblMaHS = new JLabel("-");
-    JLabel lblSoLuongThuoc = new JLabel("-");
-    infoPanel.add(new JLabel("Ngày kê:"));
-    infoPanel.add(lblNgayKe);
-    infoPanel.add(new JLabel("Mã hồ sơ:"));
-    infoPanel.add(lblMaHS);
-    infoPanel.add(new JLabel("Số loại thuốc:"));
-    infoPanel.add(lblSoLuongThuoc);
-
-    // Table thuốc
-    String[] cols = { "Mã thuốc", "Tên thuốc", "SL", "Đơn giá", "Thành tiền" };
-    DefaultTableModel modelThuoc = new DefaultTableModel(cols, 0) {
-      @Override
-      public boolean isCellEditable(int row, int column) {
-        return false;
-      }
-    };
-    JTable tableThuoc = new JTable(modelThuoc);
-    tableThuoc.setRowHeight(30);
-    JScrollPane scrollThuoc = new JScrollPane(tableThuoc);
-
-    // Panel khách hàng
-    JPanel khachPanel = new JPanel(new GridLayout(2, 2, 10, 10));
-    khachPanel.setBorder(
-      BorderFactory.createTitledBorder("Thông tin khách hàng")
-    );
-    JTextField txtTenKhach = new JTextField(15);
-    JTextField txtSDT = new JTextField(15);
-    khachPanel.add(new JLabel("Tên khách:"));
-    khachPanel.add(txtTenKhach);
-    khachPanel.add(new JLabel("SĐT:"));
-    khachPanel.add(txtSDT);
-
-    // Panel tổng tiền và nút
-    JPanel bottomPanel = new JPanel(new BorderLayout(10, 10));
-    JLabel lblTongTien = new JLabel("TỔNG TIỀN: 0 VNĐ");
-    lblTongTien.setFont(new Font("Segoe UI", Font.BOLD, 16));
-    lblTongTien.setForeground(DANGER_COLOR);
-    JButton btnThanhToan = createButton(
-      "💰 THANH TOÁN TIỀN MẶT",
-      SUCCESS_COLOR
-    );
-    btnThanhToan.setEnabled(false);
-
-    bottomPanel.add(lblTongTien, BorderLayout.WEST);
-    bottomPanel.add(btnThanhToan, BorderLayout.EAST);
-
-    // Add to main panel
-    mainPanel.add(inputPanel);
-    mainPanel.add(Box.createVerticalStrut(10));
-    mainPanel.add(infoPanel);
-    mainPanel.add(Box.createVerticalStrut(10));
-    mainPanel.add(scrollThuoc);
-    mainPanel.add(Box.createVerticalStrut(10));
-    mainPanel.add(khachPanel);
-    mainPanel.add(Box.createVerticalStrut(10));
-    mainPanel.add(bottomPanel);
-
-    dialog.add(mainPanel);
-
-    // Biến lưu đơn thuốc hiện tại
-    final DonThuocDTO[] donThuocHienTai = { null };
-    final ArrayList<CTDonThuocDTO>[] danhSachThuoc = new ArrayList[] {
-      new ArrayList<>(),
-    };
-
-    // Action tìm đơn
-    btnTimDon.addActionListener(ev -> {
-      String maDon = txtMaDon.getText().trim();
-      if (maDon.isEmpty()) {
-        JOptionPane.showMessageDialog(dialog, "Vui lòng nhập mã đơn thuốc!");
-        return;
-      }
-
-      // Tìm đơn thuốc
-      donThuocHienTai[0] = donThuocBUS.searchTheoMa(maDon);
-      if (donThuocHienTai[0] == null) {
-        JOptionPane.showMessageDialog(
-          dialog,
-          "❌ Không tìm thấy đơn thuốc: " + maDon
-        );
-        return;
-      }
-
-      // Kiểm tra đơn đã có hóa đơn chưa
-      for (HoaDonThuocDTO hd : hdBUS.getAllHoaDonThuoc()) {
-        if (hd.getMaDonThuoc() != null && hd.getMaDonThuoc().equals(maDon)) {
-          JOptionPane.showMessageDialog(
-            dialog,
-            "⚠️ Đơn thuốc này đã có hóa đơn!\nMã hóa đơn: " + hd.getMaHoaDon()
-          );
-          return;
-        }
-      }
-
-      // Lấy chi tiết đơn
-      danhSachThuoc[0] = ctDonThuocBUS.getByMaDonThuoc(maDon);
-      if (danhSachThuoc[0].isEmpty()) {
-        JOptionPane.showMessageDialog(dialog, "Đơn thuốc không có thuốc nào!");
-        return;
-      }
-
-      // Hiển thị thông tin
-      lblNgayKe.setText(donThuocHienTai[0].getNgayKeDon());
-      lblMaHS.setText(donThuocHienTai[0].getMaHoSo());
-      lblSoLuongThuoc.setText(
-        String.valueOf(danhSachThuoc[0].size()) + " loại"
-      );
-
-      // Hiển thị danh sách thuốc
-      modelThuoc.setRowCount(0);
-      double tongTien = 0;
-
-      for (CTDonThuocDTO ct : danhSachThuoc[0]) {
-        ThuocDTO thuoc = thuocBUS.getByMa(ct.getMaThuoc());
-        if (thuoc != null) {
-          double thanhTien = thuoc.getDonGiaBan() * ct.getSoluong();
-          tongTien += thanhTien;
-
-          modelThuoc.addRow(
-            new Object[] {
-              thuoc.getMaThuoc(),
-              thuoc.getTenThuoc(),
-              ct.getSoluong(),
-              String.format("%,.0f", thuoc.getDonGiaBan()),
-              String.format("%,.0f", thanhTien),
-            }
-          );
-        }
-      }
-
-      lblTongTien.setText(String.format("TỔNG TIỀN: %,.0f VNĐ", tongTien));
-      btnThanhToan.setEnabled(true);
-
-      JOptionPane.showMessageDialog(
-        dialog,
-        "✅ Tìm thấy đơn thuốc!\nSố loại thuốc: " + danhSachThuoc[0].size()
-      );
-    });
-
-    // Action thanh toán
-    btnThanhToan.addActionListener(ev -> {
-      if (donThuocHienTai[0] == null || danhSachThuoc[0].isEmpty()) {
-        JOptionPane.showMessageDialog(dialog, "Vui lòng tìm đơn thuốc trước!");
-        return;
-      }
-
-      String tenKhach = txtTenKhach.getText().trim();
-      String sdt = txtSDT.getText().trim();
-
-      if (tenKhach.isEmpty() || sdt.isEmpty()) {
-        JOptionPane.showMessageDialog(
-          dialog,
-          "Vui lòng nhập đầy đủ thông tin khách hàng!"
-        );
-        return;
-      }
-
-      // Kiểm tra tồn kho
-      for (CTDonThuocDTO ct : danhSachThuoc[0]) {
-        ThuocDTO thuoc = thuocBUS.getByMa(ct.getMaThuoc());
-        if (thuoc == null) {
-          JOptionPane.showMessageDialog(
-            dialog,
-            "Không tìm thấy thuốc: " + ct.getMaThuoc()
-          );
-          return;
-        }
-        if (thuoc.getSoLuongTon() < ct.getSoluong()) {
-          JOptionPane.showMessageDialog(
-            dialog,
-            "Thuốc " +
-              thuoc.getTenThuoc() +
-              " không đủ tồn kho!\nYêu cầu: " +
-              ct.getSoluong() +
-              ", Tồn: " +
-              thuoc.getSoLuongTon()
-          );
-          return;
-        }
-      }
-
-      int confirm = JOptionPane.showConfirmDialog(
-        dialog,
-        "Xác nhận thanh toán bằng TIỀN MẶT?\nTổng tiền: " +
-          lblTongTien.getText().replace("TỔNG TIỀN: ", ""),
-        "Xác nhận",
-        JOptionPane.YES_NO_OPTION
-      );
-
-      if (confirm != JOptionPane.YES_OPTION) return;
-
-      try {
-        // Tạo hóa đơn
-        HoaDonThuocDTO hoaDon = new HoaDonThuocDTO();
-        hoaDon.setMaHoaDon(""); // Auto-generate
-        hoaDon.setMaDonThuoc(donThuocHienTai[0].getMaDonThuoc());
-        hoaDon.setTenBenhNhan(tenKhach);
-        hoaDon.setSdtBenhNhan(sdt);
-        hoaDon.setNgayLap(LocalDateTime.now());
-
-        // Tính tổng tiền
-        double tongTien = 0;
-        for (CTDonThuocDTO ct : danhSachThuoc[0]) {
-          ThuocDTO thuoc = thuocBUS.getByMa(ct.getMaThuoc());
-          if (thuoc != null) {
-            tongTien += thuoc.getDonGiaBan() * ct.getSoluong();
-          }
-        }
-
-        hoaDon.setTongTien(tongTien);
-        hoaDon.setTrangThaiThanhToan("Đã thanh toán");
-        hoaDon.setNgayThanhToan(LocalDateTime.now());
-        hoaDon.setTrangThaiLayThuoc("ĐÃ HOÀN THÀNH");
-        hoaDon.setGhiChu("Thanh toán tiền mặt");
-
-        boolean insertHD = hdBUS.addHoaDonThuoc(hoaDon);
-        if (!insertHD) {
-          JOptionPane.showMessageDialog(dialog, "Lỗi tạo hóa đơn!");
-          return;
-        }
-
-        // Lấy mã hóa đơn vừa tạo
-        List<HoaDonThuocDTO> dsHD = hdBUS.getAllHoaDonThuoc();
-        String maHoaDon = dsHD.get(dsHD.size() - 1).getMaHoaDon();
-
-        // Insert chi tiết và trừ tồn kho
-        for (CTDonThuocDTO ct : danhSachThuoc[0]) {
-          ThuocDTO thuoc = thuocBUS.getByMa(ct.getMaThuoc());
-
-          CTHDThuocDTO ctHD = new CTHDThuocDTO();
-          ctHD.setMaCTHDThuoc(""); // Auto-generate
-          ctHD.setMaHoaDon(maHoaDon);
-          ctHD.setMaThuoc(ct.getMaThuoc());
-          ctHD.setSoLuong(ct.getSoluong());
-          ctHD.setDonGia(thuoc.getDonGiaBan());
-          ctHD.setThanhTien(thuoc.getDonGiaBan() * ct.getSoluong());
-
-          boolean insertCT = cthdBUS.addDetailMedicine(ctHD);
-          if (!insertCT) {
-            JOptionPane.showMessageDialog(dialog, "Lỗi thêm chi tiết hóa đơn!");
-            return;
-          }
-
-          // Trừ tồn kho
-          boolean truKho = thuocBUS.truSoLuongTon(
-            ct.getMaThuoc(),
-            ct.getSoluong()
-          );
-          if (!truKho) {
-            JOptionPane.showMessageDialog(
-              dialog,
-              "Lỗi trừ tồn kho: " + thuoc.getTenThuoc()
-            );
-            return;
-          }
-        }
-
-        String message = String.format(
-          "✅ THANH TOÁN THÀNH CÔNG!\n\n" +
-            "━━━━━━━━━━━━━━━━━━━━━━\n" +
-            "📋 Mã hóa đơn: %s\n" +
-            "📋 Mã đơn thuốc: %s\n" +
-            "━━━━━━━━━━━━━━━━━━━━━━\n" +
-            "💰 Tổng tiền: %,.0f VNĐ\n" +
-            "💵 Hình thức: TIỀN MẶT\n" +
-            "━━━━━━━━━━━━━━━━━━━━━━\n\n" +
-            "Đã trừ tồn kho!\nCảm ơn quý khách!",
-          maHoaDon,
-          donThuocHienTai[0].getMaDonThuoc(),
-          tongTien
-        );
-
-        JOptionPane.showMessageDialog(dialog, message);
-        dialog.dispose();
-        refreshData();
-      } catch (Exception ex) {
-        JOptionPane.showMessageDialog(dialog, "Lỗi: " + ex.getMessage());
-        ex.printStackTrace();
-      }
-    });
-
     dialog.setVisible(true);
   }
 

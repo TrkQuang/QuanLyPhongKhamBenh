@@ -19,17 +19,17 @@ public class GoiDichVuBUS {
 
   public boolean insert(GoiDichVuDTO g) {
     if (g.getMaGoi().trim().isEmpty() || g.getTenGoi().trim().isEmpty()) {
-      System.out.println("Khong duoc de trong du lieu!");
+      System.out.println("Không được để trống dữ liệu!");
       return false;
     }
     BigDecimal zero = new BigDecimal(0);
     if (g.getGiaDichVu().compareTo(zero) < 0) {
-      System.out.println("Gia dich vu phai lon hon 0!");
+      System.out.println("Giá dịch vụ phải lớn hơn 0!");
       return false;
     }
 
     if (dao.existsMaGoi(g.getMaGoi())) {
-      System.out.println("Ma goi da ton tai!");
+      System.out.println("Mã gói đã tồn tại!");
       return false;
     }
 
@@ -38,7 +38,7 @@ public class GoiDichVuBUS {
 
   public boolean update(GoiDichVuDTO g) {
     if (!dao.existsMaGoi(g.getMaGoi())) {
-      System.out.println("Khong tim thay ma de cap nhat!");
+      System.out.println("Không tìm thấy mã để cập nhật!");
       return false;
     }
 
@@ -47,7 +47,7 @@ public class GoiDichVuBUS {
 
   public boolean delete(String maGoi) {
     if (!dao.existsMaGoi(maGoi)) {
-      System.out.println("Ma khong ton tai!");
+      System.out.println("Mã không tồn tại!");
       return false;
     }
 
@@ -66,11 +66,7 @@ public class GoiDichVuBUS {
   }
 
   public GoiDichVuDTO getByMaGoi(String maGoi) {
-    GoiDichVuDTO g = new GoiDichVuDTO();
-    if (maGoi == null || maGoi.trim().isEmpty()) {
-      return null;
-    }
-    g = dao.getByMaGoi(maGoi);
-    return g;
+    if (maGoi == null || maGoi.trim().isEmpty()) return null;
+    return dao.getByMaGoi(maGoi);
   }
 }

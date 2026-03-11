@@ -47,12 +47,12 @@ public class LoginForm extends JFrame {
 
     // Username
     formPanel.add(new JLabel("Tên đăng nhập:"));
-    txtUsername = new JTextField("admin");
+    txtUsername = new JTextField();
     formPanel.add(txtUsername);
 
     // Password
     formPanel.add(new JLabel("Mật khẩu:"));
-    txtPassword = new JPasswordField("admin123");
+    txtPassword = new JPasswordField();
     txtPassword.addActionListener(e -> login());
     formPanel.add(txtPassword);
 
@@ -111,23 +111,20 @@ public class LoginForm extends JFrame {
       return;
     }
 
-    // ✅ LOGIN thành công → Lưu vào Session (tự động load permissions)
+    // Đợi khi đăng nhập thành công → Lưu vào Session (tự động load permissions)
     Session.login(user);
 
-    // ✅ Tìm maBacSi bằng email
+    // Tìm maBacSi bằng email
     BacSiBUS bacSiBUS = new BacSiBUS();
     BacSiDTO bacSi = bacSiBUS.getByEmail(user.getEmail());
     if (bacSi != null) {
       Session.setCurrentBacSiID(bacSi.getMaBacSi());
     }
 
-    // ✅ Debug: In permissions
-    Session.printInfo();
-
-    // ✅ Đóng LoginForm
+    // Đóng LoginForm
     dispose();
 
-    // ✅ Callback về MainFrame để reload menu
+    // Callback về MainFrame để reload menu
     if (mainFrame != null) {
       mainFrame.onLoginSuccess();
     } else {

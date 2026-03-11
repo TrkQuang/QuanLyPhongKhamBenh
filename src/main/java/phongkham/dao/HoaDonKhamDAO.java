@@ -11,38 +11,34 @@ import phongkham.db.DBConnection;
 
 public class HoaDonKhamDAO {
 
+  private HoaDonKhamDTO mapResultSet(ResultSet rs) throws SQLException {
+    return new HoaDonKhamDTO(
+      rs.getString("MaHDKham"),
+      rs.getString("MaHoSo"),
+      rs.getString("MaGoi"),
+      rs.getObject("NgayThanhToan", LocalDateTime.class),
+      rs.getBigDecimal("TongTien"),
+      rs.getString("HinhThucThanhToan"),
+      rs.getString("TrangThai")
+    );
+  }
+
   public ArrayList<HoaDonKhamDTO> getAll() {
     ArrayList<HoaDonKhamDTO> list = new ArrayList<>();
     String sql = "SELECT * FROM HoaDonKham";
     try (
       Connection conn = DBConnection.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
+      ResultSet rs = ps.executeQuery()
     ) {
-      ResultSet rs = ps.executeQuery();
-      while (rs.next()) {
-        LocalDateTime localDateTime = rs.getObject(
-          "NgayThanhToan",
-          LocalDateTime.class
-        );
-        HoaDonKhamDTO hd = new HoaDonKhamDTO(
-          rs.getString("MaHDKham"),
-          rs.getString("MaHoSo"),
-          rs.getString("MaGoi"),
-          localDateTime,
-          rs.getBigDecimal("TongTien"),
-          rs.getString("HinhThucThanhToan"),
-          rs.getString("TrangThai")
-        );
-
-        list.add(hd);
-      }
+      while (rs.next()) list.add(mapResultSet(rs));
     } catch (SQLException e) {
       e.printStackTrace();
     }
     return list;
   }
 
-  public boolean Insert(HoaDonKhamDTO hd) {
+  public boolean insert(HoaDonKhamDTO hd) {
     String sql =
       "INSERT INTO HoaDonKham(MaHDKham, MaHoSo, MaGoi, NgayThanhToan, TongTien, HinhThucThanhToan, TrangThai) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
@@ -65,14 +61,13 @@ public class HoaDonKhamDAO {
     return false;
   }
 
-  public boolean Delete(String MaHDKham) {
+  public boolean delete(String maHDKham) {
     String sql = "DELETE FROM HoaDonKham WHERE MaHDKham = ?";
     try (
       Connection conn = DBConnection.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
     ) {
-      ps.setString(1, MaHDKham);
-
+      ps.setString(1, maHDKham);
       return ps.executeUpdate() > 0;
     } catch (SQLException e) {
       e.printStackTrace();
@@ -80,7 +75,7 @@ public class HoaDonKhamDAO {
     return false;
   }
 
-  public boolean Update(HoaDonKhamDTO hd) {
+  public boolean update(HoaDonKhamDTO hd) {
     String sql =
       "UPDATE HoaDonKham SET MaHoSo = ?, MaGoi= ?, NgayThanhToan = ?, TongTien = ?, HinhThucThanhToan = ?, TrangThai = ? WHERE MaHDKham = ?";
     try (
@@ -102,28 +97,15 @@ public class HoaDonKhamDAO {
     return false;
   }
 
-  public HoaDonKhamDTO Search(String MaHDKham) {
+  public HoaDonKhamDTO search(String maHDKham) {
     String sql = "SELECT * FROM HoaDonKham WHERE MaHDKham = ?";
     try (
       Connection conn = DBConnection.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
     ) {
-      ps.setString(1, MaHDKham);
-      ResultSet rs = ps.executeQuery();
-      if (rs.next()) {
-        LocalDateTime localDateTime = rs.getObject(
-          "NgayThanhToan",
-          LocalDateTime.class
-        );
-        return new HoaDonKhamDTO(
-          rs.getString("MaHDKham"),
-          rs.getString("MaHoSo"),
-          rs.getString("MaGoi"),
-          localDateTime,
-          rs.getBigDecimal("TongTien"),
-          rs.getString("HinhThucThanhToan"),
-          rs.getString("TrangThai")
-        );
+      ps.setString(1, maHDKham);
+      try (ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) return mapResultSet(rs);
       }
     } catch (SQLException e) {
       e.printStackTrace();
@@ -140,22 +122,8 @@ public class HoaDonKhamDAO {
       PreparedStatement ps = conn.prepareStatement(sql);
     ) {
       ps.setString(1, trangThai);
-      ResultSet rs = ps.executeQuery();
-      while (rs.next()) {
-        LocalDateTime localDateTime = rs.getObject(
-          "NgayThanhToan",
-          LocalDateTime.class
-        );
-        HoaDonKhamDTO hd = new HoaDonKhamDTO(
-          rs.getString("MaHDKham"),
-          rs.getString("MaHoSo"),
-          rs.getString("MaGoi"),
-          localDateTime,
-          rs.getBigDecimal("TongTien"),
-          rs.getString("HinhThucThanhToan"),
-          rs.getString("TrangThai")
-        );
-        list.add(hd);
+      try (ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) list.add(mapResultSet(rs));
       }
     } catch (SQLException e) {
       e.printStackTrace();
@@ -172,22 +140,8 @@ public class HoaDonKhamDAO {
       PreparedStatement ps = conn.prepareStatement(sql);
     ) {
       ps.setString(1, maHoSo);
-      ResultSet rs = ps.executeQuery();
-      while (rs.next()) {
-        LocalDateTime localDateTime = rs.getObject(
-          "NgayThanhToan",
-          LocalDateTime.class
-        );
-        HoaDonKhamDTO hd = new HoaDonKhamDTO(
-          rs.getString("MaHDKham"),
-          rs.getString("MaHoSo"),
-          rs.getString("MaGoi"),
-          localDateTime,
-          rs.getBigDecimal("TongTien"),
-          rs.getString("HinhThucThanhToan"),
-          rs.getString("TrangThai")
-        );
-        list.add(hd);
+      try (ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) list.add(mapResultSet(rs));
       }
     } catch (SQLException e) {
       e.printStackTrace();
@@ -210,43 +164,29 @@ public class HoaDonKhamDAO {
     }
     return false;
   }
-  public ArrayList<HoaDonKhamDTO> filterByDate(LocalDateTime from, LocalDateTime to) {
+
+  public ArrayList<HoaDonKhamDTO> filterByDate(
+    LocalDateTime from,
+    LocalDateTime to
+  ) {
     ArrayList<HoaDonKhamDTO> list = new ArrayList<>();
-    String sql = "SELECT * FROM HoaDonKham WHERE NgayThanhToan BETWEEN ? AND ? ";
+    String sql =
+      "SELECT * FROM HoaDonKham WHERE NgayThanhToan BETWEEN ? AND ? ";
 
     try (
-        Connection conn = DBConnection.getConnection();
-        PreparedStatement ps = conn.prepareStatement(sql);
+      Connection conn = DBConnection.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql);
     ) {
+      ps.setObject(1, from);
+      ps.setObject(2, to);
 
-        ps.setObject(1, from);
-        ps.setObject(2, to);
-
-        ResultSet rs = ps.executeQuery();
-
-        while (rs.next()) {
-            LocalDateTime localDateTime = rs.getObject(
-                "NgayThanhToan",
-                LocalDateTime.class
-            );
-
-            HoaDonKhamDTO hd = new HoaDonKhamDTO(
-                rs.getString("MaHDKham"),
-                rs.getString("MaHoSo"),
-                rs.getString("MaGoi"),
-                localDateTime,
-                rs.getBigDecimal("TongTien"),
-                rs.getString("HinhThucThanhToan"),
-                rs.getString("TrangThai")
-            );
-
-            list.add(hd);
-        }
-
+      try (ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) list.add(mapResultSet(rs));
+      }
     } catch (SQLException e) {
-        e.printStackTrace();
+      e.printStackTrace();
     }
 
     return list;
-}
+  }
 }

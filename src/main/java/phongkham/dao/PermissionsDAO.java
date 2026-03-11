@@ -7,7 +7,7 @@ import phongkham.db.DBConnection;
 
 public class PermissionsDAO {
 
-  public ArrayList<PermissionsDTO> getAllPermisson() {
+  public ArrayList<PermissionsDTO> getAllPermissions() {
     ArrayList<PermissionsDTO> ds = new ArrayList<>();
     String sql = "SELECT * FROM Permissions";
     try (
@@ -61,19 +61,6 @@ public class PermissionsDAO {
 
   // ========== METHODS CHO QuanLyPhanQuyenPanel ==========
 
-  /**
-   * Wrapper cho getAllPermisson (fix typo)
-   * @return ArrayList<PermissionsDTO>
-   */
-  public ArrayList<PermissionsDTO> getAllPermissions() {
-    return getAllPermisson();
-  }
-
-  /**
-   * Lấy Permission theo ID
-   * @param permissionId - Mã Permission
-   * @return PermissionsDTO hoặc null
-   */
   public PermissionsDTO getPermissionById(String permissionId) {
     String sql = "SELECT * FROM Permissions WHERE MaPermission = ?";
     try (

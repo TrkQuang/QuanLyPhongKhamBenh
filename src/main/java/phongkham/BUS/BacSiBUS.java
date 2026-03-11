@@ -1,125 +1,109 @@
 package phongkham.BUS;
 
-import phongkham.dao.BacSiDAO;
-import phongkham.DTO.BacSiDTO;
 import java.util.ArrayList;
+import phongkham.DTO.BacSiDTO;
+import phongkham.dao.BacSiDAO;
 
 public class BacSiBUS {
-    private BacSiDAO dao = new BacSiDAO();
 
-    // Lay danh sach tat ca bac si
-    public ArrayList<BacSiDTO> getAll() {
-        return dao.getAll();
+  private BacSiDAO dao = new BacSiDAO();
+
+  // Lấy tất cả bác sĩ
+  public ArrayList<BacSiDTO> getAll() {
+    return dao.getAll();
+  }
+
+  // Thêm bác sĩ mới
+  public boolean add(BacSiDTO bs) {
+    if (bs == null || bs.getHoTen().trim().isEmpty()) {
+      System.out.println("Tên bác sĩ không được để trống");
+      return false;
     }
-
-    // Them bac si moi
-    public boolean add(BacSiDTO bs) {
-        if (bs == null || bs.getHoTen().trim().isEmpty()) {
-            System.out.println("Ten bac si khong duoc rong");
-            return false;
-        }
-
-        if (bs.getMaKhoa().trim().isEmpty()) {
-            System.out.println("Ma khoa khong duoc rong");
-            return false;
-        }
-
-        boolean result = dao.insertBacSi(bs);
-        if (result) {
-            System.out.println("Them bac si thanh cong: " + bs.getHoTen());
-        }
-        return result;
+    if (bs.getMaKhoa().trim().isEmpty()) {
+      System.out.println("Mã khoa không được để trống");
+      return false;
     }
+    return dao.insertBacSi(bs);
+  }
 
-    // Cap nhat thong tin bac si
-    public boolean update(BacSiDTO bs) {
-        if (bs == null || bs.getHoTen().trim().isEmpty()) {
-            System.out.println("Ten bac si khong duoc rong");
-            return false;
-        }
-
-        if (bs.getMaKhoa().trim().isEmpty()) {
-            System.out.println("Ma khoa khong duoc rong");
-            return false;
-        }
-
-        boolean result = dao.updateBacSi(bs);
-        if (result) {
-            System.out.println("Cap nhat bac si thanh cong: " + bs.getHoTen());
-        }
-        return result;
+  // Cập nhật thông tin bác sĩ
+  public boolean update(BacSiDTO bs) {
+    if (bs == null || bs.getHoTen().trim().isEmpty()) {
+      System.out.println("Tên bác sĩ không được để trống");
+      return false;
     }
-
-    // Xoa bac si theo ID
-    public boolean delete(String maBacSi) {
-        if (maBacSi == null || maBacSi.trim().isEmpty()) {
-            System.out.println("Ma bac si khong duoc rong");
-            return false;
-        }
-
-        boolean result = dao.deleteMaBacSi(maBacSi);
-        if (result) {
-            System.out.println("Xoa bac si thanh cong");
-        }
-        return result;
+    if (bs.getMaKhoa().trim().isEmpty()) {
+      System.out.println("Mã khoa không được để trống");
+      return false;
     }
+    return dao.updateBacSi(bs);
+  }
 
-    // Tim bac si theo ID
-    public BacSiDTO getById(String maBacSi) {
-        ArrayList<BacSiDTO> list = dao.getAll();
-        for (BacSiDTO bs : list) {
-            if (bs.getMaBacSi().equals(maBacSi)) {
-                return bs;
-            }
-        }
-        return null;
+  // Xóa bác sĩ theo ID
+  public boolean delete(String maBacSi) {
+    if (maBacSi == null || maBacSi.trim().isEmpty()) {
+      System.out.println("Mã bác sĩ không được để trống");
+      return false;
     }
+    return dao.deleteMaBacSi(maBacSi);
+  }
 
-    // Tim bac si theo khoa
-    public ArrayList<BacSiDTO> getByKhoa(String maKhoa) {
-        ArrayList<BacSiDTO> result = new ArrayList<>();
-        ArrayList<BacSiDTO> list = dao.getAll();
-
-        for (BacSiDTO bs : list) {
-            if (bs.getMaKhoa().equals(maKhoa)) {
-                result.add(bs);
-            }
-        }
-        return result;
+  // Tìm bác sĩ theo ID
+  public BacSiDTO getById(String maBacSi) {
+    ArrayList<BacSiDTO> list = dao.getAll();
+    for (BacSiDTO bs : list) {
+      if (bs.getMaBacSi().equals(maBacSi)) {
+        return bs;
+      }
     }
+    return null;
+  }
 
-    // Tim bac si theo ten
-    public ArrayList<BacSiDTO> searchByName(String keyword) {
-        ArrayList<BacSiDTO> result = new ArrayList<>();
-        ArrayList<BacSiDTO> list = dao.getAll();
-        String search = keyword.toLowerCase();
+  // Tìm bác sĩ theo khoa
+  public ArrayList<BacSiDTO> getByKhoa(String maKhoa) {
+    ArrayList<BacSiDTO> result = new ArrayList<>();
+    ArrayList<BacSiDTO> list = dao.getAll();
 
-        for (BacSiDTO bs : list) {
-            if (bs.getHoTen().toLowerCase().contains(search)) {
-                result.add(bs);
-            }
-        }
-        return result;
+    for (BacSiDTO bs : list) {
+      if (bs.getMaKhoa().equals(maKhoa)) {
+        result.add(bs);
+      }
     }
+    return result;
+  }
 
-    // Dem tong so bac si
-    public int countAll() {
-        return dao.getAll().size();
-    }
+  // Tìm bác sĩ theo tên
+  public ArrayList<BacSiDTO> searchByName(String keyword) {
+    ArrayList<BacSiDTO> result = new ArrayList<>();
+    ArrayList<BacSiDTO> list = dao.getAll();
+    String search = keyword.toLowerCase();
 
-    // Dem bac si theo khoa
-    public int countByKhoa(String maKhoa) {
-        return getByKhoa(maKhoa).size();
+    for (BacSiDTO bs : list) {
+      if (bs.getHoTen().toLowerCase().contains(search)) {
+        result.add(bs);
+      }
     }
+    return result;
+  }
 
-    // Tim bac si theo email
-    public BacSiDTO getByEmail(String email) {
-        ArrayList<BacSiDTO> list = dao.getAll();
-        for (BacSiDTO bs : list) {
-            if (bs.getEmail() != null && bs.getEmail().equals(email)) {
-                return bs;
-            }
-        }
-        return null;
+  // Đếm tổng số bác sĩ
+  public int countAll() {
+    return dao.getAll().size();
+  }
+
+  // Đếm bác sĩ theo khoa
+  public int countByKhoa(String maKhoa) {
+    return getByKhoa(maKhoa).size();
+  }
+
+  // Tìm bác sĩ theo email
+  public BacSiDTO getByEmail(String email) {
+    ArrayList<BacSiDTO> list = dao.getAll();
+    for (BacSiDTO bs : list) {
+      if (bs.getEmail() != null && bs.getEmail().equals(email)) {
+        return bs;
+      }
     }
+    return null;
+  }
 }

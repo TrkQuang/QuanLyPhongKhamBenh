@@ -1,6 +1,8 @@
 package phongkham.BUS;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import phongkham.DTO.HoaDonThuocDTO;
 import phongkham.dao.HoaDonThuocDAO;
@@ -80,6 +82,32 @@ public class HoaDonThuocBUS {
   // Lấy tất cả HoaDonThuoc
   public List<HoaDonThuocDTO> getAllHoaDonThuoc() {
     return hoaDonThuocDAO.getAll();
+  }
+
+  // Tìm kiếm và lọc hóa đơn theo mã/tên bệnh nhân và khoảng ngày
+  public ArrayList<HoaDonThuocDTO> searchAndFilter(
+    String key,
+    LocalDate fromDate,
+    LocalDate toDate
+  ) {
+    ArrayList<HoaDonThuocDTO> result = new ArrayList<>();
+    for (HoaDonThuocDTO hd : hoaDonThuocDAO.getAll()) {
+      boolean match = true;
+      if (key != null && !key.trim().isEmpty()) {
+        match =
+          String.valueOf(hd.getMaHoaDon()).contains(key) ||
+          (hd.getTenBenhNhan() != null &&
+            hd.getTenBenhNhan().toLowerCase().contains(key.toLowerCase()));
+      }
+      if (
+        match && fromDate != null && toDate != null && hd.getNgayLap() != null
+      ) {
+        LocalDate ngayLap = hd.getNgayLap().toLocalDate();
+        match = !ngayLap.isBefore(fromDate) && !ngayLap.isAfter(toDate);
+      }
+      if (match) result.add(hd);
+    }
+    return result;
   }
 
   // Lấy hóa đơn theo khoảng thời gian

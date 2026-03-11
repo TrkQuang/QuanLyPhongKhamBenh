@@ -1,4 +1,5 @@
 package phongkham.gui;
+
 import com.toedter.calendar.JDateChooser;
 import java.awt.*;
 import java.math.BigDecimal;
@@ -28,7 +29,6 @@ public class DatLichKhamPanel extends JPanel {
   private JTextField txtHoTen, txtSDT, txtCCCD, txtDiaChi;
   private JDateChooser dateNgaySinh;
   private JRadioButton radNam, radNu;
-  private ButtonGroup groupGioiTinh;
 
   //Thông tin đặt khám
   private JComboBox<String> GoiDV, LichKham, BacSi;
@@ -99,7 +99,9 @@ public class DatLichKhamPanel extends JPanel {
     center.add(lblGioiTinh);
     radNam = new JRadioButton("Nam");
     radNu = new JRadioButton("Nữ");
-    groupGioiTinh = new ButtonGroup();
+    ButtonGroup groupGioiTinh = new ButtonGroup();
+    groupGioiTinh.add(radNam);
+    groupGioiTinh.add(radNu);
     radNam.setSelected(true);
     JPanel GioiTinh = new JPanel();
     GioiTinh.setLayout(new FlowLayout(FlowLayout.LEFT));

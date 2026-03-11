@@ -449,115 +449,121 @@ public class KhamBenhPanel extends JPanel {
   }
 
   private void luuKhamBenh() {
-    if (maHoSoHienTai == null) {
-      JOptionPane.showMessageDialog(this, "Vui lòng chọn hồ sơ bệnh nhân!");
-      return;
-    }
-
-    // Validate
-    if (txtTrieuChung.getText().trim().isEmpty()) {
-      JOptionPane.showMessageDialog(this, "Vui lòng nhập triệu chứng!");
-      return;
-    }
-
-    if (txtChanDoan.getText().trim().isEmpty()) {
-      JOptionPane.showMessageDialog(this, "Vui lòng nhập chẩn đoán!");
-      return;
-    }
-
-    int confirm = JOptionPane.showConfirmDialog(
-      this,
-      "Xác nhận lưu thông tin khám bệnh?",
-      "Xác nhận",
-      JOptionPane.YES_NO_OPTION
-    );
-
-    if (confirm != JOptionPane.YES_OPTION) return;
+    if (!validateKhamBenh()) return;
+    if (
+      JOptionPane.showConfirmDialog(
+        this,
+        "Xác nhận lưu thông tin khám bệnh?",
+        "Xác nhận",
+        JOptionPane.YES_NO_OPTION
+      ) !=
+      JOptionPane.YES_OPTION
+    ) return;
 
     try {
-      // 1. Update HoSoBenhAn
-      HoSoBenhAnDTO hs = hoSoBUS.getById(maHoSoHienTai);
-      hs.setTrieuChung(txtTrieuChung.getText().trim());
-      hs.setChanDoan(txtChanDoan.getText().trim());
-      hs.setKetLuan(txtKetLuan.getText().trim());
-      hs.setLoiDan(txtLoiDan.getText().trim());
-      hs.setTrangThai("DA_KHAM");
+      if (!capNhatHoSo()) return;
 
-      boolean updateHS = hoSoBUS.update(hs);
-      if (!updateHS) {
-        JOptionPane.showMessageDialog(this, "Lỗi cập nhật hồ sơ!");
-        return;
-      }
-
-      // 2. Nếu có thuốc -> Insert DonThuoc và ChiTietDonThuoc
       String maDonThuoc = null;
       if (modelDonThuoc.getRowCount() > 0) {
-        // Tự động sinh mã đơn thuốc (DT01, DT02, ...)
-        maDonThuoc = donThuocBUS.generateMaDonThuoc();
-
-        // Insert DonThuoc
-        DonThuocDTO donThuoc = new DonThuocDTO();
-        donThuoc.setMaDonThuoc(maDonThuoc);
-        donThuoc.setMaHoSo(maHoSoHienTai);
-        donThuoc.setNgayKeDon(
-          LocalDateTime.now().format(
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-          )
-        );
-        donThuoc.setGhiChu("");
-
-        boolean insertDon = donThuocBUS.add(donThuoc);
-        if (!insertDon) {
-          JOptionPane.showMessageDialog(this, "Lỗi tạo đơn thuốc!");
-          return;
-        }
-
-        // Insert ChiTietDonThuoc
-        for (int i = 0; i < modelDonThuoc.getRowCount(); i++) {
-          String maThuoc = (String) modelDonThuoc.getValueAt(i, 0);
-          int soLuong = (int) modelDonThuoc.getValueAt(i, 2);
-          String lieuDung = (String) modelDonThuoc.getValueAt(i, 3);
-          String cachDung = (String) modelDonThuoc.getValueAt(i, 4);
-
-          String maCTDT = "CTDT" + System.currentTimeMillis() + "_" + i;
-
-          CTDonThuocDTO ctDon = new CTDonThuocDTO(
-            maCTDT,
-            maDonThuoc,
-            maThuoc,
-            soLuong,
-            lieuDung,
-            cachDung
-          );
-
-          boolean insertCT = ctDonThuocBUS.add(ctDon);
-          if (!insertCT) {
-            JOptionPane.showMessageDialog(this, "Lỗi thêm chi tiết đơn thuốc!");
-            return;
-          }
-        }
+        maDonThuoc = taoDonThuoc();
+        if (maDonThuoc == null) return;
       }
 
-      // Hiển thị thông báo thành công
-      String message = "✅ Lưu khám bệnh thành công!";
-      if (maDonThuoc != null) {
-        message += "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━";
-        message += "\n📋 MÃ ĐƠN THUỐC: " + maDonThuoc;
-        message += "\n━━━━━━━━━━━━━━━━━━━━━━━━━━";
-        message += "\n\n📢 Vui lòng ra quầy thuốc để:";
-        message += "\n   • Xuất trình mã đơn thuốc";
-        message += "\n   • Lấy thuốc theo đơn";
-        message += "\n   • Thanh toán bằng TIỀN MẶT";
-      }
-      JOptionPane.showMessageDialog(this, message);
-
-      // Refresh
+      JOptionPane.showMessageDialog(this, buildSuccessMessage(maDonThuoc));
       loadDanhSachHoSoChoKham();
       lamMoi();
     } catch (Exception ex) {
       JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
       ex.printStackTrace();
     }
+  }
+
+  private boolean validateKhamBenh() {
+    if (maHoSoHienTai == null) {
+      JOptionPane.showMessageDialog(this, "Vui lòng chọn hồ sơ bệnh nhân!");
+      return false;
+    }
+    if (txtTrieuChung.getText().trim().isEmpty()) {
+      JOptionPane.showMessageDialog(this, "Vui lòng nhập triệu chứng!");
+      return false;
+    }
+    if (txtChanDoan.getText().trim().isEmpty()) {
+      JOptionPane.showMessageDialog(this, "Vui lòng nhập chẩn đoán!");
+      return false;
+    }
+    return true;
+  }
+
+  private boolean capNhatHoSo() {
+    HoSoBenhAnDTO hs = hoSoBUS.getById(maHoSoHienTai);
+    hs.setTrieuChung(txtTrieuChung.getText().trim());
+    hs.setChanDoan(txtChanDoan.getText().trim());
+    hs.setKetLuan(txtKetLuan.getText().trim());
+    hs.setLoiDan(txtLoiDan.getText().trim());
+    hs.setTrangThai("DA_KHAM");
+    if (!hoSoBUS.update(hs)) {
+      JOptionPane.showMessageDialog(this, "Lỗi cập nhật hồ sơ!");
+      return false;
+    }
+    return true;
+  }
+
+  private String taoDonThuoc() {
+    String maDonThuoc = donThuocBUS.generateMaDonThuoc();
+    DonThuocDTO donThuoc = new DonThuocDTO();
+    donThuoc.setMaDonThuoc(maDonThuoc);
+    donThuoc.setMaHoSo(maHoSoHienTai);
+    donThuoc.setNgayKeDon(
+      LocalDateTime.now().format(
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+      )
+    );
+    donThuoc.setGhiChu("");
+    if (!donThuocBUS.add(donThuoc)) {
+      JOptionPane.showMessageDialog(this, "Lỗi tạo đơn thuốc!");
+      return null;
+    }
+    if (!themChiTietDonThuoc(maDonThuoc)) return null;
+    return maDonThuoc;
+  }
+
+  private boolean themChiTietDonThuoc(String maDonThuoc) {
+    for (int i = 0; i < modelDonThuoc.getRowCount(); i++) {
+      String maThuoc = (String) modelDonThuoc.getValueAt(i, 0);
+      int soLuong = (int) modelDonThuoc.getValueAt(i, 2);
+      String lieuDung = (String) modelDonThuoc.getValueAt(i, 3);
+      String cachDung = (String) modelDonThuoc.getValueAt(i, 4);
+      String maCTDT = "CTDT" + System.currentTimeMillis() + "_" + i;
+      CTDonThuocDTO ctDon = new CTDonThuocDTO(
+        maCTDT,
+        maDonThuoc,
+        maThuoc,
+        soLuong,
+        lieuDung,
+        cachDung
+      );
+      if (!ctDonThuocBUS.add(ctDon)) {
+        JOptionPane.showMessageDialog(this, "Lỗi thêm chi tiết đơn thuốc!");
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private String buildSuccessMessage(String maDonThuoc) {
+    String msg = "✅ Lưu khám bệnh thành công!";
+    if (maDonThuoc != null) {
+      msg +=
+        "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━" +
+        "\n📋 MÃ ĐƠN THUỐC: " +
+        maDonThuoc +
+        "\n━━━━━━━━━━━━━━━━━━━━━━━━━━" +
+        "\n\n📢 Vui lòng ra quầy thuốc để:" +
+        "\n   • Xuất trình mã đơn thuốc" +
+        "\n   • Lấy thuốc theo đơn" +
+        "\n   • Thanh toán bằng TIỀN MẶT";
+    }
+    return msg;
   }
 
   private void lamMoi() {

@@ -497,18 +497,9 @@ public class QuanLyPhanQuyenPanel extends JPanel {
     ArrayList<PermissionsDTO> allPermissions =
       permissionBUS.getAllPermissions();
 
-    System.out.println("🔍 DEBUG: Loading permissions for role: " + roleId);
-    System.out.println(
-      "📋 Total permissions in system: " + allPermissions.size()
-    );
-
     // Lấy các permission mà role này có
     ArrayList<RolePermissionsDTO> rolePermissions =
       rolePermissionsBUS.getPermissionsByRole(roleId);
-
-    System.out.println(
-      "✅ Permissions assigned to role: " + rolePermissions.size()
-    );
 
     // Tạo Set để tra cứu nhanh
     Map<String, Boolean> permissionMap = new HashMap<>();
@@ -736,32 +727,17 @@ public class QuanLyPhanQuyenPanel extends JPanel {
     roleListModel.clear();
     ArrayList<UsersRolesDTO> userRoles = usersRolesBUS.getRolesByUser(userId);
 
-    System.out.println("🔍 DEBUG: Loading roles for user: " + userId);
-    System.out.println("📋 Total roles for user: " + userRoles.size());
-
     for (UsersRolesDTO ur : userRoles) {
       String roleId = ur.getRole_ID();
-      System.out.println("  🔑 Role ID: " + roleId);
 
       // Lấy thông tin Role
       RolesDTO role = rolesBUS.getRoleById(roleId);
 
-      System.out.println(
-        "  🎯 Role object: " + (role != null ? "Found" : "NULL")
-      );
-
       if (role != null) {
         String display = role.getSTT() + " - " + role.getTenVaiTro();
         roleListModel.addElement(display);
-        System.out.println("  ✅ Added to list: " + display);
-      } else {
-        System.err.println("  ❌ Role not found for ID: " + roleId);
       }
     }
-
-    System.out.println(
-      "📊 Final roleListModel size: " + roleListModel.getSize()
-    );
   }
 
   /**

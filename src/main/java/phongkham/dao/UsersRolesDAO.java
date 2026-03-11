@@ -10,7 +10,7 @@ import phongkham.db.DBConnection;
 
 public class UsersRolesDAO {
 
-  public boolean Insert(UsersRolesDTO ur) {
+  public boolean insert(UsersRolesDTO ur) {
     String sql = "INSERT INTO UsersRoles(user_id, role_id) VALUES (?, ?)";
 
     try (
@@ -27,7 +27,7 @@ public class UsersRolesDAO {
     return false;
   }
 
-  public boolean Delete(String user_id, String role_id) {
+  public boolean delete(String user_id, String role_id) {
     String sql = "DELETE FROM UsersRoles WHERE user_id = ? AND role_id = ?";
 
     try (

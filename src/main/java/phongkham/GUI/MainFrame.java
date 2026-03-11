@@ -146,31 +146,29 @@ public class MainFrame extends JFrame {
     // Reload menu theo quyền
     sidePanel.loadMenu();
 
-    // Chuyển trang theo vai trò
+    // Chuyển trang theo vai trò (kiểm tra theo thứ tự ưu tiên)
     String targetPanel = "HOME";
     String userRole = "Guest";
 
-    if (
-      Session.hasPermission("DASHBOARD_VIEW") ||
-      Session.hasPermission("KHOA_VIEW") ||
-      Session.hasPermission("PHANQUYEN_VIEW")
-    ) {
-      // Admin → Dashboard
+    // 🔑 Kiểm tra theo thứ tự: Admin > Nhà Thuốc > Bác Sĩ
+    if (Session.hasPermission("PHANQUYEN_VIEW")) {
+      // ✅ Admin (chỉ admin mới có quyền phân quyền)
       targetPanel = "DASHBOARD";
       userRole = "Admin";
+    } else if (
+      Session.hasPermission("THUOC_VIEW") &&
+      !Session.hasPermission("LICHLAMVIEC_VIEW")
+    ) {
+      // ✅ Nhà thuốc (có quyền xem thuốc NHƯNG KHÔNG có quyền lịch làm việc)
+      targetPanel = "QUANLYTHUOC";
+      userRole = "Nhà thuốc";
     } else if (
       Session.hasPermission("LICHLAMVIEC_VIEW") ||
       Session.hasPermission("KHAMBENH_CREATE")
     ) {
-      // Bác sĩ → Lịch làm việc
+      // ✅ Bác sĩ (có quyền xem lịch làm việc hoặc khám bệnh)
       targetPanel = "LICHLAMVIEC";
       userRole = "Bác sĩ";
-    } else if (
-      Session.hasPermission("THUOC_VIEW") && !Session.hasPermission("KHOA_VIEW")
-    ) {
-      // Nhà thuốc → Quản lý thuốc
-      targetPanel = "QUANLYTHUOC";
-      userRole = "Nhà thuốc";
     }
 
     System.out.println(

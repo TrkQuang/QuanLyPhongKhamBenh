@@ -42,13 +42,13 @@ public class UsersBUS {
       return "Tên tài khoản ko được trống";
     }
     boolean result = userDAO.updateUser(u);
-    if (result) return "Thêm thành công";
-    else return "Thất bại!";
+    if (result) return "Cập nhật thành công";
+    else return "Cập nhật thất bại";
   }
 
   //==========XÓA USER==========
-  public String deleteUser(int uID) {
-    boolean rs = userDAO.deleteUser(uID);
+  public String deleteUser(String userID) {
+    boolean rs = userDAO.deleteUser(userID);
     if (rs) return "Xóa thành công";
     else return "Xóa thất bại";
   }

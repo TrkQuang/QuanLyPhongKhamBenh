@@ -199,7 +199,26 @@ public class SidePanel extends JPanel {
   }
 
   /**
-   * Thêm nút nhỏ (cho Quay lại)
+   * Áp dụng hiệu ứng hover cho nút menu
+   */
+  private void applyHoverEffect(JButton btn) {
+    Color normal = new Color(30, 41, 59);
+    Color hover = new Color(51, 65, 85);
+    btn.addMouseListener(
+      new java.awt.event.MouseAdapter() {
+        public void mouseEntered(java.awt.event.MouseEvent evt) {
+          btn.setBackground(hover);
+        }
+
+        public void mouseExited(java.awt.event.MouseEvent evt) {
+          btn.setBackground(normal);
+        }
+      }
+    );
+  }
+
+  /**
+   * Thêm nút nhỏ (cho Đăng nhập / Đăng xuất)
    */
   private void addSmallButton(
     String text,
@@ -216,19 +235,7 @@ public class SidePanel extends JPanel {
     btn.setMaximumSize(new Dimension(250, 35));
     btn.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-    // Hover effect
-    btn.addMouseListener(
-      new java.awt.event.MouseAdapter() {
-        public void mouseEntered(java.awt.event.MouseEvent evt) {
-          btn.setBackground(new Color(51, 65, 85));
-        }
-
-        public void mouseExited(java.awt.event.MouseEvent evt) {
-          btn.setBackground(new Color(30, 41, 59));
-        }
-      }
-    );
-
+    applyHoverEffect(btn);
     btn.addActionListener(action);
 
     menuPanel.add(Box.createVerticalStrut(10));
@@ -251,19 +258,7 @@ public class SidePanel extends JPanel {
     btn.setMaximumSize(new Dimension(250, 45));
     btn.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-    // Hover effect
-    btn.addMouseListener(
-      new java.awt.event.MouseAdapter() {
-        public void mouseEntered(java.awt.event.MouseEvent evt) {
-          btn.setBackground(new Color(51, 65, 85));
-        }
-
-        public void mouseExited(java.awt.event.MouseEvent evt) {
-          btn.setBackground(new Color(30, 41, 59));
-        }
-      }
-    );
-
+    applyHoverEffect(btn);
     btn.addActionListener(action);
 
     menuPanel.add(btn);
