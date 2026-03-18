@@ -22,6 +22,10 @@ public class GoiDichVuBUS {
       System.out.println("Khong duoc de trong du lieu!");
       return false;
     }
+    if (g.getMaKhoa() == null || g.getMaKhoa().trim().isEmpty()) {
+      System.out.println("Goi dich vu phai thuoc mot khoa");
+      return false;
+    }
     BigDecimal zero = new BigDecimal(0);
     if (g.getGiaDichVu().compareTo(zero) < 0) {
       System.out.println("Gia dich vu phai lon hon 0!");
@@ -39,6 +43,10 @@ public class GoiDichVuBUS {
   public boolean update(GoiDichVuDTO g) {
     if (!dao.existsMaGoi(g.getMaGoi())) {
       System.out.println("Khong tim thay ma de cap nhat!");
+      return false;
+    }
+    if (g.getMaKhoa() == null || g.getMaKhoa().trim().isEmpty()) {
+      System.out.println("Goi dich vu phai thuoc mot khoa");
       return false;
     }
 
@@ -72,5 +80,18 @@ public class GoiDichVuBUS {
     }
     g = dao.getByMaGoi(maGoi);
     return g;
+  }
+
+  public ArrayList<GoiDichVuDTO> getByMaKhoa(String maKhoa) {
+    ArrayList<GoiDichVuDTO> ketQua = new ArrayList<>();
+    if (maKhoa == null || maKhoa.trim().isEmpty()) {
+      return ketQua;
+    }
+    for (GoiDichVuDTO goiDichVu : dao.getAll()) {
+      if (maKhoa.equalsIgnoreCase(goiDichVu.getMaKhoa())) {
+        ketQua.add(goiDichVu);
+      }
+    }
+    return ketQua;
   }
 }

@@ -1,19 +1,12 @@
 package phongkham.gui;
 
 import java.awt.*;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import phongkham.BUS.CTHDThuocBUS;
-import phongkham.BUS.HoaDonThuocBUS;
-import phongkham.BUS.ThuocBUS;
-import phongkham.DTO.CTHDThuocDTO;
-import phongkham.DTO.HoaDonThuocDTO;
 import phongkham.DTO.ThuocDTO;
+import phongkham.gui.banthuoc.BanThuocService;
 
 public class BanThuocPanel extends JPanel {
 
@@ -32,12 +25,10 @@ public class BanThuocPanel extends JPanel {
   private JLabel lbTongTien;
   private JComboBox<String> cbPhuongThucTT;
 
-  private ThuocBUS thuocBUS;
-  private HoaDonThuocBUS hoaDonBUS;
-  private CTHDThuocBUS cthdBUS;
+  private BanThuocService banThuocService;
 
   private ArrayList<ThuocDTO> dsThuoc;
-  private ArrayList<GioHangItem> gioHang; // Lưu tạm giỏ hàng
+  private ArrayList<BanThuocService.CartItem> gioHang; // Lưu tạm giỏ hàng
 
   public BanThuocPanel() {
     initData();
@@ -46,9 +37,7 @@ public class BanThuocPanel extends JPanel {
   }
 
   private void initData() {
-    thuocBUS = new ThuocBUS();
-    hoaDonBUS = new HoaDonThuocBUS();
-    cthdBUS = new CTHDThuocBUS();
+    banThuocService = new BanThuocService();
     dsThuoc = new ArrayList<>();
     gioHang = new ArrayList<>();
   }
@@ -235,7 +224,7 @@ public class BanThuocPanel extends JPanel {
 
   private void loadDanhSachThuoc() {
     modelThuoc.setRowCount(0);
-    dsThuoc = thuocBUS.getThuocConTon(); // Chỉ lấy thuốc còn tồn
+    dsThuoc = banThuocService.layThuocConTon(); // Chỉ lấy thuốc còn tồn
 
     for (ThuocDTO t : dsThuoc) {
       modelThuoc.addRow(
@@ -258,7 +247,7 @@ public class BanThuocPanel extends JPanel {
     }
 
     modelThuoc.setRowCount(0);
-    ArrayList<ThuocDTO> result = thuocBUS.timTheoTen(key);
+    ArrayList<ThuocDTO> result = banThuocService.timThuocTheoTen(key);
 
     for (ThuocDTO t : result) {
       if (t.getSoLuongTon() > 0) {
@@ -291,7 +280,6 @@ public class BanThuocPanel extends JPanel {
 
       String maThuoc = (String) tableThuoc.getValueAt(row, 0);
       String tenThuoc = (String) tableThuoc.getValueAt(row, 1);
-      String donVi = (String) tableThuoc.getValueAt(row, 2);
       int tonKho = (int) tableThuoc.getValueAt(row, 4);
 
       if (soLuong > tonKho) {
@@ -300,33 +288,19 @@ public class BanThuocPanel extends JPanel {
       }
 
       // Tìm thuốc để lấy đơn giá
-      ThuocDTO thuoc = thuocBUS.getByMa(maThuoc);
+      ThuocDTO thuoc = banThuocService.layThuocTheoMa(maThuoc);
       if (thuoc == null) {
         JOptionPane.showMessageDialog(this, "Lỗi tìm thuốc!");
         return;
       }
 
-      // Kiểm tra xem thuốc đã có trong giỏ chưa
-      boolean found = false;
-      for (GioHangItem item : gioHang) {
-        if (item.maThuoc.equals(maThuoc)) {
-          item.soLuong += soLuong;
-          found = true;
-          break;
-        }
-      }
-
-      if (!found) {
-        gioHang.add(
-          new GioHangItem(
-            maThuoc,
-            tenThuoc,
-            donVi,
-            thuoc.getDonGiaBan(),
-            soLuong
-          )
-        );
-      }
+      banThuocService.themHoacCongDonVaoGio(
+        gioHang,
+        maThuoc,
+        tenThuoc,
+        thuoc.getDonGiaBan(),
+        soLuong
+      );
 
       updateGioHangTable();
       txtSoLuong.setText("1");
@@ -338,19 +312,18 @@ public class BanThuocPanel extends JPanel {
 
   private void updateGioHangTable() {
     modelGioHang.setRowCount(0);
-    double tongTien = 0;
+    double tongTien = banThuocService.tinhTongTien(gioHang);
 
-    for (GioHangItem item : gioHang) {
-      double thanhTien = item.donGia * item.soLuong;
+    for (BanThuocService.CartItem item : gioHang) {
+      double thanhTien = item.getDonGia() * item.getSoLuong();
       modelGioHang.addRow(
         new Object[] {
-          item.tenThuoc,
-          item.soLuong,
-          String.format("%,.0f VNĐ", item.donGia),
+          item.getTenThuoc(),
+          item.getSoLuong(),
+          String.format("%,.0f VNĐ", item.getDonGia()),
           String.format("%,.0f VNĐ", thanhTien),
         }
       );
-      tongTien += thanhTien;
     }
 
     lbTongTien.setText(String.format("%,.0f VNĐ", tongTien));
@@ -398,11 +371,7 @@ public class BanThuocPanel extends JPanel {
       return;
     }
 
-    // Tính tổng tiền
-    double tongTien = 0;
-    for (GioHangItem item : gioHang) {
-      tongTien += item.donGia * item.soLuong;
-    }
+    double tongTien = banThuocService.tinhTongTien(gioHang);
 
     // Confirm
     String phuongThuc = (String) cbPhuongThucTT.getSelectedItem();
@@ -423,89 +392,39 @@ public class BanThuocPanel extends JPanel {
       return;
     }
 
-    try {
-      // 1. Tạo hóa đơn
-      HoaDonThuocDTO hoaDon = new HoaDonThuocDTO(null, tenKhach, sdt);
-      hoaDon.setTongTien(tongTien);
-      hoaDon.setTrangThaiThanhToan("Đã thanh toán");
-      hoaDon.setNgayThanhToan(LocalDateTime.now());
-      hoaDon.setTrangThaiLayThuoc("ĐANG CHỜ LẤY");
-      hoaDon.setGhiChu("Thanh toán: " + phuongThuc);
-
-      boolean insertHD = hoaDonBUS.addHoaDonThuoc(hoaDon);
-      if (!insertHD) {
-        JOptionPane.showMessageDialog(this, "Lỗi tạo hóa đơn!");
-        return;
-      }
-
-      // 2. Lấy mã hóa đơn từ DTO (đã được tự động sinh trong DAO)
-      String maHoaDon = hoaDon.getMaHoaDon();
-
-      if (maHoaDon == null || maHoaDon.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Lỗi lấy mã hóa đơn!");
-        return;
-      }
-
-      // 3. Thêm chi tiết hóa đơn
-      for (GioHangItem item : gioHang) {
-        CTHDThuocDTO cthd = new CTHDThuocDTO(
-          maHoaDon,
-          item.maThuoc,
-          item.soLuong,
-          item.donGia
-        );
-        cthdBUS.addDetailMedicine(cthd);
-      }
-
-      // 4. Cập nhật lại tổng tiền (đảm bảo chính xác)
-      HoaDonThuocDTO hdUpdate = hoaDonBUS.getHoaDonThuocDetail(maHoaDon);
-      if (hdUpdate != null) {
-        hdUpdate.setTongTien(tongTien);
-        hoaDonBUS.updateHoaDonThuoc(hdUpdate);
-      }
-
-      JOptionPane.showMessageDialog(
-        this,
-        String.format(
-          "Thanh toán thành công!\n\nMã hóa đơn: %s\nTổng tiền: %,.0f VNĐ\n\nTrạng thái: ĐANG CHỜ LẤY THUỐC",
-          maHoaDon,
-          tongTien
-        )
-      );
-
-      // Reset
-      gioHang.clear();
-      updateGioHangTable();
-      txtTenKhach.setText("");
-      txtSDT.setText("");
-      loadDanhSachThuoc();
-    } catch (Exception e) {
-      JOptionPane.showMessageDialog(this, "Lỗi thanh toán: " + e.getMessage());
-      e.printStackTrace();
+    BanThuocService.ThanhToanResult result = banThuocService.thanhToan(
+      tenKhach,
+      sdt,
+      phuongThuc,
+      gioHang
+    );
+    if (!result.isThanhCong()) {
+      JOptionPane.showMessageDialog(this, result.getMessage());
+      return;
     }
-  }
 
-  // Inner class để lưu item trong giỏ hàng
-  private class GioHangItem {
+    JOptionPane.showMessageDialog(
+      this,
+      String.format(
+        "Thanh toán thành công!\n\nMã hóa đơn: %s\nTổng tiền: %,.0f VNĐ\n\nTrạng thái: ĐANG CHỜ LẤY THUỐC",
+        result.getMaHoaDon(),
+        result.getTongTien()
+      )
+    );
 
-    String maThuoc;
-    String tenThuoc;
-    String donVi;
-    float donGia;
-    int soLuong;
+    banThuocService.xuatHoaDonPdf(
+      result.getMaHoaDon(),
+      tenKhach,
+      sdt,
+      phuongThuc,
+      gioHang,
+      result.getTongTien()
+    );
 
-    public GioHangItem(
-      String maThuoc,
-      String tenThuoc,
-      String donVi,
-      float donGia,
-      int soLuong
-    ) {
-      this.maThuoc = maThuoc;
-      this.tenThuoc = tenThuoc;
-      this.donVi = donVi;
-      this.donGia = donGia;
-      this.soLuong = soLuong;
-    }
+    gioHang.clear();
+    updateGioHangTable();
+    txtTenKhach.setText("");
+    txtSDT.setText("");
+    loadDanhSachThuoc();
   }
 }

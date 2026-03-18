@@ -1,4 +1,5 @@
 package phongkham.gui;
+
 import java.awt.*;
 import javax.swing.*;
 
@@ -59,21 +60,21 @@ public class ContactPanel extends JPanel {
     infoPanel.setMaximumSize(new Dimension(700, Integer.MAX_VALUE));
 
     // Điện thoại
-    JPanel phonePanel = createInfoRow("📞", "Điện thoại:", "1900-8888");
+    JPanel phonePanel = createInfoRow("TEL", "Điện thoại:", "1900-8888");
 
     // Email
-    JPanel emailPanel = createInfoRow("✉", "Email:", "contact@phongkham.vn");
+    JPanel emailPanel = createInfoRow("MAIL", "Email:", "contact@phongkham.vn");
 
     // Địa chỉ
     JPanel addressPanel = createInfoRow(
-      "📍",
+      "ADDR",
       "Địa chỉ:",
       "123 Đường Nguyễn Trãi, Quận 1, TP.HCM"
     );
 
     // Giờ làm việc
     JPanel hoursPanel = createInfoRow(
-      "🕐",
+      "TIME",
       "Giờ làm việc:",
       "08:00 - 20:00 (Hàng ngày, kể cả Chủ Nhật)"
     );
@@ -99,8 +100,9 @@ public class ContactPanel extends JPanel {
     panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
 
     JLabel iconLabel = new JLabel(icon);
-    iconLabel.setFont(new Font("Segoe UI", Font.PLAIN, 24));
-    iconLabel.setPreferredSize(new Dimension(40, 40));
+    iconLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+    iconLabel.setForeground(new Color(37, 99, 235));
+    iconLabel.setPreferredSize(new Dimension(48, 40));
 
     JPanel textPanel = new JPanel();
     textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));

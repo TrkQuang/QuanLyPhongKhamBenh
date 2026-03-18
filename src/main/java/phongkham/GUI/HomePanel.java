@@ -1,4 +1,5 @@
 package phongkham.gui;
+
 import java.awt.*;
 import javax.swing.*;
 
@@ -54,22 +55,24 @@ public class HomePanel extends JPanel {
 
     // Card 1: Đặt lịch khám
     JPanel appointmentCard = createServiceCard(
-      "📅",
+      "DL",
       "Đặt lịch khám",
       "Chọn bác sĩ chuyên khoa và thời gian phù hợp với lịch trình của bạn.",
       "Đặt ngay",
       new Color(37, 99, 235),
-      new Color(29, 78, 216)
+      new Color(29, 78, 216),
+      "DATLICHKHAM"
     );
 
     // Card 2: Mua thuốc
     JPanel medicineCard = createServiceCard(
-      "💊",
+      "TH",
       "Mua thuốc",
       "Mua thuốc theo đơn thuốc điện tử hoặc nhận tư vấn trực tiếp từ dược sĩ.",
       "Mua ngay",
       new Color(16, 185, 129),
-      new Color(5, 150, 105)
+      new Color(5, 150, 105),
+      "MUATHUOC"
     );
 
     cardsPanel.add(appointmentCard);
@@ -88,10 +91,7 @@ public class HomePanel extends JPanel {
       BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(230, 230, 230))
     );
 
-    JLabel addressIcon = new JLabel("📍");
-    addressIcon.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-
-    JLabel addressLabel = new JLabel("123 Đường Nguyễn Trãi, Quận 1");
+    JLabel addressLabel = new JLabel("Dia chi: 123 Đường Nguyễn Trãi, Quận 1");
     addressLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
     addressLabel.setForeground(new Color(60, 60, 60));
 
@@ -99,7 +99,6 @@ public class HomePanel extends JPanel {
     versionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
     versionLabel.setForeground(new Color(150, 150, 150));
 
-    footerPanel.add(addressIcon);
     footerPanel.add(addressLabel);
     footerPanel.add(new JLabel(" | "));
     footerPanel.add(versionLabel);
@@ -113,7 +112,8 @@ public class HomePanel extends JPanel {
     String description,
     String buttonText,
     Color buttonColor,
-    Color buttonHoverColor
+    Color buttonHoverColor,
+    String targetPanel
   ) {
     JPanel card = new JPanel() {
       @Override
@@ -145,7 +145,8 @@ public class HomePanel extends JPanel {
     contentPanel.setOpaque(false);
 
     JLabel iconLabel = new JLabel(icon);
-    iconLabel.setFont(new Font("Segoe UI", Font.PLAIN, 60));
+    iconLabel.setFont(new Font("Segoe UI", Font.BOLD, 36));
+    iconLabel.setForeground(buttonColor);
     iconLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
     JLabel titleLabel = new JLabel(title);
@@ -170,7 +171,7 @@ public class HomePanel extends JPanel {
     contentPanel.add(descArea);
 
     // Nút bấm
-    JButton actionButton = new JButton(buttonText + " →") {
+    JButton actionButton = new JButton(buttonText + " >") {
       @Override
       protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
@@ -191,7 +192,7 @@ public class HomePanel extends JPanel {
         super.paintComponent(g);
       }
     };
-    actionButton.setText(buttonText + " →");
+    actionButton.setText(buttonText + " >");
     actionButton.setFont(new Font("Segoe UI", Font.BOLD, 15));
     actionButton.setForeground(Color.WHITE);
     actionButton.setPreferredSize(new Dimension(0, 50));
@@ -200,17 +201,19 @@ public class HomePanel extends JPanel {
     actionButton.setFocusPainted(false);
     actionButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
     actionButton.addActionListener(e -> {
-      JOptionPane.showMessageDialog(
-        this,
-        "Chức năng " + title + " đang được phát triển!",
-        "Thông báo",
-        JOptionPane.INFORMATION_MESSAGE
-      );
+      navigateToPanel(targetPanel);
     });
 
     card.add(contentPanel, BorderLayout.CENTER);
     card.add(actionButton, BorderLayout.SOUTH);
 
     return card;
+  }
+
+  private void navigateToPanel(String panelName) {
+    Window window = SwingUtilities.getWindowAncestor(this);
+    if (window instanceof MainFrame) {
+      ((MainFrame) window).showPanel(panelName);
+    }
   }
 }

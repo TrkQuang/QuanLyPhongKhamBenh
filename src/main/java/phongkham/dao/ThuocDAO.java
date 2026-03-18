@@ -38,7 +38,7 @@ public class ThuocDAO {
   public ArrayList<ThuocDTO> getAllThuoc() {
     ArrayList<ThuocDTO> ds = new ArrayList<>();
 
-    String sql = "SELECT * FROM Thuoc";
+    String sql = "SELECT * FROM Thuoc WHERE Active = 1";
     try (
       Connection conn = DBConnection.getConnection();
       Statement stmt = conn.createStatement();
@@ -68,7 +68,8 @@ public class ThuocDAO {
       t.setMaThuoc(generateMaThuoc());
     }
 
-    String sql = "INSERT INTO Thuoc VALUES (?,?,?,?,?,?)";
+    String sql =
+      "INSERT INTO Thuoc (MaThuoc, TenThuoc, HoatChat, DonViTinh, DonGiaBan, SoLuongTon, Active) VALUES (?,?,?,?,?,?,1)";
     try (
       Connection conn = DBConnection.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
@@ -223,13 +224,14 @@ public class ThuocDAO {
   // Trừ số lượng tồn kho (cho giao thuốc)
   public boolean truSoLuongTon(String maThuoc, int soLuongTru) {
     String sql =
-      "UPDATE Thuoc SET SoLuongTon = SoLuongTon - ? WHERE MaThuoc = ?";
+      "UPDATE Thuoc SET SoLuongTon = SoLuongTon - ? WHERE MaThuoc = ? AND SoLuongTon >= ? AND Active = 1";
     try (
       Connection conn = DBConnection.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql)
     ) {
       ps.setInt(1, soLuongTru);
       ps.setString(2, maThuoc);
+      ps.setInt(3, soLuongTru);
       return ps.executeUpdate() > 0;
     } catch (SQLException e) {
       System.err.println("Lỗi trừ số lượng tồn: " + e.getMessage());
@@ -240,7 +242,8 @@ public class ThuocDAO {
   // Lấy thuốc còn tồn kho (SoLuongTon > 0)
   public ArrayList<ThuocDTO> getThuocConTon() {
     ArrayList<ThuocDTO> ds = new ArrayList<>();
-    String sql = "SELECT * FROM Thuoc WHERE SoLuongTon > 0 ORDER BY TenThuoc";
+    String sql =
+      "SELECT * FROM Thuoc WHERE SoLuongTon > 0 AND Active = 1 ORDER BY TenThuoc";
     try (
       Connection conn = DBConnection.getConnection();
       Statement stmt = conn.createStatement();

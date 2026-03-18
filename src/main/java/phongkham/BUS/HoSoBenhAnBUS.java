@@ -11,6 +11,35 @@ public class HoSoBenhAnBUS {
 
   // ===== VALIDATION =====
 
+  private String normalizeGender(String gioiTinh) {
+    if (gioiTinh == null) {
+      return "";
+    }
+    String raw = gioiTinh.trim();
+    if (raw.isEmpty()) {
+      return "";
+    }
+    String upper = raw.toUpperCase();
+    if (
+      "NAM".equals(upper) ||
+      "MALE".equals(upper) ||
+      "M".equals(upper) ||
+      "1".equals(upper)
+    ) {
+      return "Nam";
+    }
+    if (
+      "NU".equals(upper) ||
+      "NỮ".equals(upper) ||
+      "FEMALE".equals(upper) ||
+      "F".equals(upper) ||
+      "0".equals(upper)
+    ) {
+      return "Nu";
+    }
+    return raw;
+  }
+
   // Validate khi đăng ký (thông tin cơ bản)
   private String validateInsert(HoSoBenhAnDTO hs) {
     if (hs == null) return "Hồ sơ không được null";
@@ -31,16 +60,38 @@ public class HoSoBenhAnBUS {
         return "Ngày sinh không được lớn hơn ngày hiện tại";
       }
     }
-    if (hs.getGioiTinh() != null && !hs.getGioiTinh().isEmpty()) {
-      if (
-        !hs.getGioiTinh().equals("Nam") &&
-        !hs.getGioiTinh().equals("Nữ") &&
-        !hs.getGioiTinh().equals("Nu")
-      ) {
-        return "Giới tính chỉ được là 'Nam', 'Nữ' hoặc 'Nu'";
+    String gioiTinhChuan = normalizeGender(hs.getGioiTinh());
+    if (!gioiTinhChuan.isEmpty()) {
+      if (!"Nam".equals(gioiTinhChuan) && !"Nu".equals(gioiTinhChuan)) {
+        return "Giới tính không hợp lệ";
       }
+      hs.setGioiTinh(gioiTinhChuan);
     }
     return null; // Hợp lệ
+  }
+
+  private String validateUpdate(HoSoBenhAnDTO hs) {
+    if (hs == null) return "Hồ sơ không được null";
+    if (hs.getMaHoSo() == null || hs.getMaHoSo().trim().isEmpty()) {
+      return "Mã hồ sơ không được để trống";
+    }
+    if (hs.getHoTen() == null || hs.getHoTen().trim().isEmpty()) {
+      return "Họ tên không được để trống";
+    }
+    if (hs.getSoDienThoai() == null || hs.getSoDienThoai().trim().isEmpty()) {
+      return "Số điện thoại không được để trống";
+    }
+    if (!isValidPhoneNumber(hs.getSoDienThoai())) {
+      return "Số điện thoại không hợp lệ";
+    }
+    String gioiTinhChuan = normalizeGender(hs.getGioiTinh());
+    if (!gioiTinhChuan.isEmpty()) {
+      if (!"Nam".equals(gioiTinhChuan) && !"Nu".equals(gioiTinhChuan)) {
+        return "Giới tính không hợp lệ";
+      }
+      hs.setGioiTinh(gioiTinhChuan);
+    }
+    return null;
   }
 
   // Kiểm tra trạng thái hợp lệ
@@ -60,6 +111,11 @@ public class HoSoBenhAnBUS {
     if (sdt == null) return false;
     // Số điện thoại Việt Nam: 10 số, bắt đầu bằng 0
     return sdt.matches("^0\\d{9}$");
+  }
+
+  private boolean isValidCCCD(String cccd) {
+    if (cccd == null) return false;
+    return cccd.trim().matches("^\\d{9,12}$");
   }
 
   //Lấy tất cả hồ sơ
@@ -82,9 +138,9 @@ public class HoSoBenhAnBUS {
   }
 
   public boolean updateHoSo(HoSoBenhAnDTO hs) {
-    String valid = validateInsert(hs);
+    String valid = validateUpdate(hs);
     if (valid != null) return false;
-    return true;
+    return hsDAO.update(hs);
   }
 
   // Cập nhật kết quả khám (bác sĩ sử dụng)
@@ -161,6 +217,18 @@ public class HoSoBenhAnBUS {
     return null;
   }
 
+  public ArrayList<HoSoBenhAnDTO> getByCCCD(String cccd) {
+    if (cccd == null || cccd.trim().isEmpty()) {
+      System.out.println("CCCD không được rỗng");
+      return null;
+    }
+    if (!isValidCCCD(cccd)) {
+      System.out.println("CCCD không hợp lệ");
+      return null;
+    }
+    return hsDAO.getByCCCD(cccd.trim());
+  }
+
   // Lấy hồ sơ theo trạng thái
   public ArrayList<HoSoBenhAnDTO> getByTrangThai(String trangThai) {
     if (!isValidTrangThai(trangThai)) {
@@ -177,7 +245,7 @@ public class HoSoBenhAnBUS {
 
   // Cập nhật toàn bộ hồ sơ
   public boolean update(HoSoBenhAnDTO hs) {
-    String valid = validateInsert(hs);
+    String valid = validateUpdate(hs);
     if (valid != null) {
       System.out.println("Validation error: " + valid);
       return false;

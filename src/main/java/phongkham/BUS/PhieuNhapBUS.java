@@ -3,6 +3,7 @@ package phongkham.BUS;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import phongkham.DTO.PhieuNhapDTO;
+import phongkham.Utils.StatusNormalizer;
 import phongkham.dao.PhieuNhapDAO;
 
 public class PhieuNhapBUS {
@@ -26,6 +27,13 @@ public class PhieuNhapBUS {
       System.err.println("❌ " + error);
       return false;
     }
+    if (pn.getTrangThai() == null || pn.getTrangThai().trim().isEmpty()) {
+      pn.setTrangThai(StatusNormalizer.CHO_DUYET);
+    } else {
+      pn.setTrangThai(
+        StatusNormalizer.normalizePhieuNhapStatus(pn.getTrangThai())
+      );
+    }
     return dao.insert(pn);
   }
 
@@ -36,36 +44,49 @@ public class PhieuNhapBUS {
       System.err.println("❌ " + error);
       return false;
     }
+    pn.setTrangThai(
+      StatusNormalizer.normalizePhieuNhapStatus(pn.getTrangThai())
+    );
     return dao.update(pn);
   }
 
   public boolean delete(String maPhieuNhap) {
+    PhieuNhapDTO pn = dao.getById(maPhieuNhap);
 
-      PhieuNhapDTO pn = dao.getById(maPhieuNhap);
+    if (pn == null) {
+      System.err.println("❌ Không tìm thấy phiếu nhập!");
+      return false;
+    }
 
-      if (pn == null) {
-          System.err.println("❌ Không tìm thấy phiếu nhập!");
-          return false;
-      }
+    // ❌ Không cho hủy nếu đã nhập kho
+    if (
+      StatusNormalizer.DA_NHAP.equals(
+        StatusNormalizer.normalizePhieuNhapStatus(pn.getTrangThai())
+      )
+    ) {
+      System.err.println("❌ Không thể hủy phiếu đã nhập!");
+      return false;
+    }
 
-      // ❌ Không cho hủy nếu đã nhập kho
-      if ("DA_NHAP".equals(pn.getTrangThai())) {
-          System.err.println("❌ Không thể hủy phiếu đã nhập!");
-          return false;
-      }
+    // ❌ Không hủy nếu đã hủy rồi
+    if (
+      StatusNormalizer.DA_HUY.equals(
+        StatusNormalizer.normalizePhieuNhapStatus(pn.getTrangThai())
+      )
+    ) {
+      System.err.println("⚠️ Phiếu đã bị hủy trước đó!");
+      return false;
+    }
 
-      // ❌ Không hủy nếu đã hủy rồi
-      if ("DA_HUY".equals(pn.getTrangThai())) {
-          System.err.println("⚠️ Phiếu đã bị hủy trước đó!");
-          return false;
-      }
-
-      // ✅ Cập nhật trạng thái thành DA_HUY
-      return dao.capNhatTrangThai(maPhieuNhap, "DA_HUY");
+    // ✅ Cập nhật trạng thái thành DA_HUY
+    return dao.capNhatTrangThai(maPhieuNhap, StatusNormalizer.DA_HUY);
   }
 
   public boolean capNhatTrangThai(String maPhieuNhap, String trangThaiMoi) {
-    return dao.capNhatTrangThai(maPhieuNhap, trangThaiMoi);
+    return dao.capNhatTrangThai(
+      maPhieuNhap,
+      StatusNormalizer.normalizePhieuNhapStatus(trangThaiMoi)
+    );
   }
 
   // ===== SEARCH OPERATIONS =====
@@ -86,7 +107,9 @@ public class PhieuNhapBUS {
   }
 
   public ArrayList<PhieuNhapDTO> getByTrangThai(String trangThai) {
-    return dao.getByTrangThai(trangThai); // ✅ Gọi thẳng DAO, không loop
+    return dao.getByTrangThai(
+      StatusNormalizer.normalizePhieuNhapStatus(trangThai)
+    );
   }
 
   public ArrayList<PhieuNhapDTO> search(String keyword) {
@@ -104,7 +127,9 @@ public class PhieuNhapBUS {
   }
 
   public double getTongTienByTrangThai(String trangThai) {
-    return dao.getTongTienByTrangThai(trangThai);
+    return dao.getTongTienByTrangThai(
+      StatusNormalizer.normalizePhieuNhapStatus(trangThai)
+    );
   }
 
   // ===== VALIDATION =====

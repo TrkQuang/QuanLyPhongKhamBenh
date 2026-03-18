@@ -35,8 +35,7 @@ public class PermissionsDAO {
     String sql =
       "SELECT p.TenPermission " +
       "FROM Users u " +
-      "JOIN UsersRoles ur ON u.UserID = ur.user_id " +
-      "JOIN Roles r ON ur.role_id = r.STT " +
+      "JOIN Roles r ON u.RoleID = r.STT " +
       "JOIN RolePermissions rp ON r.STT = rp.maRole " +
       "JOIN Permissions p ON rp.maPermission = p.MaPermission " +
       "WHERE u.UserID = ? AND p.Active = 1";

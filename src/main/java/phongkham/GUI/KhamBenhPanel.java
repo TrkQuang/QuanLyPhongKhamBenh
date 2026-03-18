@@ -1,21 +1,19 @@
 package phongkham.gui;
 
 import java.awt.*;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import phongkham.BUS.*;
-import phongkham.DTO.*;
+import phongkham.DTO.HoSoBenhAnDTO;
+import phongkham.DTO.ThuocDTO;
+import phongkham.Utils.ExcelExport;
+import phongkham.Utils.PdfExport;
+import phongkham.gui.khambenh.KhamBenhService;
 
 public class KhamBenhPanel extends JPanel {
 
-  // BUS
-  private HoSoBenhAnBUS hoSoBUS = new HoSoBenhAnBUS();
-  private ThuocBUS thuocBUS = new ThuocBUS();
-  private DonThuocBUS donThuocBUS = new DonThuocBUS();
-  private CTDonThuocBUS ctDonThuocBUS = new CTDonThuocBUS();
+  private final KhamBenhService service = new KhamBenhService();
 
   // Components - Danh sách hồ sơ chờ khám
   private JTable tableDanhSachHS;
@@ -74,6 +72,34 @@ public class KhamBenhPanel extends JPanel {
     JPanel panel = new JPanel(new BorderLayout(5, 5));
     panel.setBorder(BorderFactory.createTitledBorder("Danh sách chờ khám"));
 
+    JPanel topActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
+    JButton btnRefreshList = createButton(
+      "Làm mới DS",
+      new Color(59, 130, 246)
+    );
+    JButton btnExportExcel = createButton(
+      "Xuất DS Excel",
+      new Color(6, 95, 70)
+    );
+    JButton btnExportPdf = createButton(
+      "Xuất hồ sơ PDF",
+      new Color(220, 38, 38)
+    );
+    btnRefreshList.setPreferredSize(new Dimension(125, 32));
+    btnExportExcel.setPreferredSize(new Dimension(145, 32));
+    btnExportPdf.setPreferredSize(new Dimension(145, 32));
+    btnRefreshList.addActionListener(e -> {
+      loadDanhSachHoSoChoKham();
+      lamMoi();
+    });
+    btnExportExcel.addActionListener(e -> xuatDanhSachHoSoExcel());
+    btnExportPdf.addActionListener(e -> xuatHoSoDangChonPdf());
+    topActions.add(btnRefreshList);
+    topActions.add(btnExportExcel);
+    topActions.add(btnExportPdf);
+
+    panel.add(topActions, BorderLayout.NORTH);
+
     String[] columns = { "Mã HS", "Họ tên", "SĐT", "Ngày khám" };
     modelDanhSachHS = new DefaultTableModel(columns, 0) {
       @Override
@@ -113,8 +139,8 @@ public class KhamBenhPanel extends JPanel {
 
     // Buttons
     JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-    btnLuuKham = createButton("💾 Lưu khám bệnh", new Color(34, 197, 94));
-    btnLamMoi = createButton("🔄 Làm mới", new Color(59, 130, 246));
+    btnLuuKham = createButton("Lưu khám bệnh", new Color(34, 197, 94));
+    btnLamMoi = createButton("Làm mới", new Color(59, 130, 246));
 
     btnLuuKham.addActionListener(e -> luuKhamBenh());
     btnLamMoi.addActionListener(e -> lamMoi());
@@ -256,8 +282,8 @@ public class KhamBenhPanel extends JPanel {
       new FlowLayout(FlowLayout.CENTER, 10, 10)
     );
 
-    btnThemThuoc = createButton("➕ Thêm thuốc", new Color(34, 197, 94));
-    btnXoaThuoc = createButton("❌ Xóa thuốc", new Color(239, 68, 68));
+    btnThemThuoc = createButton("Thêm thuốc", new Color(34, 197, 94));
+    btnXoaThuoc = createButton("Xóa thuốc", new Color(239, 68, 68));
 
     btnThemThuoc.addActionListener(e -> themThuocVaoDon());
     btnXoaThuoc.addActionListener(e -> xoaThuocKhoiDon());
@@ -328,8 +354,7 @@ public class KhamBenhPanel extends JPanel {
   // ==================== LOAD DATA ====================
   private void loadDanhSachHoSoChoKham() {
     modelDanhSachHS.setRowCount(0);
-    ArrayList<HoSoBenhAnDTO> list = hoSoBUS.getByTrangThai("CHO_KHAM");
-
+    ArrayList<HoSoBenhAnDTO> list = service.layDanhSachHoSoChoKham();
     for (HoSoBenhAnDTO hs : list) {
       modelDanhSachHS.addRow(
         new Object[] {
@@ -344,7 +369,7 @@ public class KhamBenhPanel extends JPanel {
 
   private void loadDanhSachThuoc() {
     cboThuoc.removeAllItems();
-    danhSachThuoc = thuocBUS.list();
+    danhSachThuoc = service.layDanhSachThuoc();
 
     for (ThuocDTO thuoc : danhSachThuoc) {
       cboThuoc.addItem(thuoc.getMaThuoc() + " - " + thuoc.getTenThuoc());
@@ -359,7 +384,7 @@ public class KhamBenhPanel extends JPanel {
     String maHS = (String) modelDanhSachHS.getValueAt(row, 0);
     maHoSoHienTai = maHS;
 
-    HoSoBenhAnDTO hs = hoSoBUS.getById(maHS);
+    HoSoBenhAnDTO hs = service.layHoSoById(maHS);
     if (hs == null) {
       JOptionPane.showMessageDialog(this, "Không tìm thấy hồ sơ!");
       return;
@@ -474,93 +499,42 @@ public class KhamBenhPanel extends JPanel {
 
     if (confirm != JOptionPane.YES_OPTION) return;
 
-    try {
-      // 1. Update HoSoBenhAn
-      HoSoBenhAnDTO hs = hoSoBUS.getById(maHoSoHienTai);
-      hs.setTrieuChung(txtTrieuChung.getText().trim());
-      hs.setChanDoan(txtChanDoan.getText().trim());
-      hs.setKetLuan(txtKetLuan.getText().trim());
-      hs.setLoiDan(txtLoiDan.getText().trim());
-      hs.setTrangThai("DA_KHAM");
+    List<KhamBenhService.DonThuocRow> rows = layDonThuocRowsTuBang();
+    KhamBenhService.LuuKhamResult result = service.luuKhamBenh(
+      maHoSoHienTai,
+      txtTrieuChung.getText().trim(),
+      txtChanDoan.getText().trim(),
+      txtKetLuan.getText().trim(),
+      txtLoiDan.getText().trim(),
+      rows
+    );
 
-      boolean updateHS = hoSoBUS.update(hs);
-      if (!updateHS) {
-        JOptionPane.showMessageDialog(this, "Lỗi cập nhật hồ sơ!");
-        return;
-      }
-
-      // 2. Nếu có thuốc -> Insert DonThuoc và ChiTietDonThuoc
-      String maDonThuoc = null;
-      if (modelDonThuoc.getRowCount() > 0) {
-        // Tự động sinh mã đơn thuốc (DT01, DT02, ...)
-        maDonThuoc = donThuocBUS.generateMaDonThuoc();
-
-        // Insert DonThuoc
-        DonThuocDTO donThuoc = new DonThuocDTO();
-        donThuoc.setMaDonThuoc(maDonThuoc);
-        donThuoc.setMaHoSo(maHoSoHienTai);
-        donThuoc.setNgayKeDon(
-          LocalDateTime.now().format(
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-          )
-        );
-        donThuoc.setGhiChu("");
-
-        boolean insertDon = donThuocBUS.add(donThuoc);
-        if (!insertDon) {
-          JOptionPane.showMessageDialog(this, "Lỗi tạo đơn thuốc!");
-          return;
-        }
-
-        // Insert ChiTietDonThuoc
-        for (int i = 0; i < modelDonThuoc.getRowCount(); i++) {
-          String maThuoc = (String) modelDonThuoc.getValueAt(i, 0);
-          int soLuong = (int) modelDonThuoc.getValueAt(i, 2);
-          String lieuDung = (String) modelDonThuoc.getValueAt(i, 3);
-          String cachDung = (String) modelDonThuoc.getValueAt(i, 4);
-
-          String maCTDT = "CTDT" + System.currentTimeMillis() + "_" + i;
-
-          CTDonThuocDTO ctDon = new CTDonThuocDTO(
-            maCTDT,
-            maDonThuoc,
-            maThuoc,
-            soLuong,
-            lieuDung,
-            cachDung
-          );
-
-          boolean insertCT = ctDonThuocBUS.add(ctDon);
-          if (!insertCT) {
-            JOptionPane.showMessageDialog(this, "Lỗi thêm chi tiết đơn thuốc!");
-            return;
-          }
-        }
-      }
-
-      // Hiển thị thông báo thành công
-      String message = "✅ Lưu khám bệnh thành công!";
-      if (maDonThuoc != null) {
-        message += "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━";
-        message += "\n📋 MÃ ĐƠN THUỐC: " + maDonThuoc;
-        message += "\n━━━━━━━━━━━━━━━━━━━━━━━━━━";
-        message += "\n\n📢 Vui lòng ra quầy thuốc để:";
-        message += "\n   • Xuất trình mã đơn thuốc";
-        message += "\n   • Lấy thuốc theo đơn";
-        message += "\n   • Thanh toán bằng TIỀN MẶT";
-      }
-      JOptionPane.showMessageDialog(this, message);
-
-      // Refresh
-      loadDanhSachHoSoChoKham();
-      lamMoi();
-    } catch (Exception ex) {
-      JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
-      ex.printStackTrace();
+    if (!result.thanhCong) {
+      JOptionPane.showMessageDialog(this, result.message);
+      return;
     }
+
+    JOptionPane.showMessageDialog(this, result.message);
+    loadDanhSachHoSoChoKham();
+    lamMoi();
+  }
+
+  private List<KhamBenhService.DonThuocRow> layDonThuocRowsTuBang() {
+    ArrayList<KhamBenhService.DonThuocRow> rows = new ArrayList<>();
+    for (int i = 0; i < modelDonThuoc.getRowCount(); i++) {
+      String maThuoc = (String) modelDonThuoc.getValueAt(i, 0);
+      int soLuong = (int) modelDonThuoc.getValueAt(i, 2);
+      String lieuDung = (String) modelDonThuoc.getValueAt(i, 3);
+      String cachDung = (String) modelDonThuoc.getValueAt(i, 4);
+      rows.add(
+        new KhamBenhService.DonThuocRow(maThuoc, soLuong, lieuDung, cachDung)
+      );
+    }
+    return rows;
   }
 
   private void lamMoi() {
+    loadDanhSachHoSoChoKham();
     maHoSoHienTai = null;
 
     lblMaHS.setText("-");
@@ -582,5 +556,28 @@ public class KhamBenhPanel extends JPanel {
     modelDonThuoc.setRowCount(0);
 
     tableDanhSachHS.clearSelection();
+  }
+
+  private void xuatDanhSachHoSoExcel() {
+    ExcelExport.exportOperationalTableToCsv(
+      tableDanhSachHS,
+      "HoSoBenhAn_ChoKham",
+      "Danh sách chờ khám"
+    );
+  }
+
+  private void xuatHoSoDangChonPdf() {
+    if (maHoSoHienTai == null || maHoSoHienTai.trim().isEmpty()) {
+      JOptionPane.showMessageDialog(this, "Vui lòng chọn hồ sơ để xuất PDF!");
+      return;
+    }
+
+    HoSoBenhAnDTO hs = service.layHoSoById(maHoSoHienTai);
+    if (hs == null) {
+      JOptionPane.showMessageDialog(this, "Không tìm thấy hồ sơ đang chọn!");
+      return;
+    }
+    String content = service.taoNoiDungHoSoPdf(hs);
+    PdfExport.exportText(content, "HoSoBenhAn_" + hs.getMaHoSo());
   }
 }

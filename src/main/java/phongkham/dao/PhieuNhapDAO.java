@@ -4,6 +4,7 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import phongkham.DTO.PhieuNhapDTO;
+import phongkham.Utils.StatusNormalizer;
 import phongkham.db.DBConnection;
 
 public class PhieuNhapDAO {
@@ -79,6 +80,10 @@ public class PhieuNhapDAO {
       "INSERT INTO PhieuNhap (MaPhieuNhap, MaNCC, NgayNhap, NguoiGiao, TongTienNhap, TrangThai) " +
       "VALUES (?, ?, ?, ?, ?, ?)";
 
+    String trangThai = StatusNormalizer.normalizePhieuNhapStatus(
+      pn.getTrangThai() != null ? pn.getTrangThai() : StatusNormalizer.CHO_DUYET
+    );
+
     boolean success = executeUpdate(
       sql,
       pn.getMaPhieuNhap(),
@@ -86,7 +91,7 @@ public class PhieuNhapDAO {
       pn.getNgayNhap(),
       pn.getNguoiGiao(),
       pn.getTongTienNhap(),
-      pn.getTrangThai() != null ? pn.getTrangThai() : "CHO_DUYET"
+      trangThai
     );
 
     if (success) System.out.println(
@@ -100,13 +105,16 @@ public class PhieuNhapDAO {
       "UPDATE PhieuNhap SET MaNCC=?, NgayNhap=?, NguoiGiao=?, TongTienNhap=?, TrangThai=? " +
       "WHERE MaPhieuNhap=?";
 
+    String trangThai = StatusNormalizer.normalizePhieuNhapStatus(
+      pn.getTrangThai()
+    );
     boolean success = executeUpdate(
       sql,
       pn.getMaNCC(),
       pn.getNgayNhap(),
       pn.getNguoiGiao(),
       pn.getTongTienNhap(),
-      pn.getTrangThai(),
+      trangThai,
       pn.getMaPhieuNhap()
     );
 
@@ -124,9 +132,10 @@ public class PhieuNhapDAO {
   }
 
   public boolean capNhatTrangThai(String maPN, String trangThaiMoi) {
+    String trangThai = StatusNormalizer.normalizePhieuNhapStatus(trangThaiMoi);
     boolean success = executeUpdate(
       "UPDATE PhieuNhap SET TrangThai = ? WHERE MaPhieuNhap = ?",
-      trangThaiMoi,
+      trangThai,
       maPN
     );
 
@@ -168,10 +177,20 @@ public class PhieuNhapDAO {
   }
 
   public ArrayList<PhieuNhapDTO> getByTrangThai(String trangThai) {
-    return executeQuery(
-      "SELECT * FROM PhieuNhap WHERE TrangThai = ? ORDER BY NgayNhap DESC",
+    String trangThaiChuan = StatusNormalizer.normalizePhieuNhapStatus(
       trangThai
     );
+    ArrayList<PhieuNhapDTO> ketQua = new ArrayList<>();
+    for (PhieuNhapDTO pn : getAll()) {
+      if (
+        trangThaiChuan.equals(
+          StatusNormalizer.normalizePhieuNhapStatus(pn.getTrangThai())
+        )
+      ) {
+        ketQua.add(pn);
+      }
+    }
+    return ketQua;
   }
 
   // ===== UTILITY OPERATIONS =====
@@ -207,36 +226,32 @@ public class PhieuNhapDAO {
 
   // ✅ THÊM: Thống kê tổng tiền theo trạng thái
   public double getTongTienByTrangThai(String trangThai) {
-    String sql = "SELECT SUM(TongTienNhap) FROM PhieuNhap WHERE TrangThai = ?";
-    try (
-      Connection conn = DBConnection.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql)
-    ) {
-      ps.setString(1, trangThai);
-      try (ResultSet rs = ps.executeQuery()) {
-        return rs.next() ? rs.getDouble(1) : 0;
-      }
-    } catch (SQLException e) {
-      System.err.println("❌ Lỗi thống kê: " + e.getMessage());
+    String trangThaiChuan = StatusNormalizer.normalizePhieuNhapStatus(
+      trangThai
+    );
+    double tong = 0;
+    for (PhieuNhapDTO pn : getByTrangThai(trangThaiChuan)) {
+      tong += pn.getTongTienNhap();
     }
-    return 0;
+    return tong;
   }
 
   // ===== CẬP NHẬT TỔNG TIỀN =====
   public boolean updateTongTien(String maPN, java.math.BigDecimal tongTien) {
+    boolean success = executeUpdate(
+      "UPDATE PhieuNhap SET TongTienNhap = ? WHERE MaPhieuNhap = ?",
+      tongTien,
+      maPN
+    );
 
-      boolean success = executeUpdate(
-          "UPDATE PhieuNhap SET TongTienNhap = ? WHERE MaPhieuNhap = ?",
-          tongTien,
-          maPN
+    if (success) {
+      System.out.println("✅ Cập nhật tổng tiền phiếu: " + maPN);
+    } else {
+      System.err.println(
+        "⚠️ Không tìm thấy phiếu để cập nhật tổng tiền: " + maPN
       );
+    }
 
-      if (success) {
-          System.out.println("✅ Cập nhật tổng tiền phiếu: " + maPN);
-      } else {
-          System.err.println("⚠️ Không tìm thấy phiếu để cập nhật tổng tiền: " + maPN);
-      }
-
-      return success;
+    return success;
   }
 }

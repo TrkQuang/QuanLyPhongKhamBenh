@@ -6,17 +6,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import phongkham.DTO.LichKhamDTO;
+import phongkham.Utils.StatusNormalizer;
 import phongkham.dao.LichKhamDAO;
+
 public class LichKhamBUS {
 
   private LichKhamDAO dao = new LichKhamDAO();
 
   // ✅ CONSTANTS: Danh sách trạng thái hợp lệ
   private static final List<String> VALID_STATUSES = Arrays.asList(
-    "Đã đặt",
-    "Đang khám",
-    "Hoàn thành",
-    "Đã hủy"
+    "CHO_XAC_NHAN",
+    "DA_XAC_NHAN",
+    "DANG_KHAM",
+    "HOAN_THANH",
+    "DA_HUY"
   );
 
   private static final DateTimeFormatter DATETIME_FORMAT =
@@ -59,7 +62,11 @@ public class LichKhamBUS {
       return "❌ Lịch khám không tồn tại";
     }
 
-    if ("Hoàn thành".equals(lk.getTrangThai())) {
+    if (
+      StatusNormalizer.HOAN_THANH.equals(
+        StatusNormalizer.normalizeLichKhamStatus(lk.getTrangThai())
+      )
+    ) {
       return "❌ Không thể xóa lịch khám đã hoàn thành";
     }
 
@@ -123,9 +130,13 @@ public class LichKhamBUS {
     }
 
     // 5. Validate trạng thái
-    if (!isValidStatus(lk.getTrangThai())) {
+    String trangThaiChuan = StatusNormalizer.normalizeLichKhamStatus(
+      lk.getTrangThai()
+    );
+    if (!isValidStatus(trangThaiChuan)) {
       return "❌ Trạng thái không hợp lệ (Đã đặt/Đang khám/Hoàn thành/Đã hủy)";
     }
+    lk.setTrangThai(trangThaiChuan);
 
     return null; // ✅ Hợp lệ
   }
@@ -141,7 +152,11 @@ public class LichKhamBUS {
    * ✅ HELPER: Kiểm tra trạng thái hợp lệ
    */
   private boolean isValidStatus(String status) {
-    return VALID_STATUSES.contains(status);
+    if (status == null) {
+      return false;
+    }
+    String trangThai = StatusNormalizer.normalizeLichKhamStatus(status);
+    return VALID_STATUSES.contains(trangThai);
   }
 
   // ===== STATUS OPERATIONS =====
@@ -156,15 +171,15 @@ public class LichKhamBUS {
       return "❌ Lịch khám không tồn tại";
     }
 
-    String status = lk.getTrangThai();
-    if ("Hoàn thành".equals(status)) {
+    String status = StatusNormalizer.normalizeLichKhamStatus(lk.getTrangThai());
+    if ("HOAN_THANH".equals(status)) {
       return "❌ Không thể hủy lịch khám đã hoàn thành";
     }
-    if ("Đã hủy".equals(status)) {
+    if ("DA_HUY".equals(status)) {
       return "⚠️ Lịch khám đã được hủy trước đó";
     }
 
-    return dao.updateTrangThai(maLichKham, "Đã hủy")
+    return dao.updateTrangThai(maLichKham, "DA_HUY")
       ? "✅ Hủy lịch khám thành công"
       : "❌ Hủy lịch khám thất bại";
   }
@@ -176,14 +191,15 @@ public class LichKhamBUS {
     if (isEmpty(trangThai)) {
       return "❌ Trạng thái không được để trống";
     }
-    if (!isValidStatus(trangThai)) {
+    String trangThaiChuan = StatusNormalizer.normalizeLichKhamStatus(trangThai);
+    if (!isValidStatus(trangThaiChuan)) {
       return "❌ Trạng thái không hợp lệ (Đã đặt/Đang khám/Hoàn thành/Đã hủy)";
     }
     if (!dao.exists(maLichKham)) {
       return "❌ Lịch khám không tồn tại";
     }
 
-    return dao.updateTrangThai(maLichKham, trangThai)
+    return dao.updateTrangThai(maLichKham, trangThaiChuan)
       ? "✅ Cập nhật trạng thái thành công"
       : "❌ Cập nhật trạng thái thất bại";
   }
@@ -213,9 +229,21 @@ public class LichKhamBUS {
   }
 
   public ArrayList<LichKhamDTO> getByTrangThai(String trangThai) {
-    return isEmpty(trangThai)
-      ? new ArrayList<>()
-      : dao.getByTrangThai(trangThai);
+    if (isEmpty(trangThai)) {
+      return new ArrayList<>();
+    }
+    String trangThaiChuan = StatusNormalizer.normalizeLichKhamStatus(trangThai);
+    ArrayList<LichKhamDTO> ketQua = new ArrayList<>();
+    for (LichKhamDTO item : dao.getAll()) {
+      if (
+        trangThaiChuan.equals(
+          StatusNormalizer.normalizeLichKhamStatus(item.getTrangThai())
+        )
+      ) {
+        ketQua.add(item);
+      }
+    }
+    return ketQua;
   }
 
   public ArrayList<LichKhamDTO> getByNgay(String ngay) {
@@ -246,7 +274,7 @@ public class LichKhamBUS {
   // ===== UTILITY OPERATIONS =====
 
   public int countByTrangThai(String trangThai) {
-    return isEmpty(trangThai) ? 0 : dao.countByTrangThai(trangThai);
+    return getByTrangThai(trangThai).size();
   }
 
   public boolean kiemTraTrungLich(
@@ -271,7 +299,12 @@ public class LichKhamBUS {
           lk.getThoiGianBatDau(),
           DATETIME_FORMAT
         );
-        if (tgBatDau.isAfter(now) && !"Đã hủy".equals(lk.getTrangThai())) {
+        if (
+          tgBatDau.isAfter(now) &&
+          !"DA_HUY".equals(
+            StatusNormalizer.normalizeLichKhamStatus(lk.getTrangThai())
+          )
+        ) {
           dsSapToi.add(lk);
         }
       } catch (Exception e) {
@@ -288,21 +321,21 @@ public class LichKhamBUS {
   }
 
   public String thongKeLichKham() {
-    int soDaDat = countByTrangThai("Đã đặt");
-    int soDangKham = countByTrangThai("Đang khám");
-    int soHoanThanh = countByTrangThai("Hoàn thành");
-    int soDaHuy = countByTrangThai("Đã hủy");
-    int tongSo = soDaDat + soDangKham + soHoanThanh + soDaHuy;
+    int soChoXacNhan = countByTrangThai("CHO_XAC_NHAN");
+    int soDangKham = countByTrangThai("DANG_KHAM");
+    int soHoanThanh = countByTrangThai("HOAN_THANH");
+    int soDaHuy = countByTrangThai("DA_HUY");
+    int tongSo = soChoXacNhan + soDangKham + soHoanThanh + soDaHuy;
 
     return String.format(
       "=== THỐNG KÊ LỊCH KHÁM ===\n" +
         "Tổng số: %d\n" +
-        "Đã đặt: %d\n" +
+        "Chờ xác nhận: %d\n" +
         "Đang khám: %d\n" +
         "Hoàn thành: %d\n" +
         "Đã hủy: %d",
       tongSo,
-      soDaDat,
+      soChoXacNhan,
       soDangKham,
       soHoanThanh,
       soDaHuy

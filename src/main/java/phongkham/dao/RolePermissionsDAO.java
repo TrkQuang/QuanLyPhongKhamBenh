@@ -183,14 +183,14 @@ public class RolePermissionsDAO {
       conn.setAutoCommit(false); // Transaction
 
       // Xóa tất cả permissions cũ
-      String deleteSql = "DELETE FROM role_permissions WHERE ma_role = ?";
+      String deleteSql = "DELETE FROM RolePermissions WHERE MaRole = ?";
       PreparedStatement psDelete = conn.prepareStatement(deleteSql);
       psDelete.setInt(1, maRole);
       psDelete.executeUpdate();
 
       // Insert permissions mới
       String insertSql =
-        "INSERT INTO role_permissions (ma_role, ma_permission) VALUES (?, ?)";
+        "INSERT INTO RolePermissions (MaRole, MaPermission, Active) VALUES (?, ?, 1)";
       PreparedStatement psInsert = conn.prepareStatement(insertSql);
       for (Integer permId : permissionIds) {
         psInsert.setInt(1, maRole);

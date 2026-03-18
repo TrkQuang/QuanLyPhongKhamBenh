@@ -2,6 +2,9 @@ package phongkham.gui;
 
 import com.formdev.flatlaf.FlatLightLaf;
 import java.awt.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import javax.swing.*;
 import phongkham.Utils.Session;
 
@@ -32,9 +35,7 @@ public class MainFrame extends JFrame {
 
     // ✅ Add panels (mỗi panel 1 dòng)
     addPanel("HOME", new HomePanel());
-    addPanel("SERVICE", new ServicePanel());
     addPanel("CONTACT", new ContactPanel());
-    addPanel("ABOUT", new AboutPanel());
     addPanel("PHIEUNHAP", new PhieuNhapPanel());
     addPanel("DATLICHKHAM", new DatLichKhamPanel());
     addPanel("QUANLYLICHKHAM", new LichKhamPanel());
@@ -44,6 +45,9 @@ public class MainFrame extends JFrame {
     addPanel("BACSI_PROFILE", new BacSiProfilePanel());
     addPanel("QUANLYKHOA", new KhoaPanel());
     addPanel("QUANLYTHUOC", new QuanLyThuocPanel());
+    addPanel("QUANLYNCC", new QuanLyNhaCungCapPanel());
+    addPanel("QUANLYGOIDV", new QuanLyGoiDichVuPanel());
+    addPanel("QUANLYTAIKHOAN", new QuanLyTaiKhoanPanel());
     addPanel("PHANQUYEN", new QuanLyPhanQuyenPanel());
     addPanel("DASHBOARD", new DashboardPanel());
     addPanel("LICHLAMVIEC", new LichLamViecPanel());
@@ -66,7 +70,7 @@ public class MainFrame extends JFrame {
     JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 15));
     left.setBackground(Color.WHITE);
     left.add(
-      new JLabel("⚕  Phòng Khám Bệnh") {
+      new JLabel("PK  Phòng Khám Bệnh") {
         {
           setFont(new Font("Segoe UI", Font.BOLD, 20));
           setForeground(new Color(37, 99, 235));
@@ -90,7 +94,7 @@ public class MainFrame extends JFrame {
     // ✅ Hiển thị username hoặc Hello!
     if (Session.isLoggedIn()) {
       right.add(
-        new JLabel("👤 " + Session.getCurrentUsername()) {
+        new JLabel("Tai khoan: " + Session.getCurrentUsername()) {
           {
             setFont(new Font("Segoe UI", Font.BOLD, 14));
             setForeground(new Color(37, 99, 235));
@@ -99,7 +103,7 @@ public class MainFrame extends JFrame {
       );
     } else {
       right.add(
-        new JLabel("👋 Hello!") {
+        new JLabel("Xin chao!") {
           {
             setFont(new Font("Segoe UI", Font.BOLD, 14));
             setForeground(new Color(37, 99, 235));
@@ -119,7 +123,96 @@ public class MainFrame extends JFrame {
 
   // ✅ Chuyển panel
   public void showPanel(String name) {
+    if (!canAccessPanel(name)) {
+      if (Session.isLoggedIn()) {
+        JOptionPane.showMessageDialog(
+          this,
+          "Bạn không có quyền truy cập chức năng này.",
+          "Từ chối truy cập",
+          JOptionPane.WARNING_MESSAGE
+        );
+        cardLayout.show(contentPanel, "HOME");
+      } else {
+        cardLayout.show(contentPanel, "HOME");
+      }
+      return;
+    }
     cardLayout.show(contentPanel, name);
+  }
+
+  private boolean canAccessPanel(String panelName) {
+    if (panelName == null || panelName.isBlank()) {
+      return false;
+    }
+
+    final Set<String> publicPanels = new HashSet<>(
+      Arrays.asList("HOME", "CONTACT")
+    );
+
+    final Set<String> guestOnlyPanels = new HashSet<>(
+      Arrays.asList("DATLICHKHAM", "MUATHUOC")
+    );
+
+    if (publicPanels.contains(panelName)) {
+      return true;
+    }
+
+    if (!Session.isLoggedIn()) {
+      return guestOnlyPanels.contains(panelName);
+    }
+
+    return switch (panelName) {
+      case "DASHBOARD" -> hasAnyPermission("DASHBOARD_VIEW");
+      case "QUANLYKHOA" -> hasAnyPermission("KHOA_VIEW");
+      case "QUANLYTHUOC" -> hasAnyPermission("THUOC_VIEW", "THUOC_MANAGE");
+      case "QUANLYGOIDV" -> hasAnyPermission(
+        "GOIDICHVU_VIEW",
+        "GOIDICHVU_MANAGE"
+      );
+      case "QUANLYNCC" -> hasAnyPermission("NCC_VIEW", "NCC_MANAGE");
+      case "PHIEUNHAP" -> hasAnyPermission(
+        "PHIEUNHAP_VIEW",
+        "PHIEUNHAP_MANAGE"
+      );
+      case "HOADONTHUOC" -> hasAnyPermission(
+        "HOADONTHUOC_VIEW",
+        "HOADONTHUOC_CREATE",
+        "HOADONTHUOC_MANAGE"
+      );
+      case "HOADONKHAM" -> hasAnyPermission(
+        "HOADONKHAM_VIEW",
+        "HOADONKHAM_MANAGE"
+      );
+      case "PHANQUYEN" -> hasAnyPermission(
+        "PHANQUYEN_VIEW",
+        "ROLE_PERMISSION_MANAGE"
+      );
+      case "QUANLYTAIKHOAN" -> hasAnyPermission("USER_MANAGE");
+      case "LICHLAMVIEC" -> hasAnyPermission(
+        "LICHLAMVIEC_VIEW",
+        "LICHLAMVIEC_APPROVE"
+      );
+      case "QUANLYLICHKHAM" -> hasAnyPermission(
+        "LICHKHAM_VIEW",
+        "LICHKHAM_MANAGE"
+      );
+      case "KHAMBENH" -> hasAnyPermission("KHAMBENH_CREATE", "HOSO_MANAGE");
+      case "BACSI_PROFILE" -> hasAnyPermission("BACSI_PROFILE_VIEW");
+      case "DATLICHKHAM", "MUATHUOC" -> true;
+      default -> false;
+    };
+  }
+
+  private boolean hasAnyPermission(String... permissions) {
+    if (permissions == null) {
+      return false;
+    }
+    for (String permission : permissions) {
+      if (Session.hasPermission(permission)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -146,36 +239,30 @@ public class MainFrame extends JFrame {
     // Reload menu theo quyền
     sidePanel.loadMenu();
 
-    // Chuyển trang theo vai trò
+    // Chuyển trang đầu tiên user có quyền truy cập
     String targetPanel = "HOME";
-    String userRole = "Guest";
-
-    if (
-      Session.hasPermission("DASHBOARD_VIEW") ||
-      Session.hasPermission("KHOA_VIEW") ||
-      Session.hasPermission("PHANQUYEN_VIEW")
-    ) {
-      // Admin → Dashboard
-      targetPanel = "DASHBOARD";
-      userRole = "Admin";
-    } else if (
-      Session.hasPermission("LICHLAMVIEC_VIEW") ||
-      Session.hasPermission("KHAMBENH_CREATE")
-    ) {
-      // Bác sĩ → Lịch làm việc
-      targetPanel = "LICHLAMVIEC";
-      userRole = "Bác sĩ";
-    } else if (
-      Session.hasPermission("THUOC_VIEW") && !Session.hasPermission("KHOA_VIEW")
-    ) {
-      // Nhà thuốc → Quản lý thuốc
-      targetPanel = "QUANLYTHUOC";
-      userRole = "Nhà thuốc";
+    String[] panelPriority = {
+      "DASHBOARD",
+      "LICHLAMVIEC",
+      "QUANLYTHUOC",
+      "QUANLYNCC",
+      "QUANLYGOIDV",
+      "PHIEUNHAP",
+      "QUANLYLICHKHAM",
+      "KHAMBENH",
+      "HOADONTHUOC",
+      "HOADONKHAM",
+      "QUANLYTAIKHOAN",
+      "PHANQUYEN",
+      "BACSI_PROFILE",
+    };
+    for (String panel : panelPriority) {
+      if (canAccessPanel(panel)) {
+        targetPanel = panel;
+        break;
+      }
     }
 
-    System.out.println(
-      "🎯 Vai trò: " + userRole + " → Chuyển đến: " + targetPanel
-    );
     showPanel(targetPanel);
 
     revalidate();

@@ -86,7 +86,8 @@ public class DonThuocDAO {
   }
 
   public DonThuocDTO searchTheoMa(String maDonThuoc) {
-    String sql = "SELECT * FROM donthuoc WHERE MaDonThuoc=?";
+    String sql =
+      "SELECT * FROM DonThuoc WHERE UPPER(TRIM(MaDonThuoc)) = UPPER(TRIM(?))";
     try (
       Connection conn = DBConnection.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql)
@@ -109,7 +110,8 @@ public class DonThuocDAO {
   }
 
   public boolean exists(String maDT) {
-    String sql = "SELECT * FROM DonThuoc WHERE maDT = ?";
+    String sql =
+      "SELECT 1 FROM DonThuoc WHERE UPPER(TRIM(MaDonThuoc)) = UPPER(TRIM(?))";
     try (
       Connection c = DBConnection.getConnection();
       PreparedStatement ps = c.prepareStatement(sql)

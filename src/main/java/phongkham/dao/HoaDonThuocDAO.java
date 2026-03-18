@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import phongkham.DTO.HoaDonThuocDTO;
+import phongkham.Utils.StatusNormalizer;
 import phongkham.db.DBConnection;
 
 public class HoaDonThuocDAO {
@@ -40,6 +41,19 @@ public class HoaDonThuocDAO {
       hoaDon.setMaHoaDon(generateMaHoaDon());
     }
 
+    String trangThaiThanhToan = StatusNormalizer.normalizePaymentStatus(
+      hoaDon.getTrangThaiThanhToan()
+    );
+    if (trangThaiThanhToan.isEmpty()) {
+      trangThaiThanhToan = StatusNormalizer.CHUA_THANH_TOAN;
+    }
+    String trangThaiLayThuoc = StatusNormalizer.normalizePickupStatus(
+      hoaDon.getTrangThaiLayThuoc()
+    );
+    if (trangThaiLayThuoc.isEmpty()) {
+      trangThaiLayThuoc = StatusNormalizer.CHO_LAY;
+    }
+
     String sql =
       "INSERT INTO HoaDonThuoc (MaHoaDon, MaDonThuoc, NgayLap, TongTien, GhiChu, TrangThaiThanhToan, NgayThanhToan, TrangThaiLayThuoc, TenBenhNhan, SdtBenhNhan, Active) " +
       "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -53,14 +67,9 @@ public class HoaDonThuocDAO {
       pstmt.setObject(3, hoaDon.getNgayLap());
       pstmt.setDouble(4, hoaDon.getTongTien());
       pstmt.setString(5, hoaDon.getGhiChu());
-      pstmt.setString(6, hoaDon.getTrangThaiThanhToan());
+      pstmt.setString(6, trangThaiThanhToan);
       pstmt.setObject(7, hoaDon.getNgayThanhToan());
-      pstmt.setString(
-        8,
-        hoaDon.getTrangThaiLayThuoc() != null
-          ? hoaDon.getTrangThaiLayThuoc()
-          : "ĐANG CHỜ LẤY"
-      );
+      pstmt.setString(8, trangThaiLayThuoc);
       pstmt.setString(9, hoaDon.getTenBenhNhan());
       pstmt.setString(10, hoaDon.getSdtBenhNhan());
       pstmt.setBoolean(11, hoaDon.isActive());
@@ -75,6 +84,19 @@ public class HoaDonThuocDAO {
 
   // Cập nhật
   public boolean update(HoaDonThuocDTO hoaDon) {
+    String trangThaiThanhToan = StatusNormalizer.normalizePaymentStatus(
+      hoaDon.getTrangThaiThanhToan()
+    );
+    if (trangThaiThanhToan.isEmpty()) {
+      trangThaiThanhToan = StatusNormalizer.CHUA_THANH_TOAN;
+    }
+    String trangThaiLayThuoc = StatusNormalizer.normalizePickupStatus(
+      hoaDon.getTrangThaiLayThuoc()
+    );
+    if (trangThaiLayThuoc.isEmpty()) {
+      trangThaiLayThuoc = StatusNormalizer.CHO_LAY;
+    }
+
     String sql =
       "UPDATE HoaDonThuoc SET MaDonThuoc = ?, NgayLap = ?, TongTien = ?, GhiChu = ?, " +
       "TrangThaiThanhToan = ?, NgayThanhToan = ?, TrangThaiLayThuoc = ?, TenBenhNhan = ?, SdtBenhNhan = ?, Active = ? " +
@@ -88,9 +110,9 @@ public class HoaDonThuocDAO {
       pstmt.setObject(2, hoaDon.getNgayLap());
       pstmt.setDouble(3, hoaDon.getTongTien());
       pstmt.setString(4, hoaDon.getGhiChu());
-      pstmt.setString(5, hoaDon.getTrangThaiThanhToan());
+      pstmt.setString(5, trangThaiThanhToan);
       pstmt.setObject(6, hoaDon.getNgayThanhToan());
-      pstmt.setString(7, hoaDon.getTrangThaiLayThuoc());
+      pstmt.setString(7, trangThaiLayThuoc);
       pstmt.setString(8, hoaDon.getTenBenhNhan());
       pstmt.setString(9, hoaDon.getSdtBenhNhan());
       pstmt.setBoolean(10, hoaDon.isActive());
@@ -193,24 +215,18 @@ public class HoaDonThuocDAO {
 
   // Lấy hóa đơn theo trạng thái thanh toán
   public List<HoaDonThuocDTO> getByPaymentStatus(String trangThai) {
+    String statusChuan = StatusNormalizer.normalizePaymentStatus(trangThai);
     List<HoaDonThuocDTO> list = new ArrayList<>();
-    String sql =
-      "SELECT * FROM HoaDonThuoc WHERE TrangThaiThanhToan = ? AND Active = 1 ORDER BY NgayLap DESC";
-
-    try (
-      Connection conn = DBConnection.getConnection();
-      PreparedStatement pstmt = conn.prepareStatement(sql)
-    ) {
-      pstmt.setString(1, trangThai);
-      try (ResultSet rs = pstmt.executeQuery()) {
-        while (rs.next()) {
-          list.add(mapResultSetToDTO(rs));
-        }
+    for (HoaDonThuocDTO hoaDon : getAll()) {
+      if (
+        statusChuan.equals(
+          StatusNormalizer.normalizePaymentStatus(
+            hoaDon.getTrangThaiThanhToan()
+          )
+        )
+      ) {
+        list.add(hoaDon);
       }
-    } catch (SQLException e) {
-      System.err.println(
-        "✗ Error getting HoaDonThuoc by payment status: " + e.getMessage()
-      );
     }
     return list;
   }
@@ -221,7 +237,7 @@ public class HoaDonThuocDAO {
     LocalDateTime endDate
   ) {
     String sql =
-      "SELECT SUM(TongTien) FROM HoaDonThuoc WHERE NgayLap BETWEEN ? AND ? AND TrangThaiThanhToan = 'Đã thanh toán'";
+      "SELECT SUM(TongTien) FROM HoaDonThuoc WHERE NgayLap BETWEEN ? AND ? AND UPPER(TRIM(COALESCE(TrangThaiThanhToan, ''))) IN ('DA_THANH_TOAN', 'ĐÃ THANH TOÁN', 'DA THANH TOAN')";
 
     try (
       Connection conn = DBConnection.getConnection();
@@ -247,6 +263,7 @@ public class HoaDonThuocDAO {
     String trangThai,
     LocalDateTime ngayThanhToan
   ) {
+    String trangThaiChuan = StatusNormalizer.normalizePaymentStatus(trangThai);
     String sql =
       "UPDATE HoaDonThuoc SET TrangThaiThanhToan = ?, NgayThanhToan = ? WHERE MaHoaDon = ?";
 
@@ -254,7 +271,7 @@ public class HoaDonThuocDAO {
       Connection conn = DBConnection.getConnection();
       PreparedStatement pstmt = conn.prepareStatement(sql)
     ) {
-      pstmt.setString(1, trangThai);
+      pstmt.setString(1, trangThaiChuan);
       pstmt.setObject(2, ngayThanhToan);
       pstmt.setString(3, maHoaDon);
 
@@ -275,9 +292,15 @@ public class HoaDonThuocDAO {
     dto.setNgayLap(rs.getObject("NgayLap", LocalDateTime.class));
     dto.setTongTien(rs.getDouble("TongTien"));
     dto.setGhiChu(rs.getString("GhiChu"));
-    dto.setTrangThaiThanhToan(rs.getString("TrangThaiThanhToan"));
+    dto.setTrangThaiThanhToan(
+      StatusNormalizer.normalizePaymentStatus(
+        rs.getString("TrangThaiThanhToan")
+      )
+    );
     dto.setNgayThanhToan(rs.getObject("NgayThanhToan", LocalDateTime.class));
-    dto.setTrangThaiLayThuoc(rs.getString("TrangThaiLayThuoc"));
+    dto.setTrangThaiLayThuoc(
+      StatusNormalizer.normalizePickupStatus(rs.getString("TrangThaiLayThuoc"))
+    );
     dto.setTenBenhNhan(rs.getString("TenBenhNhan"));
     dto.setSdtBenhNhan(rs.getString("SdtBenhNhan"));
     dto.setActive(rs.getBoolean("Active"));

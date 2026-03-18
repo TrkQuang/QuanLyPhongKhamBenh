@@ -1,9 +1,17 @@
 package phongkham.BUS;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
+import phongkham.DTO.CTHDThuocDTO;
 import phongkham.DTO.HoaDonThuocDTO;
+import phongkham.Utils.Session;
+import phongkham.Utils.StatusNormalizer;
 import phongkham.dao.HoaDonThuocDAO;
+import phongkham.db.DBConnection;
 
 public class HoaDonThuocBUS {
 
@@ -20,6 +28,10 @@ public class HoaDonThuocBUS {
       hoaDon.getTenBenhNhan().trim().isEmpty()
     ) {
       System.err.println("Tên bệnh nhân không được để trống");
+      return false;
+    }
+    if (!isSoDienThoaiHopLe(hoaDon.getSdtBenhNhan())) {
+      System.err.println("Số điện thoại bệnh nhân không hợp lệ");
       return false;
     }
     if (hoaDon.getTongTien() < 0) {
@@ -47,6 +59,10 @@ public class HoaDonThuocBUS {
       System.err.println("Tên bệnh nhân không được để trống");
       return false;
     }
+    if (!isSoDienThoaiHopLe(hoaDon.getSdtBenhNhan())) {
+      System.err.println("Số điện thoại bệnh nhân không hợp lệ");
+      return false;
+    }
     if (hoaDon.getTongTien() < 0) {
       System.err.println("Tổng tiền không được âm");
       return false;
@@ -63,7 +79,7 @@ public class HoaDonThuocBUS {
     }
 
     // Không cho xóa hóa đơn đã thanh toán
-    if (hoaDon.getTrangThaiThanhToan().equals("Đã thanh toán")) {
+    if (isTrangThaiDaThanhToan(hoaDon.getTrangThaiThanhToan())) {
       System.err.println("Không thể xóa hóa đơn đã thanh toán");
       return false;
     }
@@ -92,12 +108,32 @@ public class HoaDonThuocBUS {
 
   // Lấy hóa đơn chưa thanh toán
   public List<HoaDonThuocDTO> getUnpaidInvoices() {
-    return hoaDonThuocDAO.getByPaymentStatus("Chưa thanh toán");
+    java.util.List<HoaDonThuocDTO> result = new java.util.ArrayList<>();
+    for (HoaDonThuocDTO hd : hoaDonThuocDAO.getAll()) {
+      if (
+        "CHUA_THANH_TOAN".equals(
+          StatusNormalizer.normalizePaymentStatus(hd.getTrangThaiThanhToan())
+        )
+      ) {
+        result.add(hd);
+      }
+    }
+    return result;
   }
 
   // Lấy hóa đơn đã thanh toán
   public List<HoaDonThuocDTO> getPaidInvoices() {
-    return hoaDonThuocDAO.getByPaymentStatus("Đã thanh toán");
+    java.util.List<HoaDonThuocDTO> result = new java.util.ArrayList<>();
+    for (HoaDonThuocDTO hd : hoaDonThuocDAO.getAll()) {
+      if (
+        "DA_THANH_TOAN".equals(
+          StatusNormalizer.normalizePaymentStatus(hd.getTrangThaiThanhToan())
+        )
+      ) {
+        result.add(hd);
+      }
+    }
+    return result;
   }
 
   // Thanh toán hóa đơn
@@ -115,7 +151,7 @@ public class HoaDonThuocBUS {
 
     return hoaDonThuocDAO.updatePaymentStatus(
       maHoaDon,
-      "Đã thanh toán",
+      StatusNormalizer.DA_THANH_TOAN,
       LocalDateTime.now()
     );
   }
@@ -129,12 +165,16 @@ public class HoaDonThuocBUS {
       return false;
     }
 
-    if (!hoaDon.getTrangThaiThanhToan().equals("Đã thanh toán")) {
+    if (!isTrangThaiDaThanhToan(hoaDon.getTrangThaiThanhToan())) {
       System.err.println("Chỉ có thể hoàn hóa đơn đã thanh toán");
       return false;
     }
 
-    return hoaDonThuocDAO.updatePaymentStatus(maHoaDon, "Hoàn hóa đơn", null);
+    return hoaDonThuocDAO.updatePaymentStatus(
+      maHoaDon,
+      StatusNormalizer.HOAN_HOA_DON,
+      null
+    );
   }
 
   // Tính tổng doanh thu trong khoảng thời gian
@@ -157,11 +197,42 @@ public class HoaDonThuocBUS {
     if (hoaDon == null) return false;
 
     // Không cho chỉnh sửa hóa đơn đã thanh toán
-    return !hoaDon.getTrangThaiThanhToan().equals("Đã thanh toán");
+    return !isTrangThaiDaThanhToan(hoaDon.getTrangThaiThanhToan());
   }
 
   // Hoàn thành lấy thuốc - Trừ kho và cập nhật trạng thái
   public boolean completePickup(String maHoaDon) {
+    return completePickupInternal(maHoaDon, false, false);
+  }
+
+  public boolean completePickupWithSimulation(
+    String maHoaDon,
+    boolean testFailAfterFirstLine
+  ) {
+    return completePickupInternal(maHoaDon, testFailAfterFirstLine, false);
+  }
+
+  public boolean completePickupForTesting(
+    String maHoaDon,
+    boolean testFailAfterFirstLine
+  ) {
+    return completePickupInternal(maHoaDon, testFailAfterFirstLine, true);
+  }
+
+  private boolean completePickupInternal(
+    String maHoaDon,
+    boolean testFailAfterFirstLine,
+    boolean skipPermissionCheck
+  ) {
+    if (
+      !skipPermissionCheck &&
+      !Session.hasPermission("HOADONTHUOC_MANAGE") &&
+      !Session.hasPermission("HOADONTHUOC_CREATE")
+    ) {
+      System.err.println("Không có quyền hoàn tất xuất thuốc");
+      return false;
+    }
+
     HoaDonThuocDTO hoaDon = hoaDonThuocDAO.getById(maHoaDon);
     if (hoaDon == null) {
       System.err.println("Hóa đơn không tồn tại");
@@ -169,74 +240,143 @@ public class HoaDonThuocBUS {
     }
 
     // Kiểm tra trạng thái hiện tại
-    if (!"ĐANG CHỜ LẤY".equals(hoaDon.getTrangThaiLayThuoc())) {
+    if (!isTrangThaiLayThuocChoLay(hoaDon.getTrangThaiLayThuoc())) {
       System.err.println("Hóa đơn không ở trạng thái ĐANG CHỜ LẤY");
       return false;
     }
 
     // Kiểm tra đã thanh toán chưa
-    if (!"Đã thanh toán".equals(hoaDon.getTrangThaiThanhToan())) {
+    if (!isTrangThaiDaThanhToan(hoaDon.getTrangThaiThanhToan())) {
       System.err.println("Hóa đơn chưa thanh toán, không thể lấy thuốc");
       return false;
     }
 
-    try {
-      // Lấy chi tiết hóa đơn để trừ kho
-      phongkham.BUS.CTHDThuocBUS cthdBUS = new phongkham.BUS.CTHDThuocBUS();
-      phongkham.BUS.ThuocBUS thuocBUS = new phongkham.BUS.ThuocBUS();
-
-      java.util.List<phongkham.DTO.CTHDThuocDTO> chiTiet =
-        cthdBUS.getDetailsByInvoice(maHoaDon);
-
-      // Kiểm tra tồn kho trước
-      for (phongkham.DTO.CTHDThuocDTO ct : chiTiet) {
-        phongkham.DTO.ThuocDTO thuoc = thuocBUS.getByMa(ct.getMaThuoc());
-        if (thuoc == null) {
-          System.err.println("Thuốc " + ct.getMaThuoc() + " không tồn tại");
+    try (Connection conn = DBConnection.getConnection()) {
+      conn.setAutoCommit(false);
+      try {
+        List<CTHDThuocDTO> chiTiet = loadChiTietHoaDon(conn, maHoaDon);
+        if (chiTiet == null || chiTiet.isEmpty()) {
+          conn.rollback();
+          System.err.println("Hóa đơn chưa có chi tiết thuốc");
           return false;
         }
-        if (thuoc.getSoLuongTon() < ct.getSoLuong()) {
-          System.err.println(
-            "Thuốc " +
-              thuoc.getTenThuoc() +
-              " không đủ số lượng. " +
-              "Tồn kho: " +
-              thuoc.getSoLuongTon() +
-              ", Cần: " +
-              ct.getSoLuong()
-          );
+
+        int soDongDaXuLy = 0;
+        for (CTHDThuocDTO ct : chiTiet) {
+          if (!truKhoTrongTransaction(conn, ct.getMaThuoc(), ct.getSoLuong())) {
+            conn.rollback();
+            System.err.println(
+              "Lỗi trừ số lượng tồn thuốc mã: " + ct.getMaThuoc()
+            );
+            return false;
+          }
+
+          soDongDaXuLy++;
+          if (testFailAfterFirstLine && soDongDaXuLy == 1) {
+            throw new SQLException("TEST_SIMULATION_PICKUP_ROLLBACK");
+          }
+        }
+
+        if (
+          !updateTrangThaiLayThuoc(
+            conn,
+            maHoaDon,
+            StatusNormalizer.DA_HOAN_THANH
+          )
+        ) {
+          conn.rollback();
           return false;
         }
-      }
 
-      // Trừ kho bằng phương thức truSoLuongTon (an toàn hơn)
-      for (phongkham.DTO.CTHDThuocDTO ct : chiTiet) {
-        boolean truKho = thuocBUS.truSoLuongTon(
-          ct.getMaThuoc(),
-          ct.getSoLuong()
-        );
-        if (!truKho) {
-          System.err.println(
-            "Lỗi trừ số lượng tồn thuốc mã: " + ct.getMaThuoc()
-          );
-          return false;
-        }
-      }
-
-      // Cập nhật trạng thái hóa đơn
-      hoaDon.setTrangThaiLayThuoc("ĐÃ HOÀN THÀNH");
-      boolean result = hoaDonThuocDAO.update(hoaDon);
-
-      if (result) {
+        conn.commit();
         System.out.println("✓ Hoàn thành lấy thuốc và trừ kho thành công!");
+        return true;
+      } catch (Exception e) {
+        conn.rollback();
+        System.err.println("Lỗi khi hoàn thành lấy thuốc: " + e.getMessage());
+        e.printStackTrace();
+        return false;
+      } finally {
+        conn.setAutoCommit(true);
       }
-
-      return result;
     } catch (Exception e) {
-      System.err.println("Lỗi khi hoàn thành lấy thuốc: " + e.getMessage());
-      e.printStackTrace();
+      System.err.println(
+        "Không thể mở transaction giao thuốc: " + e.getMessage()
+      );
       return false;
     }
+  }
+
+  private List<CTHDThuocDTO> loadChiTietHoaDon(Connection conn, String maHoaDon)
+    throws SQLException {
+    String sql =
+      "SELECT MaCTHDThuoc, MaHoaDon, MaThuoc, SoLuong, DonGia FROM CTHDThuoc WHERE MaHoaDon = ?";
+    java.util.ArrayList<CTHDThuocDTO> result = new java.util.ArrayList<>();
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+      ps.setString(1, maHoaDon);
+      try (ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) {
+          CTHDThuocDTO ct = new CTHDThuocDTO();
+          ct.setMaCTHDThuoc(rs.getString("MaCTHDThuoc"));
+          ct.setMaHoaDon(rs.getString("MaHoaDon"));
+          ct.setMaThuoc(rs.getString("MaThuoc"));
+          ct.setSoLuong(rs.getInt("SoLuong"));
+          ct.setDonGia(rs.getDouble("DonGia"));
+          result.add(ct);
+        }
+      }
+    }
+    return result;
+  }
+
+  private boolean truKhoTrongTransaction(
+    Connection conn,
+    String maThuoc,
+    int soLuong
+  ) throws SQLException {
+    String sql =
+      "UPDATE Thuoc SET SoLuongTon = SoLuongTon - ? WHERE MaThuoc = ? AND Active = 1 AND SoLuongTon >= ?";
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+      ps.setInt(1, soLuong);
+      ps.setString(2, maThuoc);
+      ps.setInt(3, soLuong);
+      return ps.executeUpdate() > 0;
+    }
+  }
+
+  private boolean updateTrangThaiLayThuoc(
+    Connection conn,
+    String maHoaDon,
+    String trangThaiLayThuoc
+  ) throws SQLException {
+    String sql =
+      "UPDATE HoaDonThuoc SET TrangThaiLayThuoc = ? WHERE MaHoaDon = ? AND Active = 1";
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+      ps.setString(
+        1,
+        StatusNormalizer.normalizePickupStatus(trangThaiLayThuoc)
+      );
+      ps.setString(2, maHoaDon);
+      return ps.executeUpdate() > 0;
+    }
+  }
+
+  private boolean isTrangThaiDaThanhToan(String trangThai) {
+    return "DA_THANH_TOAN".equals(
+      StatusNormalizer.normalizePaymentStatus(trangThai)
+    );
+  }
+
+  private boolean isTrangThaiLayThuocChoLay(String trangThai) {
+    return "CHO_LAY".equals(StatusNormalizer.normalizePickupStatus(trangThai));
+  }
+
+  private boolean isSoDienThoaiHopLe(String soDienThoai) {
+    if (soDienThoai == null) {
+      return false;
+    }
+    String soDaChuanHoa = soDienThoai.trim();
+    return soDaChuanHoa.matches("^(0|\\+84)[0-9]{9,10}$");
   }
 
   // Lấy hóa đơn theo trạng thái lấy thuốc
@@ -244,8 +384,15 @@ public class HoaDonThuocBUS {
     String trangThaiLayThuoc
   ) {
     java.util.List<HoaDonThuocDTO> result = new java.util.ArrayList<>();
+    String statusNormalized = StatusNormalizer.normalizePickupStatus(
+      trangThaiLayThuoc
+    );
     for (HoaDonThuocDTO hd : hoaDonThuocDAO.getAll()) {
-      if (trangThaiLayThuoc.equals(hd.getTrangThaiLayThuoc())) {
+      if (
+        statusNormalized.equals(
+          StatusNormalizer.normalizePickupStatus(hd.getTrangThaiLayThuoc())
+        )
+      ) {
         result.add(hd);
       }
     }

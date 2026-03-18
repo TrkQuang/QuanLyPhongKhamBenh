@@ -1,17 +1,19 @@
 package phongkham.gui;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import phongkham.BUS.CTHDThuocBUS;
-import phongkham.BUS.HoaDonThuocBUS;
-import phongkham.BUS.ThuocBUS;
 import phongkham.DTO.CTHDThuocDTO;
 import phongkham.DTO.HoaDonThuocDTO;
-import phongkham.DTO.ThuocDTO;
+import phongkham.Utils.StatusColorUtil;
+import phongkham.Utils.StatusDisplayUtil;
+import phongkham.Utils.StatusNormalizer;
+import phongkham.gui.hoadonthuoc.ChiTietHDThuocDialogs;
+import phongkham.gui.hoadonthuoc.ChiTietHDThuocService;
 
 public class ChiTietHDThuocPanel extends JPanel {
 
@@ -24,9 +26,7 @@ public class ChiTietHDThuocPanel extends JPanel {
   private JTable table;
   private DefaultTableModel model;
   private JLabel lblTongTien, lblTrangThai;
-  private HoaDonThuocBUS hdBUS;
-  private CTHDThuocBUS bus;
-  private ThuocBUS thuocBUS;
+  private ChiTietHDThuocService service;
 
   public ChiTietHDThuocPanel(String maHoaDon, HoaDonThuocPanel parentPanel) {
     this.maHoaDon = maHoaDon;
@@ -36,9 +36,7 @@ public class ChiTietHDThuocPanel extends JPanel {
   }
 
   private void initData() {
-    hdBUS = new HoaDonThuocBUS();
-    bus = new CTHDThuocBUS();
-    thuocBUS = new ThuocBUS();
+    service = new ChiTietHDThuocService();
   }
 
   private void initComponents() {
@@ -144,16 +142,20 @@ public class ChiTietHDThuocPanel extends JPanel {
     rightPanel.add(Box.createHorizontalStrut(20));
 
     // Kiểm tra trạng thái thanh toán để show/hide nút chức năng
-    HoaDonThuocDTO hd = hdBUS.getHoaDonThuocDetail(maHoaDon);
+    HoaDonThuocDTO hd = service.layHoaDon(maHoaDon);
 
     if (hd != null) {
       String trangThai = hd.getTrangThaiThanhToan();
       String trangThaiLay =
         hd.getTrangThaiLayThuoc() != null
           ? hd.getTrangThaiLayThuoc()
-          : "ĐANG CHỜ LẤY";
+          : "CHO_LAY";
 
-      if ("Chưa thanh toán".equals(trangThai)) {
+      if (
+        "CHUA_THANH_TOAN".equals(
+          StatusNormalizer.normalizePaymentStatus(trangThai)
+        )
+      ) {
         JButton btnThem = createStyledButton(
           "Thêm",
           new Color(34, 197, 94),
@@ -180,7 +182,11 @@ public class ChiTietHDThuocPanel extends JPanel {
       }
 
       // Nút thanh toán
-      if ("Chưa thanh toán".equals(trangThai)) {
+      if (
+        "CHUA_THANH_TOAN".equals(
+          StatusNormalizer.normalizePaymentStatus(trangThai)
+        )
+      ) {
         JButton btnThanhToan = createStyledButton(
           "Thanh toán",
           new Color(34, 197, 94),
@@ -192,10 +198,13 @@ public class ChiTietHDThuocPanel extends JPanel {
 
       // Nút hoàn thành lấy thuốc - chỉ hiển thị khi đã thanh toán và đang chờ lấy
       if (
-        "Đã thanh toán".equals(trangThai) && "ĐANG CHỜ LẤY".equals(trangThaiLay)
+        "DA_THANH_TOAN".equals(
+          StatusNormalizer.normalizePaymentStatus(trangThai)
+        ) &&
+        "CHO_LAY".equals(StatusNormalizer.normalizePickupStatus(trangThaiLay))
       ) {
         JButton btnHoanThanhLayThuoc = createStyledButton(
-          "✓ Hoàn thành lấy thuốc",
+          "Hoàn thành lấy thuốc",
           new Color(34, 197, 94),
           Color.WHITE
         );
@@ -222,19 +231,23 @@ public class ChiTietHDThuocPanel extends JPanel {
   private void loadData() {
     model.setRowCount(0);
 
-    HoaDonThuocDTO hd = hdBUS.getHoaDonThuocDetail(maHoaDon);
+    HoaDonThuocDTO hd = service.layHoaDon(maHoaDon);
     if (hd != null) {
       String trangThaiTT = hd.getTrangThaiThanhToan();
       String trangThaiLay =
         hd.getTrangThaiLayThuoc() != null
           ? hd.getTrangThaiLayThuoc()
-          : "ĐANG CHỜ LẤY";
+          : "CHO_LAY";
       lblTrangThai.setText(
-        "Thanh toán: " + trangThaiTT + " | Lấy thuốc: " + trangThaiLay
+        "Thanh toán: " +
+          StatusDisplayUtil.thanhToan(trangThaiTT) +
+          " | Lấy thuốc: " +
+          StatusDisplayUtil.layThuoc(trangThaiLay)
       );
+      lblTrangThai.setForeground(StatusColorUtil.thanhToan(trangThaiTT));
     }
 
-    List<CTHDThuocDTO> details = bus.getDetailsByInvoice(maHoaDon);
+    List<CTHDThuocDTO> details = service.layChiTietHoaDon(maHoaDon);
     double tongTien = 0;
 
     for (CTHDThuocDTO detail : details) {
@@ -256,94 +269,24 @@ public class ChiTietHDThuocPanel extends JPanel {
   }
 
   private void themDong() {
-    JDialog dialog = new JDialog(
-      (Frame) SwingUtilities.getWindowAncestor(this),
-      "Thêm chi tiết thuốc",
-      true
-    );
-    dialog.setLayout(new BorderLayout(10, 10));
-    dialog.setSize(500, 250);
-    dialog.setLocationRelativeTo(this);
-
-    JPanel panel = new JPanel(new GridBagLayout());
-    GridBagConstraints gbc = new GridBagConstraints();
-    gbc.insets = new Insets(5, 5, 5, 5);
-    gbc.fill = GridBagConstraints.HORIZONTAL;
-
-    // Lấy danh sách thuốc
-    java.util.ArrayList<ThuocDTO> dsThuoc = new java.util.ArrayList<>(
-      thuocBUS.list()
-    );
-    JComboBox<String> cbThuoc = new JComboBox<>();
-    for (ThuocDTO t : dsThuoc) {
-      cbThuoc.addItem(t.getMaThuoc() + " - " + t.getTenThuoc());
+    ArrayList<phongkham.DTO.ThuocDTO> dsThuoc = service.layDanhSachThuoc();
+    ChiTietHDThuocDialogs.ThemInput input =
+      ChiTietHDThuocDialogs.showThemDialog(this, dsThuoc);
+    if (input == null) {
+      return;
     }
 
-    JSpinner spinnerSoLuong = new JSpinner(
-      new SpinnerNumberModel(1, 1, 1000, 1)
+    ChiTietHDThuocService.ActionResult result = service.themChiTiet(
+      maHoaDon,
+      input.maThuoc,
+      input.soLuong,
+      input.donGia,
+      input.ghiChu
     );
-    JTextField txtDonGia = new JTextField(10);
-    JTextField txtGhiChu = new JTextField(30);
-
-    gbc.gridx = 0;
-    gbc.gridy = 0;
-    panel.add(new JLabel("Chọn thuốc:"), gbc);
-    gbc.gridx = 1;
-    panel.add(cbThuoc, gbc);
-
-    gbc.gridx = 0;
-    gbc.gridy = 1;
-    panel.add(new JLabel("Số lượng:"), gbc);
-    gbc.gridx = 1;
-    panel.add(spinnerSoLuong, gbc);
-
-    gbc.gridx = 0;
-    gbc.gridy = 2;
-    panel.add(new JLabel("Đơn giá:"), gbc);
-    gbc.gridx = 1;
-    panel.add(txtDonGia, gbc);
-
-    gbc.gridx = 0;
-    gbc.gridy = 3;
-    panel.add(new JLabel("Ghi chú:"), gbc);
-    gbc.gridx = 1;
-    panel.add(txtGhiChu, gbc);
-
-    JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-    JButton btnLuu = new JButton("Lưu");
-    JButton btnHuy = new JButton("Hủy");
-
-    btnLuu.addActionListener(e -> {
-      String maThuoc = cbThuoc.getSelectedItem().toString().split(" - ")[0];
-      int soLuong = (int) spinnerSoLuong.getValue();
-      double donGia = Double.parseDouble(txtDonGia.getText());
-
-      CTHDThuocDTO cthd = new CTHDThuocDTO(maHoaDon, maThuoc, soLuong, donGia);
-      cthd.setGhiChu(txtGhiChu.getText());
-
-      if (bus.addDetailMedicine(cthd)) {
-        // Cập nhật tổng tiền hóa đơn
-        double totalAmount = bus.calculateInvoiceTotal(maHoaDon);
-        HoaDonThuocDTO hd = hdBUS.getHoaDonThuocDetail(maHoaDon);
-        hd.setTongTien(totalAmount);
-        hdBUS.updateHoaDonThuoc(hd);
-
-        JOptionPane.showMessageDialog(dialog, "Thêm thành công!");
-        loadData();
-        dialog.dispose();
-      } else {
-        JOptionPane.showMessageDialog(dialog, "Thêm thất bại!");
-      }
-    });
-
-    btnHuy.addActionListener(e -> dialog.dispose());
-
-    buttonPanel.add(btnLuu);
-    buttonPanel.add(btnHuy);
-
-    dialog.add(panel, BorderLayout.CENTER);
-    dialog.add(buttonPanel, BorderLayout.SOUTH);
-    dialog.setVisible(true);
+    JOptionPane.showMessageDialog(this, result.getMessage());
+    if (result.isThanhCong()) {
+      loadData();
+    }
   }
 
   private void suaDong() {
@@ -354,89 +297,26 @@ public class ChiTietHDThuocPanel extends JPanel {
     }
 
     String maCTHD = (String) table.getValueAt(row, 0);
-    CTHDThuocDTO cthd = bus.getDetailMedicine(maCTHD);
-
-    JDialog dialog = new JDialog(
-      (Frame) SwingUtilities.getWindowAncestor(this),
-      "Sửa chi tiết thuốc",
-      true
+    CTHDThuocDTO cthd = service.layChiTietTheoMa(maCTHD);
+    ChiTietHDThuocDialogs.SuaInput input = ChiTietHDThuocDialogs.showSuaDialog(
+      this,
+      cthd
     );
-    dialog.setLayout(new BorderLayout(10, 10));
-    dialog.setSize(500, 250);
-    dialog.setLocationRelativeTo(this);
+    if (input == null) {
+      return;
+    }
 
-    JPanel panel = new JPanel(new GridBagLayout());
-    GridBagConstraints gbc = new GridBagConstraints();
-    gbc.insets = new Insets(5, 5, 5, 5);
-    gbc.fill = GridBagConstraints.HORIZONTAL;
-
-    JSpinner spinnerSoLuong = new JSpinner(
-      new SpinnerNumberModel(cthd.getSoLuong(), 1, 1000, 1)
+    ChiTietHDThuocService.ActionResult result = service.capNhatChiTiet(
+      maHoaDon,
+      cthd,
+      input.soLuong,
+      input.donGia,
+      input.ghiChu
     );
-    JTextField txtDonGia = new JTextField(String.valueOf(cthd.getDonGia()), 10);
-    JTextField txtGhiChu = new JTextField(
-      cthd.getGhiChu() != null ? cthd.getGhiChu() : "",
-      30
-    );
-
-    gbc.gridx = 0;
-    gbc.gridy = 0;
-    panel.add(new JLabel("Thuốc: " + cthd.getTenThuoc()), gbc);
-
-    gbc.gridx = 0;
-    gbc.gridy = 1;
-    panel.add(new JLabel("Số lượng:"), gbc);
-    gbc.gridx = 1;
-    panel.add(spinnerSoLuong, gbc);
-
-    gbc.gridx = 0;
-    gbc.gridy = 2;
-    panel.add(new JLabel("Đơn giá:"), gbc);
-    gbc.gridx = 1;
-    panel.add(txtDonGia, gbc);
-
-    gbc.gridx = 0;
-    gbc.gridy = 3;
-    panel.add(new JLabel("Ghi chú:"), gbc);
-    gbc.gridx = 1;
-    panel.add(txtGhiChu, gbc);
-
-    JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-    JButton btnLuu = new JButton("Lưu");
-    JButton btnHuy = new JButton("Hủy");
-
-    btnLuu.addActionListener(e -> {
-      int soLuong = (int) spinnerSoLuong.getValue();
-      double donGia = Double.parseDouble(txtDonGia.getText());
-
-      cthd.setSoLuong(soLuong);
-      cthd.setDonGia(donGia);
-      cthd.setThanhTien(soLuong * donGia);
-      cthd.setGhiChu(txtGhiChu.getText());
-
-      if (bus.updateDetailMedicine(cthd)) {
-        // Cập nhật tổng tiền hóa đơn
-        double totalAmount = bus.calculateInvoiceTotal(maHoaDon);
-        HoaDonThuocDTO hd = hdBUS.getHoaDonThuocDetail(maHoaDon);
-        hd.setTongTien(totalAmount);
-        hdBUS.updateHoaDonThuoc(hd);
-
-        JOptionPane.showMessageDialog(dialog, "Cập nhật thành công!");
-        loadData();
-        dialog.dispose();
-      } else {
-        JOptionPane.showMessageDialog(dialog, "Cập nhật thất bại!");
-      }
-    });
-
-    btnHuy.addActionListener(e -> dialog.dispose());
-
-    buttonPanel.add(btnLuu);
-    buttonPanel.add(btnHuy);
-
-    dialog.add(panel, BorderLayout.CENTER);
-    dialog.add(buttonPanel, BorderLayout.SOUTH);
-    dialog.setVisible(true);
+    JOptionPane.showMessageDialog(this, result.getMessage());
+    if (result.isThanhCong()) {
+      loadData();
+    }
   }
 
   private void xoaDong() {
@@ -455,17 +335,13 @@ public class ChiTietHDThuocPanel extends JPanel {
     );
 
     if (confirm == JOptionPane.YES_OPTION) {
-      if (bus.deleteDetailMedicine(maCTHD)) {
-        // Cập nhật tổng tiền hóa đơn
-        double totalAmount = bus.calculateInvoiceTotal(maHoaDon);
-        HoaDonThuocDTO hd = hdBUS.getHoaDonThuocDetail(maHoaDon);
-        hd.setTongTien(totalAmount);
-        hdBUS.updateHoaDonThuoc(hd);
-
-        JOptionPane.showMessageDialog(this, "Xóa thành công!");
+      ChiTietHDThuocService.ActionResult result = service.xoaChiTiet(
+        maHoaDon,
+        maCTHD
+      );
+      JOptionPane.showMessageDialog(this, result.getMessage());
+      if (result.isThanhCong()) {
         loadData();
-      } else {
-        JOptionPane.showMessageDialog(this, "Xóa thất bại!");
       }
     }
   }
@@ -478,11 +354,12 @@ public class ChiTietHDThuocPanel extends JPanel {
       JOptionPane.YES_NO_OPTION
     );
     if (confirm == JOptionPane.YES_OPTION) {
-      if (hdBUS.payInvoice(maHoaDon)) {
-        JOptionPane.showMessageDialog(this, "Thanh toán thành công!");
+      ChiTietHDThuocService.ActionResult result = service.thanhToanHoaDon(
+        maHoaDon
+      );
+      JOptionPane.showMessageDialog(this, result.getMessage());
+      if (result.isThanhCong()) {
         loadData();
-      } else {
-        JOptionPane.showMessageDialog(this, "Thanh toán thất bại!");
       }
     }
   }
@@ -496,10 +373,13 @@ public class ChiTietHDThuocPanel extends JPanel {
       JOptionPane.YES_NO_OPTION
     );
     if (confirm == JOptionPane.YES_OPTION) {
-      if (hdBUS.completePickup(maHoaDon)) {
+      ChiTietHDThuocService.ActionResult result = service.hoanThanhLayThuoc(
+        maHoaDon
+      );
+      if (result.isThanhCong()) {
         JOptionPane.showMessageDialog(
           this,
-          "Hoàn thành lấy thuốc và trừ kho thành công!",
+          result.getMessage(),
           "Thành công",
           JOptionPane.INFORMATION_MESSAGE
         );
@@ -511,8 +391,7 @@ public class ChiTietHDThuocPanel extends JPanel {
       } else {
         JOptionPane.showMessageDialog(
           this,
-          "Không thể hoàn thành lấy thuốc!\n" +
-            "Kiểm tra số lượng thuốc tồn kho.",
+          result.getMessage(),
           "Lỗi",
           JOptionPane.ERROR_MESSAGE
         );

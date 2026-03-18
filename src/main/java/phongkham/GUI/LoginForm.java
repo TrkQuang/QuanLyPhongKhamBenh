@@ -121,7 +121,6 @@ public class LoginForm extends JFrame {
       Session.setCurrentBacSiID(bacSi.getMaBacSi());
     }
 
-    // ✅ Debug: In permissions
     Session.printInfo();
 
     // ✅ Đóng LoginForm
@@ -133,8 +132,7 @@ public class LoginForm extends JFrame {
     } else {
       // Nếu không có mainFrame (chạy standalone) → Tạo mới
       MainFrame newFrame = new MainFrame();
-      newFrame.setVisible(true);
-      newFrame.showPanel("LICHLAMVIEC");
+      newFrame.onLoginSuccess();
     }
   }
 

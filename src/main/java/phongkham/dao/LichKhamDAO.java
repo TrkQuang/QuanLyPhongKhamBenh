@@ -3,7 +3,9 @@ package phongkham.dao;
 import java.sql.*;
 import java.util.ArrayList;
 import phongkham.DTO.LichKhamDTO;
+import phongkham.Utils.StatusNormalizer;
 import phongkham.db.DBConnection;
+
 public class LichKhamDAO {
 
   // ✅ 1. METHOD DÙNG CHUNG: Map ResultSet → DTO
@@ -73,6 +75,20 @@ public class LichKhamDAO {
   }
 
   public boolean insert(LichKhamDTO lk) {
+    if (
+      checkTrungLich(
+        lk.getMaBacSi(),
+        lk.getThoiGianBatDau(),
+        lk.getThoiGianKetThuc()
+      )
+    ) {
+      return false;
+    }
+
+    String trangThaiChuan = StatusNormalizer.normalizeLichKhamStatus(
+      lk.getTrangThai()
+    );
+
     String sql =
       "INSERT INTO LichKham (MaLichKham, MaGoi, MaBacSi, ThoiGianBatDau, " +
       "ThoiGianKetThuc, TrangThai, MaDinhDanhTam) VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -84,12 +100,15 @@ public class LichKhamDAO {
       lk.getMaBacSi(),
       lk.getThoiGianBatDau(),
       lk.getThoiGianKetThuc(),
-      lk.getTrangThai(),
+      trangThaiChuan,
       lk.getMaDinhDanhTam()
     );
   }
 
   public boolean update(LichKhamDTO lk) {
+    String trangThaiChuan = StatusNormalizer.normalizeLichKhamStatus(
+      lk.getTrangThai()
+    );
     String sql =
       "UPDATE LichKham SET MaGoi=?, MaBacSi=?, ThoiGianBatDau=?, " +
       "ThoiGianKetThuc=?, TrangThai=?, MaDinhDanhTam=? WHERE MaLichKham=?";
@@ -100,7 +119,7 @@ public class LichKhamDAO {
       lk.getMaBacSi(),
       lk.getThoiGianBatDau(),
       lk.getThoiGianKetThuc(),
-      lk.getTrangThai(),
+      trangThaiChuan,
       lk.getMaDinhDanhTam(),
       lk.getMaLichKham()
     );
@@ -114,9 +133,10 @@ public class LichKhamDAO {
   }
 
   public boolean updateTrangThai(String maLichKham, String trangThai) {
+    String trangThaiChuan = StatusNormalizer.normalizeLichKhamStatus(trangThai);
     return executeUpdate(
       "UPDATE LichKham SET TrangThai = ? WHERE MaLichKham = ?",
-      trangThai,
+      trangThaiChuan,
       maLichKham
     );
   }
@@ -200,7 +220,7 @@ public class LichKhamDAO {
     String thoiGianKetThuc
   ) {
     String sql =
-      "SELECT COUNT(*) FROM LichKham WHERE MaBacSi = ? AND TrangThai != 'Đã hủy' " +
+      "SELECT COUNT(*) FROM LichKham WHERE MaBacSi = ? AND UPPER(COALESCE(TrangThai,'')) NOT IN ('DA_HUY','HUY') " +
       "AND ((ThoiGianBatDau <= ? AND ThoiGianKetThuc > ?) " +
       "OR (ThoiGianBatDau < ? AND ThoiGianKetThuc >= ?) " +
       "OR (ThoiGianBatDau >= ? AND ThoiGianKetThuc <= ?))";
@@ -234,7 +254,7 @@ public class LichKhamDAO {
   ) {
     String sql =
       "SELECT COUNT(*) FROM LichKham WHERE MaBacSi = ? AND MaLichKham != ? " +
-      "AND TrangThai != 'Đã hủy' " +
+      "AND UPPER(COALESCE(TrangThai,'')) NOT IN ('DA_HUY','HUY') " +
       "AND ((ThoiGianBatDau <= ? AND ThoiGianKetThuc > ?) " +
       "OR (ThoiGianBatDau < ? AND ThoiGianKetThuc >= ?) " +
       "OR (ThoiGianBatDau >= ? AND ThoiGianKetThuc <= ?))";

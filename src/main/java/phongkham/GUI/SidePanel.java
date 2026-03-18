@@ -107,8 +107,6 @@ public class SidePanel extends JPanel {
     addMenuItem("Trang chủ", e -> mainFrame.showPanel("HOME"));
     addMenuItem("Đặt lịch khám", e -> mainFrame.showPanel("DATLICHKHAM"));
     addMenuItem("Mua thuốc", e -> mainFrame.showPanel("MUATHUOC"));
-    addMenuItem("Dịch vụ", e -> mainFrame.showPanel("SERVICE"));
-    addMenuItem("Giới thiệu", e -> mainFrame.showPanel("ABOUT"));
     addMenuItem("Liên hệ", e -> mainFrame.showPanel("CONTACT"));
 
     // Spacer đẩy nút Quay lại xuống dưới
@@ -123,73 +121,94 @@ public class SidePanel extends JPanel {
    */
   private void loadUserMenu() {
     // Dashboard
-    if (Session.hasPermission("DASHBOARD_VIEW")) {
+    if (hasAnyPermission("DASHBOARD_VIEW")) {
       addMenuItem(" Dashboard", e -> mainFrame.showPanel("DASHBOARD"));
     }
 
     // Quản lý khoa
-    if (Session.hasPermission("KHOA_VIEW")) {
+    if (hasAnyPermission("KHOA_VIEW")) {
       addMenuItem("Quản lý khoa", e -> mainFrame.showPanel("QUANLYKHOA"));
     }
 
     // Quản lý thuốc
-    if (Session.hasPermission("THUOC_VIEW")) {
+    if (hasAnyPermission("THUOC_VIEW", "THUOC_MANAGE")) {
       addMenuItem("Quản lý thuốc", e -> mainFrame.showPanel("QUANLYTHUOC"));
     }
 
+    // Quản lý gói dịch vụ
+    if (hasAnyPermission("GOIDICHVU_VIEW", "GOIDICHVU_MANAGE")) {
+      addMenuItem("Quản lý gói dịch vụ", e ->
+        mainFrame.showPanel("QUANLYGOIDV")
+      );
+    }
+
+    // Quản lý nhà cung cấp
+    if (hasAnyPermission("NCC_VIEW", "NCC_MANAGE")) {
+      addMenuItem("Quản lý nhà cung cấp", e ->
+        mainFrame.showPanel("QUANLYNCC")
+      );
+    }
+
     // Quản lý phiếu nhập
-    if (Session.hasPermission("PHIEUNHAP_VIEW")) {
+    if (hasAnyPermission("PHIEUNHAP_VIEW", "PHIEUNHAP_MANAGE")) {
       addMenuItem("Quản lý phiếu nhập", e -> mainFrame.showPanel("PHIEUNHAP"));
     }
 
     // Hóa đơn thuốc
-    if (Session.hasPermission("HOADONTHUOC_VIEW")) {
+    if (
+      hasAnyPermission(
+        "HOADONTHUOC_VIEW",
+        "HOADONTHUOC_CREATE",
+        "HOADONTHUOC_MANAGE"
+      )
+    ) {
       addMenuItem("Hóa đơn thuốc", e -> mainFrame.showPanel("HOADONTHUOC"));
     }
 
     // Hóa đơn khám
-    if (Session.hasPermission("HOADONKHAM_VIEW")) {
+    if (hasAnyPermission("HOADONKHAM_VIEW", "HOADONKHAM_MANAGE")) {
       addMenuItem("Hóa đơn khám", e -> mainFrame.showPanel("HOADONKHAM"));
     }
 
     // Quản lý phân quyền
-    if (Session.hasPermission("PHANQUYEN_VIEW")) {
+    if (hasAnyPermission("PHANQUYEN_VIEW", "ROLE_PERMISSION_MANAGE")) {
       addMenuItem("Quản lý phân quyền", e -> mainFrame.showPanel("PHANQUYEN"));
     }
 
+    // Quản lý tài khoản
+    if (hasAnyPermission("USER_MANAGE")) {
+      addMenuItem("Quản lý tài khoản", e ->
+        mainFrame.showPanel("QUANLYTAIKHOAN")
+      );
+    }
+
     // Lịch làm việc
-    if (Session.hasPermission("LICHLAMVIEC_VIEW")) {
+    if (hasAnyPermission("LICHLAMVIEC_VIEW", "LICHLAMVIEC_APPROVE")) {
       addMenuItem("Lịch làm việc", e -> mainFrame.showPanel("LICHLAMVIEC"));
     }
 
     // Lịch khám bệnh
-    if (Session.hasPermission("LICHKHAM_VIEW")) {
+    if (hasAnyPermission("LICHKHAM_VIEW", "LICHKHAM_MANAGE")) {
       addMenuItem("Lịch khám bệnh", e -> mainFrame.showPanel("QUANLYLICHKHAM"));
     }
 
     // Khám bệnh
-    if (Session.hasPermission("KHAMBENH_CREATE")) {
+    if (hasAnyPermission("KHAMBENH_CREATE", "HOSO_MANAGE")) {
       addMenuItem("Khám bệnh", e -> mainFrame.showPanel("KHAMBENH"));
     }
 
     // Hồ sơ bác sĩ
-    if (Session.hasPermission("BACSI_PROFILE_VIEW")) {
+    if (hasAnyPermission("BACSI_PROFILE_VIEW")) {
       addMenuItem("Hồ sơ cá nhân", e -> mainFrame.showPanel("BACSI_PROFILE"));
     }
 
     // Bán thuốc
-    if (Session.hasPermission("HOADONTHUOC_CREATE")) {
+    if (hasAnyPermission("HOADONTHUOC_CREATE", "HOADONTHUOC_MANAGE")) {
       addMenuItem("Bán thuốc", e -> mainFrame.showPanel("MUATHUOC"));
     }
 
     // Separator
     addMenuSeparator();
-
-    // Tiện ích (luôn hiển thị)
-    addMenuItem("Trang chủ", e -> mainFrame.showPanel("HOME"));
-    addMenuItem("Dịch vụ", e -> mainFrame.showPanel("SERVICE"));
-    addMenuItem("Giới thiệu", e -> mainFrame.showPanel("ABOUT"));
-    addMenuItem("Liên hệ", e -> mainFrame.showPanel("CONTACT"));
 
     // Spacer đẩy nút Đăng xuất xuống dưới
     menuPanel.add(Box.createVerticalGlue());
@@ -274,6 +293,18 @@ public class SidePanel extends JPanel {
    */
   private void addMenuSeparator() {
     menuPanel.add(Box.createVerticalStrut(10));
+  }
+
+  private boolean hasAnyPermission(String... permissions) {
+    if (permissions == null) {
+      return false;
+    }
+    for (String permission : permissions) {
+      if (Session.hasPermission(permission)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

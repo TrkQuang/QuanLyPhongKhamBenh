@@ -3,15 +3,16 @@ package phongkham.Utils;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
 import com.itextpdf.text.pdf.draw.LineSeparator;
-
 import java.awt.Desktop;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.text.NumberFormat;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.table.TableModel;
 import phongkham.DTO.HoaDonKhamDTO;
 import phongkham.dao.HoaDonKhamDAO;
 
@@ -89,137 +90,248 @@ public class PdfExport {
    */
   private static boolean exportSimplePDF(String maHD, String outputPath) {
     try {
-        HoaDonKhamDAO hoaDonDAO = new HoaDonKhamDAO();
-        HoaDonKhamDTO hoaDon = hoaDonDAO.Search(maHD);
+      HoaDonKhamDAO hoaDonDAO = new HoaDonKhamDAO();
+      HoaDonKhamDTO hoaDon = hoaDonDAO.Search(maHD);
 
-        if (hoaDon == null) {
-            return false;
-        }
+      if (hoaDon == null) {
+        return false;
+      }
 
-        Document document = new Document(PageSize.A4, 50, 50, 50, 50);
-        PdfWriter.getInstance(document, new FileOutputStream(outputPath));
-        document.open();
+      Document document = new Document(PageSize.A4, 50, 50, 50, 50);
+      PdfWriter.getInstance(document, new FileOutputStream(outputPath));
+      document.open();
 
-        // ===== FONT TIẾNG VIỆT =====
-        BaseFont baseFont;
-        try {
-            baseFont = BaseFont.createFont(
-                    FONT_PATH,
-                    BaseFont.IDENTITY_H,
-                    BaseFont.EMBEDDED
-            );
-        } catch (Exception e) {
-            baseFont = BaseFont.createFont(
-                    BaseFont.HELVETICA,
-                    BaseFont.CP1252,
-                    BaseFont.EMBEDDED
-            );
-        }
+      // ===== FONT TIẾNG VIỆT =====
+      BaseFont baseFont;
+      try {
+        baseFont = BaseFont.createFont(
+          FONT_PATH,
+          BaseFont.IDENTITY_H,
+          BaseFont.EMBEDDED
+        );
+      } catch (Exception e) {
+        baseFont = BaseFont.createFont(
+          BaseFont.HELVETICA,
+          BaseFont.CP1252,
+          BaseFont.EMBEDDED
+        );
+      }
 
-        Font titleFont = new Font(baseFont, 20, Font.BOLD);
-        Font headerFont = new Font(baseFont, 14, Font.BOLD);
-        Font normalFont = new Font(baseFont, 12, Font.NORMAL);
+      Font titleFont = new Font(baseFont, 20, Font.BOLD);
+      Font headerFont = new Font(baseFont, 14, Font.BOLD);
+      Font normalFont = new Font(baseFont, 12, Font.NORMAL);
 
-        // ===== HEADER PHÒNG KHÁM =====
-        Paragraph clinic = new Paragraph("PHÒNG KHÁM ĐA KHOA", headerFont);
-        clinic.setAlignment(Element.ALIGN_CENTER);
-        document.add(clinic);
+      // ===== HEADER PHÒNG KHÁM =====
+      Paragraph clinic = new Paragraph("PHÒNG KHÁM ĐA KHOA", headerFont);
+      clinic.setAlignment(Element.ALIGN_CENTER);
+      document.add(clinic);
 
-        Paragraph hotline = new Paragraph("Hotline: 1900-8888", normalFont);
-        hotline.setAlignment(Element.ALIGN_CENTER);
-        hotline.setSpacingAfter(10);
-        document.add(hotline);
+      Paragraph hotline = new Paragraph("Hotline: 1900-8888", normalFont);
+      hotline.setAlignment(Element.ALIGN_CENTER);
+      hotline.setSpacingAfter(10);
+      document.add(hotline);
 
-        LineSeparator line = new LineSeparator();
-        document.add(new Chunk(line));
-        document.add(Chunk.NEWLINE);
+      LineSeparator line = new LineSeparator();
+      document.add(new Chunk(line));
+      document.add(Chunk.NEWLINE);
 
-        // ===== TIÊU ĐỀ =====
-        Paragraph title = new Paragraph("HÓA ĐƠN KHÁM BỆNH", titleFont);
-        title.setAlignment(Element.ALIGN_CENTER);
-        title.setSpacingAfter(20);
-        document.add(title);
+      // ===== TIÊU ĐỀ =====
+      Paragraph title = new Paragraph("HÓA ĐƠN KHÁM BỆNH", titleFont);
+      title.setAlignment(Element.ALIGN_CENTER);
+      title.setSpacingAfter(20);
+      document.add(title);
 
-        // ===== BẢNG THÔNG TIN =====
-        PdfPTable infoTable = new PdfPTable(2);
-        infoTable.setWidthPercentage(100);
-        infoTable.setSpacingAfter(20);
-        infoTable.setWidths(new float[]{2, 3});
+      // ===== BẢNG THÔNG TIN =====
+      PdfPTable infoTable = new PdfPTable(2);
+      infoTable.setWidthPercentage(100);
+      infoTable.setSpacingAfter(20);
+      infoTable.setWidths(new float[] { 2, 3 });
 
-        infoTable.addCell(createCell("Mã hóa đơn:", headerFont));
-        infoTable.addCell(createCell(hoaDon.getMaHDKham(), normalFont));
+      infoTable.addCell(createCell("Mã hóa đơn:", headerFont));
+      infoTable.addCell(createCell(hoaDon.getMaHDKham(), normalFont));
 
-        infoTable.addCell(createCell("Mã gói dịch vụ:", headerFont));
-        infoTable.addCell(createCell(hoaDon.getMaGoi(), normalFont));
+      infoTable.addCell(createCell("Mã gói dịch vụ:", headerFont));
+      infoTable.addCell(createCell(hoaDon.getMaGoi(), normalFont));
 
-        if (hoaDon.getNgayThanhToan() != null) {
-            DateTimeFormatter formatter =
-                    DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-            infoTable.addCell(createCell("Ngày thanh toán:", headerFont));
-            infoTable.addCell(createCell(
-                    hoaDon.getNgayThanhToan().format(formatter),
-                    normalFont
-            ));
-        }
+      if (hoaDon.getNgayThanhToan() != null) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(
+          "dd/MM/yyyy HH:mm"
+        );
+        infoTable.addCell(createCell("Ngày thanh toán:", headerFont));
+        infoTable.addCell(
+          createCell(hoaDon.getNgayThanhToan().format(formatter), normalFont)
+        );
+      }
 
-        String hinhThuc = hoaDon.getHinhThucThanhToan() != null
-                ? hoaDon.getHinhThucThanhToan()
-                : "Chưa thanh toán";
+      String hinhThuc =
+        hoaDon.getHinhThucThanhToan() != null
+          ? hoaDon.getHinhThucThanhToan()
+          : "Chưa thanh toán";
 
-        infoTable.addCell(createCell("Hình thức thanh toán:", headerFont));
-        infoTable.addCell(createCell(hinhThuc, normalFont));
+      infoTable.addCell(createCell("Hình thức thanh toán:", headerFont));
+      infoTable.addCell(createCell(hinhThuc, normalFont));
 
-        infoTable.addCell(createCell("Trạng thái:", headerFont));
-        infoTable.addCell(createCell(hoaDon.getTrangThai(), normalFont));
+      infoTable.addCell(createCell("Trạng thái:", headerFont));
+      infoTable.addCell(createCell(hoaDon.getTrangThai(), normalFont));
 
-        document.add(infoTable);
+      document.add(infoTable);
 
-        // ===== TỔNG TIỀN NỔI BẬT =====
-        NumberFormat currencyFormat =
-                NumberFormat.getInstance(new Locale("vi", "VN"));
-        String tongTienStr =
-                currencyFormat.format(hoaDon.getTongTien()) + " VNĐ";
+      // ===== TỔNG TIỀN NỔI BẬT =====
+      NumberFormat currencyFormat = NumberFormat.getInstance(
+        new Locale("vi", "VN")
+      );
+      String tongTienStr = currencyFormat.format(hoaDon.getTongTien()) + " VNĐ";
 
-        PdfPTable totalTable = new PdfPTable(2);
-        totalTable.setWidthPercentage(100);
+      PdfPTable totalTable = new PdfPTable(2);
+      totalTable.setWidthPercentage(100);
 
-        PdfPCell empty = new PdfPCell(new Phrase(""));
-        empty.setBorder(Rectangle.NO_BORDER);
-        totalTable.addCell(empty);
+      PdfPCell empty = new PdfPCell(new Phrase(""));
+      empty.setBorder(Rectangle.NO_BORDER);
+      totalTable.addCell(empty);
 
-        PdfPCell totalCell =
-                new PdfPCell(new Phrase("TỔNG TIỀN: " + tongTienStr, headerFont));
-        totalCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        totalCell.setBorder(Rectangle.NO_BORDER);
-        totalCell.setPadding(10);
-        totalTable.addCell(totalCell);
+      PdfPCell totalCell = new PdfPCell(
+        new Phrase("TỔNG TIỀN: " + tongTienStr, headerFont)
+      );
+      totalCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+      totalCell.setBorder(Rectangle.NO_BORDER);
+      totalCell.setPadding(10);
+      totalTable.addCell(totalCell);
 
-        document.add(totalTable);
+      document.add(totalTable);
 
-        document.add(Chunk.NEWLINE);
-        document.add(new Chunk(line));
-        document.add(Chunk.NEWLINE);
+      document.add(Chunk.NEWLINE);
+      document.add(new Chunk(line));
+      document.add(Chunk.NEWLINE);
 
-        // ===== FOOTER =====
-        Paragraph thanks = new Paragraph(
-                "Cảm ơn quý khách đã sử dụng dịch vụ!",
-                normalFont);
+      // ===== FOOTER =====
+      Paragraph thanks = new Paragraph(
+        "Cảm ơn quý khách đã sử dụng dịch vụ!",
+        normalFont
+      );
 
-        thanks.setAlignment(Element.ALIGN_CENTER);
-        document.add(thanks);
+      thanks.setAlignment(Element.ALIGN_CENTER);
+      document.add(thanks);
 
-        document.close();
-        return true;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+      document.close();
+      return true;
+    } catch (Exception e) {
+      e.printStackTrace();
+      return false;
+    }
   }
+
   private static PdfPCell createCell(String text, Font font) {
-      PdfPCell cell = new PdfPCell(new Phrase(text, font));
-      cell.setPadding(8);
-      return cell;
+    PdfPCell cell = new PdfPCell(new Phrase(text, font));
+    cell.setPadding(8);
+    return cell;
+  }
+
+  public static void exportOperationalTable(
+    JTable table,
+    String reportTitle,
+    String filterSummary
+  ) {
+    if (table == null || table.getRowCount() == 0) {
+      JOptionPane.showMessageDialog(
+        null,
+        "Bảng không có dữ liệu để xuất PDF.",
+        "Thông báo",
+        JOptionPane.INFORMATION_MESSAGE
+      );
+      return;
+    }
+
+    String fileName =
+      reportTitle.replaceAll("[^A-Za-z0-9_\\-]", "_") +
+      "_Operational_" +
+      LocalDateTime.now().format(
+        DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
+      ) +
+      ".pdf";
+
+    try {
+      BaseFont baseFont = BaseFont.createFont(
+        FONT_PATH,
+        BaseFont.IDENTITY_H,
+        BaseFont.EMBEDDED
+      );
+      Font titleFont = new Font(baseFont, 16, Font.BOLD);
+      Font metaFont = new Font(baseFont, 10, Font.ITALIC);
+      Font headerFont = new Font(baseFont, 10, Font.BOLD);
+      Font contentFont = new Font(baseFont, 9, Font.NORMAL);
+
+      Document document = new Document(PageSize.A4.rotate(), 30, 30, 25, 25);
+      PdfWriter.getInstance(document, new FileOutputStream(fileName));
+      document.open();
+
+      Paragraph title = new Paragraph(
+        "BÁO CÁO VẬN HÀNH - " + reportTitle,
+        titleFont
+      );
+      title.setAlignment(Element.ALIGN_CENTER);
+      title.setSpacingAfter(8);
+      document.add(title);
+
+      Paragraph meta = new Paragraph(
+        "Thời gian xuất: " +
+          LocalDateTime.now().format(
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")
+          ) +
+          " | Bộ lọc: " +
+          (filterSummary == null || filterSummary.trim().isEmpty()
+            ? "Không"
+            : filterSummary),
+        metaFont
+      );
+      meta.setSpacingAfter(12);
+      document.add(meta);
+
+      TableModel model = table.getModel();
+      PdfPTable pdfTable = new PdfPTable(model.getColumnCount());
+      pdfTable.setWidthPercentage(100);
+      pdfTable.setHeaderRows(1);
+
+      for (int c = 0; c < model.getColumnCount(); c++) {
+        PdfPCell cell = new PdfPCell(
+          new Phrase(model.getColumnName(c), headerFont)
+        );
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setBackgroundColor(new BaseColor(240, 242, 245));
+        cell.setPadding(6);
+        pdfTable.addCell(cell);
+      }
+
+      for (int r = 0; r < model.getRowCount(); r++) {
+        for (int c = 0; c < model.getColumnCount(); c++) {
+          Object value = model.getValueAt(r, c);
+          PdfPCell cell = new PdfPCell(
+            new Phrase(value == null ? "" : value.toString(), contentFont)
+          );
+          cell.setPadding(5);
+          pdfTable.addCell(cell);
+        }
+      }
+
+      document.add(pdfTable);
+      document.close();
+
+      JOptionPane.showMessageDialog(
+        null,
+        "Xuất PDF thành công: " + fileName,
+        "Thành công",
+        JOptionPane.INFORMATION_MESSAGE
+      );
+      if (Desktop.isDesktopSupported()) {
+        Desktop.getDesktop().open(new File(fileName));
+      }
+    } catch (Exception ex) {
+      JOptionPane.showMessageDialog(
+        null,
+        "Lỗi xuất PDF: " + ex.getMessage(),
+        "Lỗi",
+        JOptionPane.ERROR_MESSAGE
+      );
+    }
   }
 
   public static void exportText(String content, String fileName) {

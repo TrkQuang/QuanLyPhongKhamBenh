@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import phongkham.DTO.HoSoBenhAnDTO;
+import phongkham.Utils.StatusNormalizer;
 import phongkham.db.DBConnection;
 
 public class HoSoBenhAnDAO {
@@ -112,15 +113,28 @@ public class HoSoBenhAnDAO {
 
   // Tra cứu theo Trạng thái
   public ArrayList<HoSoBenhAnDTO> getByTrangThai(String trangThai) {
-    String sql =
-      "SELECT * FROM HoSoBenhAn WHERE TrangThai = ? ORDER BY NgayKham DESC";
-    return executeQuery(sql, trangThai);
+    String trangThaiChuan = StatusNormalizer.normalizeHoSoStatus(trangThai);
+    ArrayList<HoSoBenhAnDTO> ketQua = new ArrayList<>();
+    for (HoSoBenhAnDTO hs : getAll()) {
+      if (
+        trangThaiChuan.equals(
+          StatusNormalizer.normalizeHoSoStatus(hs.getTrangThai())
+        )
+      ) {
+        ketQua.add(hs);
+      }
+    }
+    return ketQua;
   }
 
   // Cập nhật trạng thái
   public boolean updateTrangThai(String maHoSo, String trangThai) {
     String sql = "UPDATE HoSoBenhAn SET TrangThai = ? WHERE MaHoSo = ?";
-    return executeUpdate(sql, trangThai, maHoSo);
+    return executeUpdate(
+      sql,
+      StatusNormalizer.normalizeHoSoStatus(trangThai),
+      maHoSo
+    );
   }
 
   // Cập nhật kết quả khám (bác sĩ sử dụng)
@@ -164,7 +178,7 @@ public class HoSoBenhAnDAO {
       hs.getKetLuan(),
       hs.getLoiDan(),
       hs.getMaBacSi(),
-      hs.getTrangThai()
+      StatusNormalizer.normalizeHoSoStatus(hs.getTrangThai())
     );
   }
 
@@ -186,7 +200,7 @@ public class HoSoBenhAnDAO {
       hs.getKetLuan(),
       hs.getLoiDan(),
       hs.getMaBacSi(),
-      hs.getTrangThai(),
+      StatusNormalizer.normalizeHoSoStatus(hs.getTrangThai()),
       hs.getMaHoSo()
     );
   }

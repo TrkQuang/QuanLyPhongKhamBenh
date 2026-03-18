@@ -1,32 +1,26 @@
 package phongkham.gui;
+
 import com.toedter.calendar.JDateChooser;
 import java.awt.*;
-import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import phongkham.BUS.BacSiBUS;
-import phongkham.BUS.GoiDichVuBUS;
 import phongkham.BUS.HoSoBenhAnBUS;
-import phongkham.BUS.HoaDonKhamBUS;
-import phongkham.BUS.LichKhamBUS;
 import phongkham.DTO.BacSiDTO;
 import phongkham.DTO.GoiDichVuDTO;
 import phongkham.DTO.HoSoBenhAnDTO;
-import phongkham.DTO.HoaDonKhamDTO;
-import phongkham.DTO.LichKhamDTO;
+import phongkham.gui.datlich.DatLichKhamDialogs;
+import phongkham.gui.datlich.DatLichKhamService;
 
 public class DatLichKhamPanel extends JPanel {
 
   private HoSoBenhAnBUS hsBUS = new HoSoBenhAnBUS();
-  private LichKhamBUS lkBUS = new LichKhamBUS();
+  private DatLichKhamService datLichService = new DatLichKhamService();
 
   //Thông tin cá nhân - components
   private JTextField txtHoTen, txtSDT, txtCCCD, txtDiaChi;
-  private JDateChooser dateNgaySinh;
+  private JDateChooser dateNgaySinh, dateNgayKham;
   private JRadioButton radNam, radNu;
   private ButtonGroup groupGioiTinh;
 
@@ -93,19 +87,29 @@ public class DatLichKhamPanel extends JPanel {
     JLabel lblNgaySinh = createLabel("Ngày sinh");
     center.add(lblNgaySinh);
     dateNgaySinh = new JDateChooser();
-    dateNgaySinh.setDateFormatString("dd/mm/yyyy");
+    dateNgaySinh.setDateFormatString("dd/MM/yyyy");
     center.add(dateNgaySinh);
     JLabel lblGioiTinh = createLabel("Giới tính");
     center.add(lblGioiTinh);
     radNam = new JRadioButton("Nam");
     radNu = new JRadioButton("Nữ");
     groupGioiTinh = new ButtonGroup();
+    groupGioiTinh.add(radNam);
+    groupGioiTinh.add(radNu);
     radNam.setSelected(true);
     JPanel GioiTinh = new JPanel();
     GioiTinh.setLayout(new FlowLayout(FlowLayout.LEFT));
     GioiTinh.add(radNam);
     GioiTinh.add(radNu);
     center.add(GioiTinh);
+
+    JLabel lblNgayKham = createLabel("Ngày khám");
+    center.add(lblNgayKham);
+    dateNgayKham = new JDateChooser();
+    dateNgayKham.setDateFormatString("yyyy-MM-dd");
+    dateNgayKham.setDate(new Date());
+    center.add(dateNgayKham);
+
     JLabel lblGoiDV = createLabel("Gói dịch vụ");
     GoiDV = new JComboBox<>();
     center.add(lblGoiDV);
@@ -181,32 +185,33 @@ public class DatLichKhamPanel extends JPanel {
   //===================XỬ LÝ DATA===============
   private void loadData() {
     loadGoiDichVu();
-    loadBacSi();
+    onGoiDichVuChanged();
   }
 
   //Sau khi có Dịch vụ bus thì bỏ comment cái này
   public void loadGoiDichVu() {
     GoiDV.removeAllItems();
-    GoiDichVuBUS dvBUS = new GoiDichVuBUS();
-    ArrayList<GoiDichVuDTO> list = new ArrayList<>();
-    list = dvBUS.getAll();
+    ArrayList<GoiDichVuDTO> list = datLichService.layDanhSachGoiDichVu();
     if (list != null && !list.isEmpty()) {
       for (GoiDichVuDTO dichvu : list) {
-        GoiDV.addItem(dichvu.getMaGoi() + "-" + dichvu.getTenGoi());
+        GoiDV.addItem(dichvu.getMaGoi() + " - " + dichvu.getTenGoi());
       }
     }
   }
 
-  //Bác sĩ BUS xong thì bỏ comment cái này
-  public void loadBacSi() {
+  private void loadBacSiTheoKhoaVaLich(String maKhoa) {
     BacSi.removeAllItems();
-    BacSiBUS bsBUS = new BacSiBUS();
-    ArrayList<BacSiDTO> list = new ArrayList<>();
-    list = bsBUS.getAll();
-    if (list != null && !list.isEmpty()) {
-      for (BacSiDTO bs : list) {
-        BacSi.addItem(bs.getMaBacSi() + " - " + bs.getHoTen());
-      }
+    ArrayList<BacSiDTO> list = datLichService.layBacSiTheoKhoaVaLich(
+      maKhoa,
+      dateNgayKham.getDate(),
+      (String) LichKham.getSelectedItem()
+    );
+    if (list == null || list.isEmpty()) {
+      return;
+    }
+
+    for (BacSiDTO bs : list) {
+      BacSi.addItem(bs.getMaBacSi() + " - " + bs.getHoTen());
     }
   }
 
@@ -214,6 +219,10 @@ public class DatLichKhamPanel extends JPanel {
   private void loadEvents() {
     //sự kiện thay đổi gói dịch vụ
     GoiDV.addActionListener(e -> onGoiDichVuChanged());
+    LichKham.addActionListener(e -> onGoiDichVuChanged());
+    dateNgayKham
+      .getDateEditor()
+      .addPropertyChangeListener("date", e -> onGoiDichVuChanged());
     btnDangky.addActionListener(e -> onDangKy());
     btnRefresh.addActionListener(e -> onRefresh());
     btnSearch.addActionListener(e -> onSearch());
@@ -222,145 +231,71 @@ public class DatLichKhamPanel extends JPanel {
   private void onGoiDichVuChanged() {
     String selected = (String) GoiDV.getSelectedItem();
     if (selected != null && !selected.isEmpty()) {
-      String MaGoi = selected.split("-")[0];
-      GoiDichVuBUS GoiDVBUS = new GoiDichVuBUS();
-      GoiDichVuDTO goi = GoiDVBUS.getByMaGoi(MaGoi);
+      String MaGoi = selected.split(" - ")[0].trim();
+      GoiDichVuDTO goi = datLichService.layGoiDichVuTheoMa(MaGoi);
       if (goi != null) {
         txtMoTaGoi.setText(goi.getMoTa());
         lblGiaGoi.setText(goi.getGiaDichVu() + " VND");
+        loadBacSiTheoKhoaVaLich(goi.getMaKhoa());
       }
     }
   }
 
   private void onDangKy() {
     if (!validateInput()) return;
-    //data thô
-    String maHS = generateMaHoSo();
-    String maLichKham = lkBUS.generateMaLichKham();
-    //lấy thông tin từ dịch vụ để tính tiền
+
     String selectedGoi = (String) GoiDV.getSelectedItem();
-    String maGoi = selectedGoi.split("-")[0];
-    GoiDichVuBUS goiDVBUS = new GoiDichVuBUS();
-    GoiDichVuDTO goiDV = goiDVBUS.getByMaGoi(maGoi);
+    String maGoi = selectedGoi.split(" - ")[0].trim();
+    GoiDichVuDTO goiDV = datLichService.layGoiDichVuTheoMa(maGoi);
 
     if (goiDV == null) {
       JOptionPane.showMessageDialog(this, "Không tìm thấy gói dịch vụ");
       return;
     }
-    String phuongThucThanhToan = showThanhToanDialog(goiDV.getGiaDichVu());
+    String phuongThucThanhToan = DatLichKhamDialogs.showThanhToanDialog(
+      this,
+      goiDV.getGiaDichVu()
+    );
     if (phuongThucThanhToan == null) {
-      //thg này nó hủy đặt lịch r ae ơi nên cho nó cook
       return;
     }
-    //thanh toán xong mới bắt đầu insert vô database
-    HoSoBenhAnDTO hs = new HoSoBenhAnDTO();
-    hs.setMaHoSo(maHS);
+
     String maBS = (String) BacSi.getSelectedItem();
-    hs.setMaBacSi(maBS.split(" - ")[0]);
-    hs.setHoTen(txtHoTen.getText());
-    hs.setGioiTinh(radNam.isSelected() ? "Nam" : "Nu");
-    hs.setDiaChi(txtDiaChi.getText());
-    hs.setTrangThai("CHO_KHAM");
-    hs.setCCCD(txtCCCD.getText());
-    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-    hs.setNgaySinh(java.sql.Date.valueOf(sdf.format(dateNgaySinh)));
-    boolean insertHS = hsBUS.dangKyBenhNhan(hs);
-    if (!insertHS) {
-      JOptionPane.showMessageDialog(this, "Lỗi đăng ký thông tin người khám");
+    if (maBS == null || maBS.trim().isEmpty()) {
+      JOptionPane.showMessageDialog(this, "Vui lòng chọn bác sĩ");
       return;
     }
-    //lịch khám
-    LichKhamDTO lichKham = new LichKhamDTO();
-    lichKham.setMaLichKham(maLichKham);
-    String maBacSi = ((String) BacSi.getSelectedItem()).split(" - ")[0];
-    lichKham.setMaBacSi(maBacSi);
-    lichKham.setMaGoi(maGoi);
-    lichKham.setMaDinhDanhTam(maHS);
-    String ngayKham = sdf.format(new Date());
-    String gioKham = (String) LichKham.getSelectedItem();
-    String[] gio = gioKham.split(" - ");
-    lichKham.setThoiGianBatDau(ngayKham + " " + gio[0] + ":00");
-    lichKham.setThoiGianKetThuc(ngayKham + " " + gio[1] + ":00");
-    lichKham.setTrangThai("Đã đặt");
-    String resultLK = lkBUS.insert(lichKham);
-    if (!resultLK.contains("✅")) {
-      JOptionPane.showMessageDialog(
-        this,
-        "❌ Lỗi khi đăng ký lịch khám " + resultLK
-      );
+    String maBacSi = maBS.split(" - ")[0];
+
+    DatLichKhamService.DangKyInput input = new DatLichKhamService.DangKyInput(
+      txtHoTen.getText().trim(),
+      txtSDT.getText().trim(),
+      txtCCCD.getText().trim(),
+      txtDiaChi.getText().trim(),
+      dateNgaySinh.getDate(),
+      dateNgayKham.getDate(),
+      radNam.isSelected() ? "Nam" : "Nữ",
+      maGoi,
+      maBacSi,
+      (String) LichKham.getSelectedItem(),
+      phuongThucThanhToan
+    );
+
+    DatLichKhamService.DangKyResult result = datLichService.dangKyKham(input);
+    if (!result.thanhCong) {
+      JOptionPane.showMessageDialog(this, result.message);
       return;
     }
-    //hóa đơn khám
-    HoaDonKhamBUS hdBUS = new HoaDonKhamBUS();
-    HoaDonKhamDTO hd = new HoaDonKhamDTO();
-    String maHD = "HDK" + System.currentTimeMillis();
-    hd.setMaHoaDonKham(maHD);
-    // hd.setTongTien(goiDV.getGiaDichVu());
-    hd.setMaHoSo(maHS);
-    // hd.setHinhThucThanhToan(phuongThucThanhToan);
-    hd.setTrangThai("ĐÃ THANH TOÁN");
-    hd.setNgayThanhToan(LocalDateTime.now());
-    boolean insertHD = hdBUS.add(hd);
-    if (!insertHD) {
-      JOptionPane.showMessageDialog(this, "Lỗi khi insert hóa đơn");
-      return;
-    }
-    printPhieuDangKy(hs, lichKham, goiDV, hd, phuongThucThanhToan);
+
+    DatLichKhamDialogs.printPhieuDangKy(
+      result.hoSo,
+      result.lichKham,
+      result.goiDichVu,
+      result.hoaDon,
+      phuongThucThanhToan
+    );
     JOptionPane.showMessageDialog(this, "ĐĂNG KÝ THÀNH CÔNG");
     onRefresh();
-  }
-
-  //Dialog thanh toán, trả về string hoặc null nếu hủy
-  private String showThanhToanDialog(BigDecimal tongTien) {
-    JDialog dialog = new JDialog(
-      (Frame) SwingUtilities.getWindowAncestor(this),
-      "Thanh toán",
-      true
-    );
-    dialog.setLayout(new BorderLayout());
-    dialog.setSize(400, 250);
-    dialog.setLocationRelativeTo(this);
-    //panel thông tin tiền :))
-    JPanel info = new JPanel(new GridLayout(2, 1, 5, 5));
-    JLabel lblTitle = createLabel("XÁC NHẬN THANH TOÁN");
-    JLabel lblMoney = new JLabel(
-      String.format("Tổng tiền: %,.0f VNĐ", tongTien),
-      JLabel.CENTER
-    );
-    lblMoney.setForeground(Color.GREEN);
-    lblMoney.setFont(new Font("Segoe UI", Font.ITALIC, 16));
-    info.add(lblTitle);
-    info.add(lblMoney);
-    //panel cho chọn phương thức
-    JPanel pick = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-    ButtonGroup gr = new ButtonGroup();
-    JRadioButton CashIN = new JRadioButton("Tiền mặt");
-    JRadioButton Banking = new JRadioButton("Chuyển khoản");
-    gr.add(CashIN);
-    gr.add(Banking);
-    pick.add(CashIN);
-    pick.add(Banking);
-    //panel thao tác ( button )
-    JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-    JButton btnConfirm = createButton("Xác nhận");
-    JButton btnExit = createButton("Hủy");
-    String[] kq = { null };
-    //Xử lý event cho cái của nợ này
-    btnConfirm.addActionListener(e -> {
-      kq[0] = CashIN.isSelected() ? "Tiền mặt" : "Chuyển khoản";
-      dialog.dispose();
-    });
-    btnExit.addActionListener(e -> {
-      kq[0] = null;
-      dialog.dispose();
-    });
-    btnPanel.add(btnConfirm);
-    btnPanel.add(btnExit);
-    dialog.add(info, BorderLayout.NORTH);
-    dialog.add(pick, BorderLayout.CENTER);
-    dialog.add(btnPanel, BorderLayout.SOUTH);
-    dialog.setVisible(true);
-    return kq[0];
   }
 
   private void onRefresh() {
@@ -369,6 +304,7 @@ public class DatLichKhamPanel extends JPanel {
     txtCCCD.setText("");
     txtDiaChi.setText("");
     dateNgaySinh.setDate(null);
+    dateNgayKham.setDate(new Date());
     radNam.setSelected(true);
     GoiDV.setSelectedIndex(0);
     BacSi.setSelectedIndex(0);
@@ -377,17 +313,17 @@ public class DatLichKhamPanel extends JPanel {
   }
 
   private void onSearch() {
-    String sdt = JOptionPane.showInputDialog(
+    String cccd = JOptionPane.showInputDialog(
       this,
-      "Nhập số điện thoại của bạn: ",
+      "Nhập CCCD của bạn: ",
       "Tìm kiếm hồ sơ",
       JOptionPane.QUESTION_MESSAGE
     );
-    if (sdt == null || sdt.trim().isEmpty()) {
+    if (cccd == null || cccd.trim().isEmpty()) {
       return;
     }
     ArrayList<HoSoBenhAnDTO> list = new ArrayList<>();
-    list = hsBUS.getBySDT(sdt);
+    list = hsBUS.getByCCCD(cccd.trim());
     if (list == null || list.isEmpty()) {
       JOptionPane.showMessageDialog(
         this,
@@ -396,56 +332,8 @@ public class DatLichKhamPanel extends JPanel {
         JOptionPane.INFORMATION_MESSAGE
       );
     } else {
-      showHoSo(list);
+      DatLichKhamDialogs.showHoSoDialog(this, list);
     }
-  }
-
-  private void showHoSo(ArrayList<HoSoBenhAnDTO> list) {
-    JDialog dialog = new JDialog(
-      (Frame) SwingUtilities.getWindowAncestor(this),
-      "Danh sách hồ sơ",
-      true
-    );
-    dialog.setSize(800, 400);
-    dialog.setLocationRelativeTo(this);
-
-    //tạo table
-    String[] col = {
-      "Mã hồ sơ",
-      "Họ tên",
-      "CCCD",
-      "Ngày sinh",
-      "Giới tính",
-      "Ngày khám",
-      "Bác sĩ khám",
-      "Chẩn đoán",
-      "Lời dặn",
-      "Trạng thái",
-    };
-    DefaultTableModel model = new DefaultTableModel(col, 0);
-    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-    for (HoSoBenhAnDTO hs : list) {
-      model.addRow(
-        new Object[] {
-          hs.getMaHoSo(),
-          hs.getHoTen(),
-          hs.getCCCD(),
-          hs.getNgaySinh() != null ? sdf.format(hs.getNgaySinh()) : "",
-          hs.getGioiTinh(),
-          hs.getNgayKham() != null ? sdf.format(hs.getNgayKham()) : "",
-          hs.getMaBacSi(),
-          hs.getChanDoan(),
-          hs.getLoiDan(),
-          hs.getTrangThai(),
-        }
-      );
-    }
-    JTable table = new JTable(model);
-    table.setRowHeight(30);
-    JScrollPane scroll = new JScrollPane(table);
-
-    dialog.add(scroll);
-    dialog.setVisible(true);
   }
 
   private boolean validateInput() {
@@ -467,8 +355,25 @@ public class DatLichKhamPanel extends JPanel {
       return false;
     }
 
+    if (txtCCCD.getText().trim().isEmpty()) {
+      JOptionPane.showMessageDialog(this, "Vui lòng nhập CCCD!");
+      txtCCCD.requestFocus();
+      return false;
+    }
+
+    if (!txtCCCD.getText().trim().matches("^\\d{9,12}$")) {
+      JOptionPane.showMessageDialog(this, "CCCD không hợp lệ!");
+      txtCCCD.requestFocus();
+      return false;
+    }
+
     if (dateNgaySinh.getDate() == null) {
       JOptionPane.showMessageDialog(this, "Vui lòng chọn ngày sinh!");
+      return false;
+    }
+
+    if (dateNgayKham.getDate() == null) {
+      JOptionPane.showMessageDialog(this, "Vui lòng chọn ngày khám!");
       return false;
     }
 
@@ -482,67 +387,19 @@ public class DatLichKhamPanel extends JPanel {
       return false;
     }
 
+    if (dateNgayKham.getDate() != null) {
+      LocalDate ngayKham = new java.sql.Date(
+        dateNgayKham.getDate().getTime()
+      ).toLocalDate();
+      if (ngayKham.isBefore(LocalDate.now())) {
+        JOptionPane.showMessageDialog(
+          this,
+          "Ngày khám không được trong quá khứ!"
+        );
+        return false;
+      }
+    }
+
     return true;
-  }
-
-  private String generateMaHoSo() {
-    return "HS" + System.currentTimeMillis();
-  }
-
-  //format hết thông tin lại xong gọi hàm exportText của pdfExport lên
-  private void printPhieuDangKy(
-    HoSoBenhAnDTO hs,
-    LichKhamDTO lk,
-    GoiDichVuDTO goi,
-    HoaDonKhamDTO hd,
-    String phuongThuc
-  ) {
-    SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy");
-    SimpleDateFormat dt = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-
-    String content = String.format(
-      "=== PHIẾU ĐĂNG KÝ KHÁM BỆNH ===\n\n" +
-        "--- THÔNG TIN BỆNH NHÂN ---\n" +
-        "Mã hồ sơ: %s\n" +
-        "Họ tên: %s\n" +
-        "CCCD: %s\n" +
-        "Số điện thoại: %s\n" +
-        "Ngày sinh: %s\n" +
-        "Giới tính: %s\n" +
-        "Địa chỉ: %s\n\n" +
-        "--- THÔNG TIN LỊCH KHÁM ---\n" +
-        "Mã lịch khám: %s\n" +
-        "Bác sĩ: %s\n" +
-        "Gói dịch vụ: %s\n" +
-        "Thời gian: %s - %s\n\n" +
-        "--- THÔNG TIN THANH TOÁN ---\n" +
-        "Mã hóa đơn: %s\n" +
-        "Tổng tiền: %,d VNĐ\n" +
-        "Phương thức: %s\n" +
-        "Ngày thanh toán: %s\n" +
-        "Trạng thái: %s\n\n" +
-        "=== CẢM ƠN QUÝ KHÁCH ===\n" +
-        "Vui lòng đến đúng giờ hẹn và mang theo CCCD!",
-      hs.getMaHoSo(),
-      hs.getHoTen(),
-      hs.getCCCD(),
-      hs.getSoDienThoai(),
-      df.format(hs.getNgaySinh()),
-      hs.getGioiTinh(),
-      hs.getDiaChi(),
-      lk.getMaLichKham(),
-      lk.getMaBacSi(),
-      goi.getTenGoi(),
-      lk.getThoiGianBatDau(),
-      lk.getThoiGianKetThuc(),
-      hd.getMaHDKham(),
-      goi.getGiaDichVu().intValue(),
-      phuongThuc,
-      dt.format(hd.getNgayThanhToan()),
-      hd.getTrangThai()
-    );
-
-    String fileName = "PhieuDangKy_" + hd.getMaHDKham();
-    phongkham.Utils.PdfExport.exportText(content, fileName);
   }
 }
