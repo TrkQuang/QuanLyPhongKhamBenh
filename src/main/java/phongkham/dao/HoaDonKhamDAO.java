@@ -83,18 +83,7 @@ public class HoaDonKhamDAO {
     return executeUpdate("DELETE FROM HoaDonKham WHERE MaHDKham = ?", MaHDKham);
   }
 
-  public boolean Update(HoaDonKhamDTO hd) {
-    return executeUpdate(
-      "UPDATE HoaDonKham SET MaHoSo = ?, MaGoi= ?, NgayThanhToan = ?, TongTien = ?, HinhThucThanhToan = ?, TrangThai = ? WHERE MaHDKham = ?",
-      hd.getMaHoSo(),
-      hd.getMaGoi(),
-      hd.getNgayThanhToan(),
-      hd.getTongTien(),
-      hd.getHinhThucThanhToan(),
-      hd.getTrangThai(),
-      hd.getMaHDKham()
-    );
-  }
+
 
   public HoaDonKhamDTO Search(String MaHDKham) {
     ArrayList<HoaDonKhamDTO> list = executeQuery(
