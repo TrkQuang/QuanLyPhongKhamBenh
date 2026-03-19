@@ -251,13 +251,6 @@ public class QuanLyNhaThuocTabPanel extends JPanel {
     panel.add(input, gbc);
   }
 
-  private void addFormField(JPanel form, String label, Component input) {
-    JLabel lbl = new JLabel(label + ":");
-    lbl.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-    form.add(lbl);
-    form.add(input);
-  }
-
   private JButton createActionButton(String text, Color color) {
     JButton button = new JButton(text);
     button.setBackground(color);

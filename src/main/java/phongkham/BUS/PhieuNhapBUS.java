@@ -78,7 +78,7 @@ public class PhieuNhapBUS {
       return false;
     }
 
-    // ✅ Cập nhật trạng thái thành DA_HUY
+    //Cập nhật trạng thái thành DA_HUY
     return dao.capNhatTrangThai(maPhieuNhap, StatusNormalizer.DA_HUY);
   }
 

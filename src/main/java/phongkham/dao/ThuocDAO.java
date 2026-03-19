@@ -11,79 +11,68 @@ import phongkham.db.DBConnection;
 
 public class ThuocDAO {
 
-  private ThuocDTO mapResultSetToThuoc(ResultSet rs) throws SQLException {
-    ThuocDTO t = new ThuocDTO();
-    t.setMaThuoc(rs.getString("MaThuoc"));
-    t.setTenThuoc(rs.getString("TenThuoc"));
-    t.setHoatChat(rs.getString("HoatChat"));
-    t.setDonViTinh(rs.getString("DonViTinh"));
-    t.setDonGiaBan(rs.getFloat("DonGiaBan"));
-    t.setSoLuongTon(rs.getInt("SoLuongTon"));
-    return t;
-  }
-
-  private ArrayList<ThuocDTO> executeListQuery(String sql, Object... params) {
-    ArrayList<ThuocDTO> ds = new ArrayList<>();
-    try (
-      Connection conn = DBConnection.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql)
-    ) {
-      for (int i = 0; i < params.length; i++) {
-        ps.setObject(i + 1, params[i]);
-      }
-      try (ResultSet rs = ps.executeQuery()) {
-        while (rs.next()) {
-          ds.add(mapResultSetToThuoc(rs));
-        }
-      }
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-    return ds;
-  }
-
-  private ThuocDTO executeSingleQuery(String sql, Object... params) {
-    ArrayList<ThuocDTO> ds = executeListQuery(sql, params);
-    return ds.isEmpty() ? null : ds.get(0);
-  }
-
-  // Tự động sinh mã thuốc
+  // ===== TỰ ĐỘNG SINH MÃ =====
   public String generateMaThuoc() {
     String sql = "SELECT MaThuoc FROM Thuoc ORDER BY MaThuoc DESC LIMIT 1";
+
     try (
       Connection conn = DBConnection.getConnection();
       Statement stmt = conn.createStatement();
-      ResultSet rs = stmt.executeQuery(sql)
+      ResultSet rs = stmt.executeQuery(sql);
     ) {
       if (rs.next()) {
         String lastMa = rs.getString("MaThuoc");
-        // Mã có dạng DT01, DT02, DT03...
+
         if (lastMa != null && lastMa.startsWith("T")) {
-          int num = Integer.parseInt(lastMa.substring(2));
+          int num = Integer.parseInt(lastMa.substring(1));
           return String.format("T%02d", num + 1);
         }
       }
+
     } catch (SQLException e) {
-      System.err.println("Lỗi sinh mã thuốc: " + e.getMessage());
+      System.out.println("Lỗi sinh mã thuốc");
+      e.printStackTrace();
     }
-    // Nếu chưa có thuốc nào, bắt đầu từ DT10
-    return "T10";
+
+    return "T01";
   }
 
-  //lấy tất cả thuốc
+  // ===== LẤY TẤT CẢ =====
   public ArrayList<ThuocDTO> getAllThuoc() {
-    return executeListQuery("SELECT * FROM Thuoc WHERE Active = 1");
+    ArrayList<ThuocDTO> list = new ArrayList<>();
+    String sql = "SELECT * FROM Thuoc WHERE Active = 1";
+
+    try (
+      Connection conn = DBConnection.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql);
+      ResultSet rs = ps.executeQuery();
+    ) {
+      while (rs.next()) {
+        ThuocDTO t = new ThuocDTO();
+        t.setMaThuoc(rs.getString("MaThuoc"));
+        t.setTenThuoc(rs.getString("TenThuoc"));
+        t.setHoatChat(rs.getString("HoatChat"));
+        t.setDonViTinh(rs.getString("DonViTinh"));
+        t.setDonGiaBan(rs.getFloat("DonGiaBan"));
+        t.setSoLuongTon(rs.getInt("SoLuongTon"));
+        list.add(t);
+      }
+
+    } catch (SQLException e) {
+      System.out.println("Lỗi lấy danh sách thuốc");
+      e.printStackTrace();
+    }
+    return list;
   }
 
-  //thêm thuốc mới
+  // ===== THÊM =====
   public boolean insertThuoc(ThuocDTO t) {
-    // Tự động sinh mã nếu chưa có
     if (t.getMaThuoc() == null || t.getMaThuoc().trim().isEmpty()) {
       t.setMaThuoc(generateMaThuoc());
     }
 
-    String sql =
-      "INSERT INTO Thuoc (MaThuoc, TenThuoc, HoatChat, DonViTinh, DonGiaBan, SoLuongTon, Active) VALUES (?,?,?,?,?,?,1)";
+    String sql = "INSERT INTO Thuoc (MaThuoc, TenThuoc, HoatChat, DonViTinh, DonGiaBan, SoLuongTon, Active) VALUES (?,?,?,?,?,?,1)";
+
     try (
       Connection conn = DBConnection.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
@@ -96,16 +85,18 @@ public class ThuocDAO {
       ps.setInt(6, t.getSoLuongTon());
 
       return ps.executeUpdate() > 0;
+
     } catch (SQLException e) {
+      System.out.println("Lỗi thêm thuốc");
       e.printStackTrace();
     }
     return false;
   }
 
-  //cập nhật thuốc
+  // ===== CẬP NHẬT =====
   public boolean updateThuoc(ThuocDTO t) {
-    String sql =
-      "UPDATE Thuoc SET TenThuoc=?, HoatChat=?, DonViTinh=?, DonGiaBan=?, SoLuongTon=? WHERE MaThuoc=?";
+    String sql = "UPDATE Thuoc SET TenThuoc=?, HoatChat=?, DonViTinh=?, DonGiaBan=?, SoLuongTon=? WHERE MaThuoc=?";
+
     try (
       Connection conn = DBConnection.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
@@ -118,102 +109,238 @@ public class ThuocDAO {
       ps.setString(6, t.getMaThuoc());
 
       return ps.executeUpdate() > 0;
+
     } catch (SQLException e) {
+      System.out.println("Lỗi cập nhật thuốc");
       e.printStackTrace();
     }
     return false;
   }
 
-  //xóa theo mã
-  public boolean deleteThuoc(String MaThuoc) {
-    String sql = "UPDATE Thuoc SET Active = 0 WHERE MaThuoc =?";
+  // ===== XOÁ MỀM =====
+  public boolean deleteThuoc(String maThuoc) {
+    String sql = "UPDATE Thuoc SET Active = 0 WHERE MaThuoc = ?";
+
     try (
       Connection conn = DBConnection.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
     ) {
-      ps.setString(1, MaThuoc);
+      ps.setString(1, maThuoc);
       return ps.executeUpdate() > 0;
+
     } catch (SQLException e) {
+      System.out.println("Lỗi xoá thuốc");
       e.printStackTrace();
     }
     return false;
   }
 
+  // ===== CỘNG SỐ LƯỢNG =====
   public boolean updateSoLuong(String maThuoc, int soLuongThem) {
-    String sql =
-      "UPDATE Thuoc SET SoLuongTon = SoLuongTon + ? WHERE MaThuoc = ?";
+    String sql = "UPDATE Thuoc SET SoLuongTon = SoLuongTon + ? WHERE MaThuoc = ?";
+
     try (
       Connection conn = DBConnection.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql)
+      PreparedStatement ps = conn.prepareStatement(sql);
     ) {
       ps.setInt(1, soLuongThem);
       ps.setString(2, maThuoc);
       return ps.executeUpdate() > 0;
+
     } catch (SQLException e) {
+      System.out.println("Lỗi cập nhật số lượng");
       e.printStackTrace();
-      return false;
     }
+    return false;
   }
 
-  //tìm theo mã
+  // ===== TÌM THEO MÃ =====
   public ThuocDTO searchById(String maThuoc) {
-    return executeSingleQuery("SELECT * FROM Thuoc WHERE MaThuoc=?", maThuoc);
-  }
+    String sql = "SELECT * FROM Thuoc WHERE MaThuoc=?";
 
-  //tìm theo tên thuốc
-  public ArrayList<ThuocDTO> searchByTenThuoc(String TenThuoc) {
-    return executeListQuery(
-      "SELECT * FROM Thuoc WHERE TenThuoc LIKE ?",
-      "%" + TenThuoc + "%"
-    );
-  }
-
-  //tìm theo hoạt chất
-  public ArrayList<ThuocDTO> searchByHoatChat(String hoatChat) {
-    return executeListQuery(
-      "SELECT * FROM Thuoc WHERE HoatChat LIKE ?",
-      "%" + hoatChat + "%"
-    );
-  }
-
-  // Trừ số lượng tồn kho (cho giao thuốc)
-  public boolean truSoLuongTon(String maThuoc, int soLuongTru) {
-    String sql =
-      "UPDATE Thuoc SET SoLuongTon = SoLuongTon - ? WHERE MaThuoc = ? AND SoLuongTon >= ? AND Active = 1";
     try (
       Connection conn = DBConnection.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql)
+      PreparedStatement ps = conn.prepareStatement(sql);
+    ) {
+      ps.setString(1, maThuoc);
+      ResultSet rs = ps.executeQuery();
+
+      if (rs.next()) {
+        ThuocDTO t = new ThuocDTO();
+        t.setMaThuoc(rs.getString("MaThuoc"));
+        t.setTenThuoc(rs.getString("TenThuoc"));
+        t.setHoatChat(rs.getString("HoatChat"));
+        t.setDonViTinh(rs.getString("DonViTinh"));
+        t.setDonGiaBan(rs.getFloat("DonGiaBan"));
+        t.setSoLuongTon(rs.getInt("SoLuongTon"));
+        return t;
+      }
+
+    } catch (SQLException e) {
+      System.out.println("Lỗi tìm thuốc theo mã");
+      e.printStackTrace();
+    }
+    return null;
+  }
+
+  // ===== TÌM THEO TÊN =====
+  public ArrayList<ThuocDTO> searchByTenThuoc(String tenThuoc) {
+    ArrayList<ThuocDTO> list = new ArrayList<>();
+    String sql = "SELECT * FROM Thuoc WHERE TenThuoc LIKE ?";
+
+    try (
+      Connection conn = DBConnection.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql);
+    ) {
+      ps.setString(1, "%" + tenThuoc + "%");
+      ResultSet rs = ps.executeQuery();
+
+      while (rs.next()) {
+        ThuocDTO t = new ThuocDTO();
+        t.setMaThuoc(rs.getString("MaThuoc"));
+        t.setTenThuoc(rs.getString("TenThuoc"));
+        t.setHoatChat(rs.getString("HoatChat"));
+        t.setDonViTinh(rs.getString("DonViTinh"));
+        t.setDonGiaBan(rs.getFloat("DonGiaBan"));
+        t.setSoLuongTon(rs.getInt("SoLuongTon"));
+        list.add(t);
+      }
+
+    } catch (SQLException e) {
+      System.out.println("Lỗi tìm thuốc theo tên");
+      e.printStackTrace();
+    }
+    return list;
+  }
+
+  // ===== TRỪ SỐ LƯỢNG =====
+  public boolean truSoLuongTon(String maThuoc, int soLuongTru) {
+    String sql = "UPDATE Thuoc SET SoLuongTon = SoLuongTon - ? WHERE MaThuoc = ? AND SoLuongTon >= ? AND Active = 1";
+
+    try (
+      Connection conn = DBConnection.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql);
     ) {
       ps.setInt(1, soLuongTru);
       ps.setString(2, maThuoc);
       ps.setInt(3, soLuongTru);
+
       return ps.executeUpdate() > 0;
+
     } catch (SQLException e) {
-      System.err.println("Lỗi trừ số lượng tồn: " + e.getMessage());
-      return false;
+      System.out.println("Lỗi trừ số lượng tồn");
+      e.printStackTrace();
     }
+    return false;
   }
 
-  // Lấy thuốc còn tồn kho (SoLuongTon > 0)
+  // ===== LẤY THUỐC CÒN TỒN =====
   public ArrayList<ThuocDTO> getThuocConTon() {
-    return executeListQuery(
-      "SELECT * FROM Thuoc WHERE SoLuongTon > 0 AND Active = 1 ORDER BY TenThuoc"
-    );
+    ArrayList<ThuocDTO> list = new ArrayList<>();
+    String sql = "SELECT * FROM Thuoc WHERE SoLuongTon > 0 AND Active = 1 ORDER BY TenThuoc";
+
+    try (
+      Connection conn = DBConnection.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql);
+      ResultSet rs = ps.executeQuery();
+    ) {
+      while (rs.next()) {
+        ThuocDTO t = new ThuocDTO();
+        t.setMaThuoc(rs.getString("MaThuoc"));
+        t.setTenThuoc(rs.getString("TenThuoc"));
+        t.setHoatChat(rs.getString("HoatChat"));
+        t.setDonViTinh(rs.getString("DonViTinh"));
+        t.setDonGiaBan(rs.getFloat("DonGiaBan"));
+        t.setSoLuongTon(rs.getInt("SoLuongTon"));
+        list.add(t);
+      }
+
+    } catch (SQLException e) {
+      System.out.println("Lỗi lấy thuốc còn tồn");
+      e.printStackTrace();
+    }
+    return list;
   }
 
-  //tìm theo đơn giá bán
-  public ArrayList<ThuocDTO> searchByGiaBan(Float donGiaBan) {
-    return executeListQuery(
-      "SELECT * FROM Thuoc WHERE DonGiaBan = ?",
-      donGiaBan
-    );
-  }
-
+  // ===== LẤY SỐ LƯỢNG TỒN =====
   public int getSoLuongTon(String maThuoc) {
-    ThuocDTO thuoc = executeSingleQuery(
-      "SELECT * FROM Thuoc WHERE MaThuoc = ?",
-      maThuoc
-    );
-    return thuoc == null ? 0 : thuoc.getSoLuongTon();
+    String sql = "SELECT SoLuongTon FROM Thuoc WHERE MaThuoc = ?";
+
+    try (
+      Connection conn = DBConnection.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql);
+    ) {
+      ps.setString(1, maThuoc);
+      ResultSet rs = ps.executeQuery();
+
+      if (rs.next()) {
+        return rs.getInt("SoLuongTon");
+      }
+
+    } catch (SQLException e) {
+      System.out.println("Lỗi lấy số lượng tồn");
+      e.printStackTrace();
+    }
+    return 0;
   }
+
+  // ===== TÌM THEO HOẠT CHẤT =====
+public ArrayList<ThuocDTO> searchByHoatChat(String hoatChat) {
+  ArrayList<ThuocDTO> list = new ArrayList<>();
+  String sql = "SELECT * FROM Thuoc WHERE HoatChat LIKE ? AND Active = 1";
+
+  try (
+    Connection conn = DBConnection.getConnection();
+    PreparedStatement ps = conn.prepareStatement(sql);
+  ) {
+    ps.setString(1, "%" + hoatChat + "%");
+    ResultSet rs = ps.executeQuery();
+
+    while (rs.next()) {
+      ThuocDTO t = new ThuocDTO();
+      t.setMaThuoc(rs.getString("MaThuoc"));
+      t.setTenThuoc(rs.getString("TenThuoc"));
+      t.setHoatChat(rs.getString("HoatChat"));
+      t.setDonViTinh(rs.getString("DonViTinh"));
+      t.setDonGiaBan(rs.getFloat("DonGiaBan"));
+      t.setSoLuongTon(rs.getInt("SoLuongTon"));
+      list.add(t);
+    }
+
+  } catch (SQLException e) {
+    System.out.println("Lỗi tìm thuốc theo hoạt chất");
+    e.printStackTrace();
+  }
+  return list;
+}
+
+// ===== TÌM THEO GIÁ BÁN =====
+public ArrayList<ThuocDTO> searchByGiaBan(Float donGiaBan) {
+  ArrayList<ThuocDTO> list = new ArrayList<>();
+  String sql = "SELECT * FROM Thuoc WHERE DonGiaBan = ? AND Active = 1";
+
+  try (
+    Connection conn = DBConnection.getConnection();
+    PreparedStatement ps = conn.prepareStatement(sql);
+  ) {
+    ps.setFloat(1, donGiaBan);
+    ResultSet rs = ps.executeQuery();
+
+    while (rs.next()) {
+      ThuocDTO t = new ThuocDTO();
+      t.setMaThuoc(rs.getString("MaThuoc"));
+      t.setTenThuoc(rs.getString("TenThuoc"));
+      t.setHoatChat(rs.getString("HoatChat"));
+      t.setDonViTinh(rs.getString("DonViTinh"));
+      t.setDonGiaBan(rs.getFloat("DonGiaBan"));
+      t.setSoLuongTon(rs.getInt("SoLuongTon"));
+      list.add(t);
+    }
+
+  } catch (SQLException e) {
+    System.out.println("Lỗi tìm thuốc theo giá bán");
+    e.printStackTrace();
+  }
+  return list;
+}
 }
