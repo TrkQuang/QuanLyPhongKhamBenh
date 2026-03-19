@@ -73,11 +73,7 @@ public class HoaDonKhamBUS {
     return hdDAO.Insert(hd);
   }
 
-  // ================= UPDATE =================
-  public boolean update(HoaDonKhamDTO hd) {
-    if (!validateHoaDon(hd)) return false;
-    return hdDAO.Update(hd);
-  }
+
 
   // ================= DELETE =================
   public boolean delete(String maHD) {
