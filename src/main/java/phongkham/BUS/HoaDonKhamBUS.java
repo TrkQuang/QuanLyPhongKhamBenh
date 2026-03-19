@@ -55,12 +55,12 @@ public class HoaDonKhamBUS {
         match && from != null && to != null && hd.getNgayThanhToan() != null
       ) {
         LocalDateTime f = from.atStartOfDay();
-        LocalDateTime t = to.atStartOfDay();
-        if (
-          hd.getNgayThanhToan().isBefore(f) || hd.getNgayThanhToan().isAfter(t)
-        ) {
+        LocalDateTime t = to.plusDays(1).atStartOfDay();
+
+      if (hd.getNgayThanhToan().isBefore(f) ||
+          !hd.getNgayThanhToan().isBefore(t)) {
           match = false;
-        }
+      }
       }
       if (match) result.add(hd);
     }
