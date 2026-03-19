@@ -1,6 +1,9 @@
 package phongkham.dao;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import phongkham.DTO.RolePermissionsDTO;
@@ -8,168 +11,130 @@ import phongkham.db.DBConnection;
 
 public class RolePermissionsDAO {
 
-  // Thêm mới
-  public boolean insert(RolePermissionsDTO rolePermissions) {
-    String sql =
-      "INSERT INTO RolePermissions (MaRole, MaPermission, Active) VALUES (?, ?, ?)";
+  private static final String BASE_SELECT =
+    "SELECT rp.*, r.TenVaiTro, p.TenPermission " +
+    "FROM RolePermissions rp " +
+    "LEFT JOIN Roles r ON rp.MaRole = r.STT " +
+    "LEFT JOIN Permissions p ON rp.MaPermission = p.MaPermission";
 
+  private boolean executeUpdate(String sql, Object... params) {
     try (
       Connection conn = DBConnection.getConnection();
       PreparedStatement pstmt = conn.prepareStatement(sql)
     ) {
-      pstmt.setInt(1, rolePermissions.getMaRole());
-      pstmt.setInt(2, rolePermissions.getMaPermission());
-      pstmt.setBoolean(3, rolePermissions.isActive());
-
-      int rowsInserted = pstmt.executeUpdate();
-      return rowsInserted > 0;
+      for (int i = 0; i < params.length; i++) {
+        pstmt.setObject(i + 1, params[i]);
+      }
+      return pstmt.executeUpdate() > 0;
     } catch (SQLException e) {
-      System.err.println(
-        "✗ Error inserting RolePermissions: " + e.getMessage()
-      );
+      System.err.println("RolePermissions update error: " + e.getMessage());
       return false;
     }
   }
 
-  // Cập nhật
-  public boolean update(RolePermissionsDTO rolePermissions) {
-    String sql =
-      "UPDATE RolePermissions SET MaRole = ?, MaPermission = ?, Active = ? WHERE MaRolePermissions = ?";
-
+  private int executeCount(String sql, Object... params) {
     try (
       Connection conn = DBConnection.getConnection();
       PreparedStatement pstmt = conn.prepareStatement(sql)
     ) {
-      pstmt.setInt(1, rolePermissions.getMaRole());
-      pstmt.setInt(2, rolePermissions.getMaPermission());
-      pstmt.setBoolean(3, rolePermissions.isActive());
-      pstmt.setInt(4, rolePermissions.getMaRolePermissions());
-
-      int rowsUpdated = pstmt.executeUpdate();
-      return rowsUpdated > 0;
-    } catch (SQLException e) {
-      System.err.println("✗ Error updating RolePermissions: " + e.getMessage());
-      return false;
-    }
-  }
-
-  // Xóa
-  public boolean delete(int maRolePermissions) {
-    String sql = "DELETE FROM RolePermissions WHERE MaRolePermissions = ?";
-
-    try (
-      Connection conn = DBConnection.getConnection();
-      PreparedStatement pstmt = conn.prepareStatement(sql)
-    ) {
-      pstmt.setInt(1, maRolePermissions);
-      int rowsDeleted = pstmt.executeUpdate();
-      return rowsDeleted > 0;
-    } catch (SQLException e) {
-      System.err.println("✗ Error deleting RolePermissions: " + e.getMessage());
-      return false;
-    }
-  }
-
-  // Lấy theo ID
-  public RolePermissionsDTO getById(int maRolePermissions) {
-    String sql =
-      "SELECT rp.*, r.TenVaiTro, p.TenPermission " +
-      "FROM RolePermissions rp " +
-      "LEFT JOIN Roles r ON rp.MaRole = r.STT " +
-      "LEFT JOIN Permissions p ON rp.MaPermission = p.MaPermission " +
-      "WHERE rp.MaRolePermissions = ?";
-
-    try (
-      Connection conn = DBConnection.getConnection();
-      PreparedStatement pstmt = conn.prepareStatement(sql)
-    ) {
-      pstmt.setInt(1, maRolePermissions);
+      for (int i = 0; i < params.length; i++) {
+        pstmt.setObject(i + 1, params[i]);
+      }
       try (ResultSet rs = pstmt.executeQuery()) {
         if (rs.next()) {
-          return mapResultSetToDTO(rs);
+          return rs.getInt(1);
         }
       }
     } catch (SQLException e) {
-      System.err.println(
-        "✗ Error getting RolePermissions by ID: " + e.getMessage()
-      );
+      System.err.println("RolePermissions count error: " + e.getMessage());
     }
-    return null;
+    return 0;
   }
 
-  // Lấy tất cả
-  public List<RolePermissionsDTO> getAll() {
+  private List<RolePermissionsDTO> executeQueryList(
+    String sql,
+    Object... params
+  ) {
     List<RolePermissionsDTO> list = new ArrayList<>();
-    String sql =
-      "SELECT rp.*, r.TenVaiTro, p.TenPermission " +
-      "FROM RolePermissions rp " +
-      "LEFT JOIN Roles r ON rp.MaRole = r.STT " +
-      "LEFT JOIN Permissions p ON rp.MaPermission = p.MaPermission";
-
-    try (
-      Connection conn = DBConnection.getConnection();
-      Statement stmt = conn.createStatement();
-      ResultSet rs = stmt.executeQuery(sql)
-    ) {
-      while (rs.next()) {
-        list.add(mapResultSetToDTO(rs));
-      }
-    } catch (SQLException e) {
-      System.err.println(
-        "✗ Error getting all RolePermissions: " + e.getMessage()
-      );
-    }
-    return list;
-  }
-
-  // Lấy theo Role
-  public List<RolePermissionsDTO> getByRole(int maRole) {
-    List<RolePermissionsDTO> list = new ArrayList<>();
-    String sql =
-      "SELECT rp.*, r.TenVaiTro, p.TenPermission " +
-      "FROM RolePermissions rp " +
-      "LEFT JOIN Roles r ON rp.MaRole = r.STT " +
-      "LEFT JOIN Permissions p ON rp.MaPermission = p.MaPermission " +
-      "WHERE rp.MaRole = ? AND rp.Active = 1";
-
     try (
       Connection conn = DBConnection.getConnection();
       PreparedStatement pstmt = conn.prepareStatement(sql)
     ) {
-      pstmt.setInt(1, maRole);
+      for (int i = 0; i < params.length; i++) {
+        pstmt.setObject(i + 1, params[i]);
+      }
       try (ResultSet rs = pstmt.executeQuery()) {
         while (rs.next()) {
           list.add(mapResultSetToDTO(rs));
         }
       }
     } catch (SQLException e) {
-      System.err.println(
-        "✗ Error getting RolePermissions by Role: " + e.getMessage()
-      );
+      System.err.println("RolePermissions query error: " + e.getMessage());
     }
     return list;
   }
 
+  // Thêm mới
+  public boolean insert(RolePermissionsDTO rolePermissions) {
+    return executeUpdate(
+      "INSERT INTO RolePermissions (MaRole, MaPermission, Active) VALUES (?, ?, ?)",
+      rolePermissions.getMaRole(),
+      rolePermissions.getMaPermission(),
+      rolePermissions.isActive()
+    );
+  }
+
+  // Cập nhật
+  public boolean update(RolePermissionsDTO rolePermissions) {
+    return executeUpdate(
+      "UPDATE RolePermissions SET MaRole = ?, MaPermission = ?, Active = ? WHERE MaRolePermissions = ?",
+      rolePermissions.getMaRole(),
+      rolePermissions.getMaPermission(),
+      rolePermissions.isActive(),
+      rolePermissions.getMaRolePermissions()
+    );
+  }
+
+  // Xóa
+  public boolean delete(int maRolePermissions) {
+    return executeUpdate(
+      "DELETE FROM RolePermissions WHERE MaRolePermissions = ?",
+      maRolePermissions
+    );
+  }
+
+  // Lấy theo ID
+  public RolePermissionsDTO getById(int maRolePermissions) {
+    List<RolePermissionsDTO> list = executeQueryList(
+      BASE_SELECT + " WHERE rp.MaRolePermissions = ?",
+      maRolePermissions
+    );
+    return list.isEmpty() ? null : list.get(0);
+  }
+
+  // Lấy tất cả
+  public List<RolePermissionsDTO> getAll() {
+    return executeQueryList(BASE_SELECT);
+  }
+
+  // Lấy theo Role
+  public List<RolePermissionsDTO> getByRole(int maRole) {
+    return executeQueryList(
+      BASE_SELECT + " WHERE rp.MaRole = ? AND rp.Active = 1",
+      maRole
+    );
+  }
+
   // Kiểm tra permission của role
   public boolean hasPermission(int maRole, int maPermission) {
-    String sql =
-      "SELECT COUNT(*) FROM RolePermissions WHERE MaRole = ? AND MaPermission = ? AND Active = 1";
-
-    try (
-      Connection conn = DBConnection.getConnection();
-      PreparedStatement pstmt = conn.prepareStatement(sql)
-    ) {
-      pstmt.setInt(1, maRole);
-      pstmt.setInt(2, maPermission);
-      try (ResultSet rs = pstmt.executeQuery()) {
-        if (rs.next()) {
-          return rs.getInt(1) > 0;
-        }
-      }
-    } catch (SQLException e) {
-      System.err.println("✗ Error checking permission: " + e.getMessage());
-    }
-    return false;
+    return (
+      executeCount(
+        "SELECT COUNT(*) FROM RolePermissions WHERE MaRole = ? AND MaPermission = ? AND Active = 1",
+        maRole,
+        maPermission
+      ) >
+      0
+    );
   }
 
   // Thay đổi permissions cho một role
@@ -184,20 +149,22 @@ public class RolePermissionsDAO {
 
       // Xóa tất cả permissions cũ
       String deleteSql = "DELETE FROM RolePermissions WHERE MaRole = ?";
-      PreparedStatement psDelete = conn.prepareStatement(deleteSql);
-      psDelete.setInt(1, maRole);
-      psDelete.executeUpdate();
-
-      // Insert permissions mới
       String insertSql =
         "INSERT INTO RolePermissions (MaRole, MaPermission, Active) VALUES (?, ?, 1)";
-      PreparedStatement psInsert = conn.prepareStatement(insertSql);
-      for (Integer permId : permissionIds) {
-        psInsert.setInt(1, maRole);
-        psInsert.setInt(2, permId);
-        psInsert.addBatch();
+      try (
+        PreparedStatement psDelete = conn.prepareStatement(deleteSql);
+        PreparedStatement psInsert = conn.prepareStatement(insertSql)
+      ) {
+        psDelete.setInt(1, maRole);
+        psDelete.executeUpdate();
+
+        for (Integer permId : permissionIds) {
+          psInsert.setInt(1, maRole);
+          psInsert.setInt(2, permId);
+          psInsert.addBatch();
+        }
+        psInsert.executeBatch();
       }
-      psInsert.executeBatch();
 
       conn.commit(); // Commit transaction
       return true;
@@ -205,10 +172,21 @@ public class RolePermissionsDAO {
       if (conn != null) {
         try {
           conn.rollback();
-        } catch (SQLException ex) {}
+        } catch (SQLException ex) {
+          System.err.println("Rollback failed: " + ex.getMessage());
+        }
       }
       e.printStackTrace();
       return false;
+    } finally {
+      if (conn != null) {
+        try {
+          conn.setAutoCommit(true);
+          conn.close();
+        } catch (SQLException ex) {
+          System.err.println("Close connection failed: " + ex.getMessage());
+        }
+      }
     }
   }
 
@@ -242,11 +220,11 @@ public class RolePermissionsDAO {
       pstmt.setInt(1, roleId);
       int rowsDeleted = pstmt.executeUpdate();
       System.out.println(
-        "✅ Xóa " + rowsDeleted + " RolePermission của Role " + roleId
+        "Xoa " + rowsDeleted + " RolePermission cua Role " + roleId
       );
       return true; // Trả về true ngay cả khi không có gì để xóa
     } catch (SQLException e) {
-      System.err.println("❌ Lỗi deleteByRoleId: " + e.getMessage());
+      System.err.println("Loi deleteByRoleId: " + e.getMessage());
       return false;
     }
   }

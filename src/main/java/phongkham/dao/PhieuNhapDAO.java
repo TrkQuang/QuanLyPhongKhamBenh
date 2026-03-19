@@ -9,7 +9,7 @@ import phongkham.db.DBConnection;
 
 public class PhieuNhapDAO {
 
-  // ✅ 1. METHOD DÙNG CHUNG: Tạo DTO từ ResultSet
+  //METHOD DÙNG CHUNG: Tạo DTO từ ResultSet
   private PhieuNhapDTO mapResultSet(ResultSet rs) throws SQLException {
     PhieuNhapDTO pn = new PhieuNhapDTO();
     pn.setMaPhieuNhap(rs.getString("MaPhieuNhap"));
@@ -21,7 +21,7 @@ public class PhieuNhapDAO {
     return pn;
   }
 
-  // ✅ 2. METHOD DÙNG CHUNG: Execute query trả về List
+  //METHOD DÙNG CHUNG: Execute query trả về List
   private ArrayList<PhieuNhapDTO> executeQuery(String sql, Object... params) {
     ArrayList<PhieuNhapDTO> list = new ArrayList<>();
     try (
@@ -44,7 +44,7 @@ public class PhieuNhapDAO {
     return list;
   }
 
-  // ✅ 3. METHOD DÙNG CHUNG: Execute update
+  //METHOD DÙNG CHUNG: Execute update
   private boolean executeUpdate(String sql, Object... params) {
     try (
       Connection conn = DBConnection.getConnection();
@@ -59,6 +59,42 @@ public class PhieuNhapDAO {
       System.err.println("❌ Lỗi update: " + e.getMessage());
     }
     return false;
+  }
+
+  private boolean existsByQuery(String sql, Object... params) {
+    try (
+      Connection conn = DBConnection.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql)
+    ) {
+      for (int i = 0; i < params.length; i++) {
+        ps.setObject(i + 1, params[i]);
+      }
+      try (ResultSet rs = ps.executeQuery()) {
+        return rs.next() && rs.getInt(1) > 0;
+      }
+    } catch (SQLException e) {
+      System.err.println("❌ Lỗi kiểm tra tồn tại: " + e.getMessage());
+    }
+    return false;
+  }
+
+  private double queryTongTien(String sql, Object... params) {
+    try (
+      Connection conn = DBConnection.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql)
+    ) {
+      for (int i = 0; i < params.length; i++) {
+        ps.setObject(i + 1, params[i]);
+      }
+      try (ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) {
+          return rs.getDouble(1);
+        }
+      }
+    } catch (SQLException e) {
+      System.err.println("❌ Lỗi thống kê tổng tiền: " + e.getMessage());
+    }
+    return 0;
   }
 
   // ===== CRUD OPERATIONS =====
@@ -180,17 +216,10 @@ public class PhieuNhapDAO {
     String trangThaiChuan = StatusNormalizer.normalizePhieuNhapStatus(
       trangThai
     );
-    ArrayList<PhieuNhapDTO> ketQua = new ArrayList<>();
-    for (PhieuNhapDTO pn : getAll()) {
-      if (
-        trangThaiChuan.equals(
-          StatusNormalizer.normalizePhieuNhapStatus(pn.getTrangThai())
-        )
-      ) {
-        ketQua.add(pn);
-      }
-    }
-    return ketQua;
+    return executeQuery(
+      "SELECT * FROM PhieuNhap WHERE TrangThai = ? ORDER BY NgayNhap DESC",
+      trangThaiChuan
+    );
   }
 
   // ===== UTILITY OPERATIONS =====
@@ -200,19 +229,10 @@ public class PhieuNhapDAO {
   }
 
   public boolean hasPhieuNhap(String maNCC) {
-    String sql = "SELECT COUNT(*) FROM PhieuNhap WHERE MaNCC = ?";
-    try (
-      Connection conn = DBConnection.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql)
-    ) {
-      ps.setString(1, maNCC);
-      try (ResultSet rs = ps.executeQuery()) {
-        return rs.next() && rs.getInt(1) > 0;
-      }
-    } catch (SQLException e) {
-      System.err.println("❌ Lỗi kiểm tra phiếu nhập: " + e.getMessage());
-    }
-    return false;
+    return existsByQuery(
+      "SELECT COUNT(*) FROM PhieuNhap WHERE MaNCC = ?",
+      maNCC
+    );
   }
 
   // ✅ THÊM: Tìm kiếm đa điều kiện
@@ -229,11 +249,10 @@ public class PhieuNhapDAO {
     String trangThaiChuan = StatusNormalizer.normalizePhieuNhapStatus(
       trangThai
     );
-    double tong = 0;
-    for (PhieuNhapDTO pn : getByTrangThai(trangThaiChuan)) {
-      tong += pn.getTongTienNhap();
-    }
-    return tong;
+    return queryTongTien(
+      "SELECT COALESCE(SUM(TongTienNhap), 0) FROM PhieuNhap WHERE TrangThai = ?",
+      trangThaiChuan
+    );
   }
 
   // ===== CẬP NHẬT TỔNG TIỀN =====

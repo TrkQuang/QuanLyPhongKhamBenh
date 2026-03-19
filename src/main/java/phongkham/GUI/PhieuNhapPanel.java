@@ -1,28 +1,18 @@
 package phongkham.gui;
 
 import java.awt.*;
-import java.math.BigDecimal;
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 import javax.swing.*;
 import phongkham.BUS.CTPhieuNhapBUS;
-import phongkham.BUS.NhaCungCapBUS;
 import phongkham.BUS.PhieuNhapBUS;
-import phongkham.BUS.ThuocBUS;
-import phongkham.DTO.NhaCungCapDTO;
 import phongkham.DTO.PhieuNhapDTO;
-import phongkham.DTO.ThuocDTO;
 import phongkham.Utils.ExcelExport;
 import phongkham.Utils.PdfExport;
 import phongkham.Utils.StatusColorUtil;
 import phongkham.Utils.StatusDisplayUtil;
 import phongkham.Utils.StatusNormalizer;
+import phongkham.gui.phieunhap.PhieuNhapCreateDialog;
 
 public class PhieuNhapPanel extends JPanel {
 
@@ -116,7 +106,7 @@ public class PhieuNhapPanel extends JPanel {
   private void showList(ArrayList<PhieuNhapDTO> list) {
     listContainer.removeAll();
 
-    if (list.isEmpty()) {
+    if (list == null || list.isEmpty()) {
       JLabel lblEmpty = new JLabel("Không có dữ liệu");
       lblEmpty.setHorizontalAlignment(SwingConstants.CENTER);
       listContainer.add(lblEmpty);
@@ -153,7 +143,7 @@ public class PhieuNhapPanel extends JPanel {
     return item;
   }
 
-  // ✅ TẠO PANEL THÔNG TIN (Thay thế HTML)
+  // ✅ TẠO PANEL THÔNG TIN
   private JPanel createInfoPanel(PhieuNhapDTO pn) {
     JPanel panel = new JPanel();
     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -197,35 +187,13 @@ public class PhieuNhapPanel extends JPanel {
 
   // ✅ TẠO LABEL TRẠNG THÁI với màu sắc
   private JLabel createTrangThaiLabel(String trangThai) {
-    String text;
-    Color color;
     String trangThaiChuan = StatusNormalizer.normalizePhieuNhapStatus(
       trangThai
     );
 
-    switch (trangThaiChuan) {
-      case "DA_NHAP":
-        text = StatusDisplayUtil.phieuNhap(trangThaiChuan);
-        color = StatusColorUtil.phieuNhap(trangThaiChuan);
-        break;
-      case "DA_DUYET":
-        text = StatusDisplayUtil.phieuNhap(trangThaiChuan);
-        color = StatusColorUtil.phieuNhap(trangThaiChuan);
-        break;
-      case "DA_HUY":
-        text = StatusDisplayUtil.phieuNhap(trangThaiChuan);
-        color = StatusColorUtil.phieuNhap(trangThaiChuan);
-        break;
-      case "CHO_DUYET":
-      default:
-        text = StatusDisplayUtil.phieuNhap(trangThaiChuan);
-        color = StatusColorUtil.phieuNhap(trangThaiChuan);
-        break;
-    }
-
-    JLabel lbl = new JLabel(text);
+    JLabel lbl = new JLabel(StatusDisplayUtil.phieuNhap(trangThaiChuan));
     lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
-    lbl.setForeground(color);
+    lbl.setForeground(StatusColorUtil.phieuNhap(trangThaiChuan));
     return lbl;
   }
 
@@ -240,35 +208,13 @@ public class PhieuNhapPanel extends JPanel {
 
     // Nút "Chi tiết"
     JButton btnChiTiet = createButton("Chi tiết", new Color(59, 130, 246));
-    btnChiTiet.addActionListener(e -> {
-      ChiTietPhieuNhapPanel detailPanel = new ChiTietPhieuNhapPanel(
-        pn.getMaPhieuNhap(),
-        this
-      );
-      removeAll();
-      setLayout(new BorderLayout());
-      add(detailPanel, BorderLayout.CENTER);
-      revalidate();
-      repaint();
-    });
+    btnChiTiet.addActionListener(e -> moChiTietPhieuNhap(pn.getMaPhieuNhap()));
     panel.add(btnChiTiet);
 
     // Nút "Duyệt" (chỉ hiện nếu CHO_DUYET)
-    if ("CHUA_DUYET".equals(trangThai) || "CHO_DUYET".equals(trangThai)) {
+    if (coTheDuyet(trangThai)) {
       JButton btnDuyet = createButton("Duyệt", new Color(16, 185, 129));
-      btnDuyet.addActionListener(e -> {
-        if (confirm("Xác nhận duyệt phiếu nhập này?")) {
-          if (bus.capNhatTrangThai(pn.getMaPhieuNhap(), "DA_DUYET")) {
-            JOptionPane.showMessageDialog(
-              this,
-              "✅ Đã duyệt phiếu thành công!"
-            );
-            loadData();
-          } else {
-            JOptionPane.showMessageDialog(this, "❌ Lỗi khi duyệt phiếu!");
-          }
-        }
-      });
+      btnDuyet.addActionListener(e -> duyetPhieuNhap(pn.getMaPhieuNhap()));
       panel.add(btnDuyet);
     }
 
@@ -279,42 +225,17 @@ public class PhieuNhapPanel extends JPanel {
         "Xác nhận nhập kho",
         new Color(16, 185, 129)
       );
-      btnXacNhanNhapKho.addActionListener(e -> {
-        if (
-          confirm(
-            "Xác nhận nhập kho phiếu này?\nHệ thống sẽ cộng số lượng tồn kho thuốc."
-          )
-        ) {
-          if (ctPhieuNhapBUS.xacNhanNhapKho(pn.getMaPhieuNhap())) {
-            JOptionPane.showMessageDialog(this, "✅ Nhập kho thành công!");
-            refreshData();
-          } else {
-            JOptionPane.showMessageDialog(
-              this,
-              "❌ Không thể nhập kho!\nVui lòng kiểm tra trạng thái phiếu và chi tiết nhập."
-            );
-          }
-        }
-      });
+      btnXacNhanNhapKho.addActionListener(e ->
+        xacNhanNhapKho(pn.getMaPhieuNhap())
+      );
       panel.add(btnXacNhanNhapKho);
     }
 
     // Nút "Xóa" (chỉ hiện nếu KHÔNG PHẢI DA_DUYET)
     // Chỉ cho xóa khi chưa nhập và chưa hủy
-    if (!"DA_NHAP".equals(trangThai) && !"DA_HUY".equals(trangThai)) {
+    if (coTheXoa(trangThai)) {
       JButton btnXoa = createButton("Xóa", new Color(239, 68, 68));
-
-      btnXoa.addActionListener(e -> {
-        if (confirm("Xác nhận hủy phiếu nhập này?")) {
-          if (bus.delete(pn.getMaPhieuNhap())) {
-            JOptionPane.showMessageDialog(this, "✅ Đã hủy thành công!");
-            loadData();
-          } else {
-            JOptionPane.showMessageDialog(this, "❌ Không thể hủy phiếu!");
-          }
-        }
-      });
-
+      btnXoa.addActionListener(e -> huyPhieuNhap(pn.getMaPhieuNhap()));
       panel.add(btnXoa);
     }
 
@@ -356,409 +277,98 @@ public class PhieuNhapPanel extends JPanel {
   }
 
   private void moDialogThemPhieuNhap() {
-    NhaCungCapBUS nhaCungCapBUS = new NhaCungCapBUS();
-    ArrayList<NhaCungCapDTO> danhSachNCC = nhaCungCapBUS.listDangHopTac();
-    ArrayList<ThuocDTO> danhSachThuoc = new ThuocBUS().list();
-
-    if (danhSachNCC == null || danhSachNCC.isEmpty()) {
-      JOptionPane.showMessageDialog(
-        this,
-        "❌ Chưa có nhà cung cấp đang hợp tác để tạo phiếu nhập"
-      );
-      return;
-    }
-
-    if (danhSachThuoc == null || danhSachThuoc.isEmpty()) {
-      JOptionPane.showMessageDialog(
-        this,
-        "❌ Chưa có thuốc trong hệ thống để thêm vào phiếu nhập"
-      );
-      return;
-    }
-
-    JComboBox<String> cboNhaCungCap = new JComboBox<>();
-    for (NhaCungCapDTO nhaCungCap : danhSachNCC) {
-      cboNhaCungCap.addItem(
-        nhaCungCap.getMaNhaCungCap() + " - " + nhaCungCap.getTenNhaCungCap()
-      );
-    }
-
-    JTextField txtNguoiGiao = new JTextField();
-
-    JPanel formPanel = new JPanel(new GridLayout(0, 2, 10, 10));
-    formPanel.add(new JLabel("Nhà cung cấp:"));
-    formPanel.add(cboNhaCungCap);
-    formPanel.add(new JLabel("Người giao:"));
-    formPanel.add(txtNguoiGiao);
-
-    String[] cols = {
-      "Mã thuốc",
-      "Tên thuốc",
-      "Số lượng",
-      "Đơn giá nhập",
-      "Hạn sử dụng",
-      "Thành tiền",
-    };
-    javax.swing.table.DefaultTableModel model =
-      new javax.swing.table.DefaultTableModel(cols, 0) {
-        @Override
-        public boolean isCellEditable(int row, int column) {
-          return false;
-        }
-      };
-
-    JTable table = new JTable(model);
-    table.setRowHeight(26);
-    JScrollPane scrollPane = new JScrollPane(table);
-    scrollPane.setPreferredSize(new Dimension(760, 220));
-
-    NumberFormat formatter = NumberFormat.getInstance(new Locale("vi", "VN"));
-    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    List<TempChiTietNhap> chiTietTam = new ArrayList<>();
-
-    JLabel lblTongTien = new JLabel("Tổng tiền nhập: 0 đ");
-    lblTongTien.setFont(new Font("Segoe UI", Font.BOLD, 13));
-
-    Runnable refreshBangChiTiet = () -> {
-      model.setRowCount(0);
-      BigDecimal tong = BigDecimal.ZERO;
-      for (TempChiTietNhap ct : chiTietTam) {
-        BigDecimal thanhTien = ct.tinhThanhTien();
-        tong = tong.add(thanhTien);
-        model.addRow(
-          new Object[] {
-            ct.maThuoc,
-            ct.tenThuoc,
-            ct.soLuong,
-            formatter.format(ct.donGiaNhap),
-            ct.hanSuDung == null ? "" : ct.hanSuDung.format(dateFormatter),
-            formatter.format(thanhTien),
-          }
-        );
-      }
-      lblTongTien.setText("Tổng tiền nhập: " + formatter.format(tong) + " đ");
-    };
-
-    JButton btnThemThuoc = new JButton("Thêm thuốc");
-    JButton btnSuaThuoc = new JButton("Sửa dòng");
-    JButton btnXoaThuoc = new JButton("Xóa dòng");
-
-    btnSuaThuoc.setEnabled(false);
-    btnXoaThuoc.setEnabled(false);
-
-    table
-      .getSelectionModel()
-      .addListSelectionListener(e -> {
-        if (e.getValueIsAdjusting()) {
-          return;
-        }
-        boolean coChon = table.getSelectedRow() >= 0;
-        btnSuaThuoc.setEnabled(coChon);
-        btnXoaThuoc.setEnabled(coChon);
-      });
-
-    btnThemThuoc.addActionListener(e -> {
-      TempChiTietNhap input = hienThiDialogChonThuocNhap(danhSachThuoc, null);
-      if (input == null) {
-        return;
-      }
-      chiTietTam.add(input);
-      refreshBangChiTiet.run();
-    });
-
-    btnSuaThuoc.addActionListener(e -> {
-      int row = table.getSelectedRow();
-      if (row < 0 || row >= chiTietTam.size()) {
-        return;
-      }
-      TempChiTietNhap cu = chiTietTam.get(row);
-      TempChiTietNhap moi = hienThiDialogChonThuocNhap(danhSachThuoc, cu);
-      if (moi == null) {
-        return;
-      }
-      chiTietTam.set(row, moi);
-      refreshBangChiTiet.run();
-      if (row < model.getRowCount()) {
-        table.setRowSelectionInterval(row, row);
-      }
-    });
-
-    btnXoaThuoc.addActionListener(e -> {
-      int row = table.getSelectedRow();
-      if (row < 0 || row >= chiTietTam.size()) {
-        return;
-      }
-      chiTietTam.remove(row);
-      refreshBangChiTiet.run();
-      btnSuaThuoc.setEnabled(false);
-      btnXoaThuoc.setEnabled(false);
-    });
-
-    JPanel actionsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-    actionsPanel.add(btnThemThuoc);
-    actionsPanel.add(btnSuaThuoc);
-    actionsPanel.add(btnXoaThuoc);
-
-    JPanel tablePanel = new JPanel(new BorderLayout(0, 8));
-    tablePanel.setBorder(
-      BorderFactory.createTitledBorder("Chi tiết thuốc nhập")
-    );
-    tablePanel.add(actionsPanel, BorderLayout.NORTH);
-    tablePanel.add(scrollPane, BorderLayout.CENTER);
-    tablePanel.add(lblTongTien, BorderLayout.SOUTH);
-
-    JPanel panelNhap = new JPanel(new BorderLayout(0, 10));
-    panelNhap.add(formPanel, BorderLayout.NORTH);
-    panelNhap.add(tablePanel, BorderLayout.CENTER);
-
-    int luaChon = JOptionPane.showConfirmDialog(
+    boolean success = PhieuNhapCreateDialog.show(
       this,
-      panelNhap,
-      "Thêm phiếu nhập",
-      JOptionPane.OK_CANCEL_OPTION,
-      JOptionPane.PLAIN_MESSAGE
-    );
-
-    if (luaChon != JOptionPane.OK_OPTION) {
-      return;
-    }
-
-    try {
-      String nguoiGiao = txtNguoiGiao.getText().trim();
-      if (nguoiGiao.isEmpty()) {
-        JOptionPane.showMessageDialog(
-          this,
-          "❌ Người giao không được để trống"
-        );
-        return;
-      }
-
-      if (chiTietTam.isEmpty()) {
-        JOptionPane.showMessageDialog(
-          this,
-          "❌ Cần thêm ít nhất một dòng thuốc vào phiếu nhập"
-        );
-        return;
-      }
-
-      String nhaCungCapDaChon = (String) cboNhaCungCap.getSelectedItem();
-      String maNhaCungCap = nhaCungCapDaChon.split(" - ")[0].trim();
-      String maPhieuNhap = "PN" + System.currentTimeMillis();
-
-      BigDecimal tong = BigDecimal.ZERO;
-      for (TempChiTietNhap ct : chiTietTam) {
-        tong = tong.add(ct.tinhThanhTien());
-      }
-
-      PhieuNhapDTO phieuNhapMoi = new PhieuNhapDTO();
-      phieuNhapMoi.setMaPhieuNhap(maPhieuNhap);
-      phieuNhapMoi.setMaNCC(maNhaCungCap);
-      phieuNhapMoi.setNgayNhap(new java.sql.Date(System.currentTimeMillis()));
-      phieuNhapMoi.setNguoiGiao(nguoiGiao);
-      phieuNhapMoi.setTongTienNhap(tong.floatValue());
-      phieuNhapMoi.setTrangThai("CHO_DUYET");
-
-      if (!bus.insert(phieuNhapMoi)) {
-        JOptionPane.showMessageDialog(this, "❌ Không thể thêm phiếu nhập");
-        return;
-      }
-
-      for (int i = 0; i < chiTietTam.size(); i++) {
-        TempChiTietNhap ct = chiTietTam.get(i);
-        boolean inserted = ctPhieuNhapBUS.insert(
-          taoMaCTPN(maPhieuNhap, i),
+      bus,
+      (maCTPN, maPhieuNhap, maThuoc, soLuong, donGia, hanSuDung) ->
+        ctPhieuNhapBUS.insert(
+          maCTPN,
           maPhieuNhap,
-          ct.maThuoc,
-          ct.soLuong,
-          ct.donGiaNhap,
-          ct.hanSuDung
-        );
-        if (!inserted) {
-          JOptionPane.showMessageDialog(
-            this,
-            "❌ Tạo phiếu thành công nhưng thêm dòng thuốc thất bại ở dòng " +
-              (i + 1) +
-              ".\nVui lòng mở chi tiết phiếu để kiểm tra lại."
-          );
-          loadData();
-          return;
-        }
-      }
-
-      JOptionPane.showMessageDialog(this, "✅ Thêm phiếu nhập thành công");
+          maThuoc,
+          soLuong,
+          donGia,
+          hanSuDung
+        )
+    );
+    if (success) {
       loadData();
-    } catch (Exception ex) {
-      JOptionPane.showMessageDialog(this, "❌ Dữ liệu không hợp lệ");
     }
   }
 
-  private String taoMaCTPN(String maPhieuNhap, int stt) {
-    return "CT" + maPhieuNhap + "_" + (stt + 1);
+  private void moChiTietPhieuNhap(String maPhieuNhap) {
+    ChiTietPhieuNhapPanel detailPanel = new ChiTietPhieuNhapPanel(
+      maPhieuNhap,
+      this
+    );
+    removeAll();
+    setLayout(new BorderLayout());
+    add(detailPanel, BorderLayout.CENTER);
+    revalidate();
+    repaint();
   }
 
-  private TempChiTietNhap hienThiDialogChonThuocNhap(
-    List<ThuocDTO> danhSachThuoc,
-    TempChiTietNhap macDinh
-  ) {
-    JComboBox<String> cboThuoc = new JComboBox<>();
-    NumberFormat formatter = NumberFormat.getInstance(new Locale("vi", "VN"));
+  private boolean coTheDuyet(String trangThai) {
+    return "CHUA_DUYET".equals(trangThai) || "CHO_DUYET".equals(trangThai);
+  }
 
-    int selectedIndex = 0;
-    for (int i = 0; i < danhSachThuoc.size(); i++) {
-      ThuocDTO t = danhSachThuoc.get(i);
-      cboThuoc.addItem(
-        t.getMaThuoc() +
-          " - " +
-          t.getTenThuoc() +
-          " (Giá bán: " +
-          formatter.format(t.getDonGiaBan()) +
-          " đ)"
-      );
-      if (macDinh != null && t.getMaThuoc().equals(macDinh.maThuoc)) {
-        selectedIndex = i;
-      }
+  private boolean coTheXoa(String trangThai) {
+    return !"DA_NHAP".equals(trangThai) && !"DA_HUY".equals(trangThai);
+  }
+
+  private void duyetPhieuNhap(String maPhieuNhap) {
+    if (!confirm("Xác nhận duyệt phiếu nhập này?")) {
+      return;
     }
-    cboThuoc.setSelectedIndex(selectedIndex);
 
-    JSpinner spSoLuong = new JSpinner(
-      new SpinnerNumberModel(
-        macDinh == null ? 1 : macDinh.soLuong,
-        1,
-        100000,
-        1
+    if (bus.capNhatTrangThai(maPhieuNhap, "DA_DUYET")) {
+      JOptionPane.showMessageDialog(this, "✅ Đã duyệt phiếu thành công!");
+      loadData();
+      return;
+    }
+    JOptionPane.showMessageDialog(this, "❌ Lỗi khi duyệt phiếu!");
+  }
+
+  private void xacNhanNhapKho(String maPhieuNhap) {
+    if (
+      !confirm(
+        "Xác nhận nhập kho phiếu này?\nHệ thống sẽ cộng số lượng tồn kho thuốc."
       )
-    );
-    JTextField txtDonGia = new JTextField(
-      macDinh == null
-        ? String.valueOf(danhSachThuoc.get(selectedIndex).getDonGiaBan())
-        : macDinh.donGiaNhap.toPlainString()
-    );
-    JTextField txtHanSuDung = new JTextField(
-      macDinh == null || macDinh.hanSuDung == null
-        ? ""
-        : macDinh.hanSuDung
-            .toLocalDate()
-            .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-    );
+    ) {
+      return;
+    }
 
-    cboThuoc.addActionListener(e -> {
-      int idx = cboThuoc.getSelectedIndex();
-      if (idx >= 0 && idx < danhSachThuoc.size()) {
-        txtDonGia.setText(
-          String.valueOf(danhSachThuoc.get(idx).getDonGiaBan())
-        );
-      }
-    });
-
-    Object[] message = {
-      "Chọn thuốc:",
-      cboThuoc,
-      "Số lượng nhập:",
-      spSoLuong,
-      "Đơn giá nhập:",
-      txtDonGia,
-      "Hạn sử dụng (dd/MM/yyyy, để trống nếu chưa có):",
-      txtHanSuDung,
-    };
-
-    int option = JOptionPane.showConfirmDialog(
+    if (ctPhieuNhapBUS.xacNhanNhapKho(maPhieuNhap)) {
+      JOptionPane.showMessageDialog(this, "✅ Nhập kho thành công!");
+      refreshData();
+      return;
+    }
+    JOptionPane.showMessageDialog(
       this,
-      message,
-      macDinh == null ? "Thêm thuốc vào phiếu nhập" : "Sửa dòng thuốc",
-      JOptionPane.OK_CANCEL_OPTION,
-      JOptionPane.PLAIN_MESSAGE
+      "❌ Không thể nhập kho!\nVui lòng kiểm tra trạng thái phiếu và chi tiết nhập."
     );
-
-    if (option != JOptionPane.OK_OPTION) {
-      return null;
-    }
-
-    try {
-      int idx = cboThuoc.getSelectedIndex();
-      if (idx < 0 || idx >= danhSachThuoc.size()) {
-        JOptionPane.showMessageDialog(this, "❌ Vui lòng chọn thuốc");
-        return null;
-      }
-
-      ThuocDTO thuoc = danhSachThuoc.get(idx);
-      int soLuong = (int) spSoLuong.getValue();
-      BigDecimal donGia = new BigDecimal(txtDonGia.getText().trim());
-      if (donGia.compareTo(BigDecimal.ZERO) <= 0) {
-        JOptionPane.showMessageDialog(this, "❌ Đơn giá nhập phải lớn hơn 0");
-        return null;
-      }
-
-      LocalDateTime hanSuDung = null;
-      String hanText = txtHanSuDung.getText().trim();
-      if (!hanText.isEmpty()) {
-        LocalDate ngay = LocalDate.parse(
-          hanText,
-          DateTimeFormatter.ofPattern("dd/MM/yyyy")
-        );
-        if (ngay.isBefore(LocalDate.now())) {
-          JOptionPane.showMessageDialog(
-            this,
-            "❌ Hạn sử dụng phải từ hôm nay trở đi"
-          );
-          return null;
-        }
-        hanSuDung = ngay.atStartOfDay();
-      }
-
-      return new TempChiTietNhap(
-        thuoc.getMaThuoc(),
-        thuoc.getTenThuoc(),
-        soLuong,
-        donGia,
-        hanSuDung
-      );
-    } catch (Exception ex) {
-      JOptionPane.showMessageDialog(this, "❌ Dữ liệu dòng thuốc không hợp lệ");
-      return null;
-    }
   }
 
-  private static class TempChiTietNhap {
-
-    private final String maThuoc;
-    private final String tenThuoc;
-    private final int soLuong;
-    private final BigDecimal donGiaNhap;
-    private final LocalDateTime hanSuDung;
-
-    private TempChiTietNhap(
-      String maThuoc,
-      String tenThuoc,
-      int soLuong,
-      BigDecimal donGiaNhap,
-      LocalDateTime hanSuDung
-    ) {
-      this.maThuoc = maThuoc;
-      this.tenThuoc = tenThuoc;
-      this.soLuong = soLuong;
-      this.donGiaNhap = donGiaNhap;
-      this.hanSuDung = hanSuDung;
+  private void huyPhieuNhap(String maPhieuNhap) {
+    if (!confirm("Xác nhận hủy phiếu nhập này?")) {
+      return;
     }
 
-    private BigDecimal tinhThanhTien() {
-      return donGiaNhap.multiply(BigDecimal.valueOf(soLuong));
+    if (bus.delete(maPhieuNhap)) {
+      JOptionPane.showMessageDialog(this, "✅ Đã hủy thành công!");
+      loadData();
+      return;
     }
+    JOptionPane.showMessageDialog(this, "❌ Không thể hủy phiếu!");
   }
 
   private void xuatBaoCaoExcel() {
     JTable table = taoBangTamDanhSachPhieuNhap();
-    String boLoc = txtTimKiem.getText().trim().isEmpty()
-      ? "Toàn bộ"
-      : "Từ khóa: " + txtTimKiem.getText().trim();
-    ExcelExport.exportOperationalTableToCsv(table, "PhieuNhap", boLoc);
+    ExcelExport.exportOperationalTableToCsv(table, "PhieuNhap", taoBoLocText());
   }
 
   private void xuatBaoCaoPdf() {
     JTable table = taoBangTamDanhSachPhieuNhap();
-    String boLoc = txtTimKiem.getText().trim().isEmpty()
-      ? "Toàn bộ"
-      : "Từ khóa: " + txtTimKiem.getText().trim();
-    PdfExport.exportOperationalTable(table, "Phiếu nhập", boLoc);
+    PdfExport.exportOperationalTable(table, "Phiếu nhập", taoBoLocText());
   }
 
   private JTable taoBangTamDanhSachPhieuNhap() {
@@ -773,12 +383,7 @@ public class PhieuNhapPanel extends JPanel {
     javax.swing.table.DefaultTableModel model =
       new javax.swing.table.DefaultTableModel(cols, 0);
 
-    java.util.ArrayList<PhieuNhapDTO> danhSach = txtTimKiem
-      .getText()
-      .trim()
-      .isEmpty()
-      ? bus.getAll()
-      : bus.search(txtTimKiem.getText().trim());
+    java.util.ArrayList<PhieuNhapDTO> danhSach = layDanhSachTheoBoLoc();
 
     SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
     for (PhieuNhapDTO pn : danhSach) {
@@ -794,5 +399,15 @@ public class PhieuNhapPanel extends JPanel {
       );
     }
     return new JTable(model);
+  }
+
+  private String taoBoLocText() {
+    String keyword = txtTimKiem.getText().trim();
+    return keyword.isEmpty() ? "Toàn bộ" : "Từ khóa: " + keyword;
+  }
+
+  private ArrayList<PhieuNhapDTO> layDanhSachTheoBoLoc() {
+    String keyword = txtTimKiem.getText().trim();
+    return keyword.isEmpty() ? bus.getAll() : bus.search(keyword);
   }
 }

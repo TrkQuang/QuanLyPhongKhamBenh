@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
 import phongkham.DTO.LichLamViecDTO;
 import phongkham.Utils.StatusNormalizer;
 import phongkham.dao.LichLamViecDAO;
@@ -75,52 +76,56 @@ public class LichLamViecBUS {
   }
 
   public ArrayList<LichLamViecDTO> getByNgay(String ngay) {
-    ArrayList<LichLamViecDTO> result = new ArrayList<>();
-    if (!isEmpty(ngay)) {
-      for (LichLamViecDTO llv : dao.getAll()) {
-        if (llv.getNgayLam().equals(ngay)) result.add(llv);
-      }
+    if (isEmpty(ngay)) {
+      return new ArrayList<>();
     }
-    return result;
+    return filterFromAll(llv -> ngay.equals(llv.getNgayLam()));
   }
 
   public ArrayList<LichLamViecDTO> getByCa(String ca) {
-    ArrayList<LichLamViecDTO> result = new ArrayList<>();
-    if (!isEmpty(ca)) {
-      for (LichLamViecDTO llv : dao.getAll()) {
-        if (llv.getCaLam().equals(ca)) result.add(llv);
-      }
+    if (isEmpty(ca)) {
+      return new ArrayList<>();
     }
-    return result;
+    return filterFromAll(llv -> ca.equals(llv.getCaLam()));
   }
 
   public ArrayList<LichLamViecDTO> getByBacSiAndNgay(
     String maBacSi,
     String ngay
   ) {
+    if (isEmpty(maBacSi) || isEmpty(ngay)) {
+      return new ArrayList<>();
+    }
     ArrayList<LichLamViecDTO> result = new ArrayList<>();
-    if (!isEmpty(maBacSi) && !isEmpty(ngay)) {
-      for (LichLamViecDTO llv : dao.getByBacSi(maBacSi)) {
-        if (llv.getNgayLam().equals(ngay)) result.add(llv);
-      }
+    for (LichLamViecDTO llv : dao.getByBacSi(maBacSi)) {
+      if (ngay.equals(llv.getNgayLam())) result.add(llv);
     }
     return result;
   }
 
   public ArrayList<LichLamViecDTO> getSapToi(String maBacSi) {
     String today = LocalDate.now().format(DATE_FORMAT);
-    ArrayList<LichLamViecDTO> result = new ArrayList<>();
-    for (LichLamViecDTO llv : getByBacSi(maBacSi)) {
-      if (llv.getNgayLam().compareTo(today) >= 0) result.add(llv);
-    }
-    return result;
+    return filterByNgayMoc(maBacSi, today, true);
   }
 
   public ArrayList<LichLamViecDTO> getQuaKhu(String maBacSi) {
     String today = LocalDate.now().format(DATE_FORMAT);
+    return filterByNgayMoc(maBacSi, today, false);
+  }
+
+  private ArrayList<LichLamViecDTO> filterByNgayMoc(
+    String maBacSi,
+    String mocNgay,
+    boolean layTuHienTai
+  ) {
     ArrayList<LichLamViecDTO> result = new ArrayList<>();
     for (LichLamViecDTO llv : getByBacSi(maBacSi)) {
-      if (llv.getNgayLam().compareTo(today) < 0) result.add(llv);
+      boolean hopLe = layTuHienTai
+        ? llv.getNgayLam().compareTo(mocNgay) >= 0
+        : llv.getNgayLam().compareTo(mocNgay) < 0;
+      if (hopLe) {
+        result.add(llv);
+      }
     }
     return result;
   }
@@ -152,23 +157,14 @@ public class LichLamViecBUS {
   }
 
   public boolean duyetLich(String maLichLam) {
-    if (isEmpty(maLichLam)) {
-      return false;
-    }
-    LichLamViecDTO llv = getById(maLichLam);
-    if (llv == null) {
-      return false;
-    }
-    String trangThai = StatusNormalizer.normalizeLichLamViecStatus(
-      llv.getTrangThai()
-    );
-    if (!"CHO_DUYET".equals(trangThai)) {
-      return false;
-    }
-    return dao.updateTrangThai(maLichLam, "DA_DUYET");
+    return updateFromChoDuyet(maLichLam, "DA_DUYET");
   }
 
   public boolean tuChoiLich(String maLichLam) {
+    return updateFromChoDuyet(maLichLam, "TU_CHOI");
+  }
+
+  private boolean updateFromChoDuyet(String maLichLam, String trangThaiMoi) {
     if (isEmpty(maLichLam)) {
       return false;
     }
@@ -182,7 +178,7 @@ public class LichLamViecBUS {
     if (!"CHO_DUYET".equals(trangThai)) {
       return false;
     }
-    return dao.updateTrangThai(maLichLam, "TU_CHOI");
+    return dao.updateTrangThai(maLichLam, trangThaiMoi);
   }
 
   public int countAll() {
@@ -254,18 +250,33 @@ public class LichLamViecBUS {
       );
       return false;
     }
-    llv.setTrangThai(
-      StatusNormalizer.normalizeLichLamViecStatus(llv.getTrangThai())
+    String trangThaiChuan = StatusNormalizer.normalizeLichLamViecStatus(
+      llv.getTrangThai()
     );
-    if (!isUpdate && exists(llv.getMaLichLam())) {
+    llv.setTrangThai(trangThaiChuan);
+
+    boolean tonTai = exists(llv.getMaLichLam());
+    if (!isUpdate && tonTai) {
       System.out.println("Ma da ton tai");
       return false;
     }
-    if (isUpdate && !exists(llv.getMaLichLam())) {
+    if (isUpdate && !tonTai) {
       System.out.println("Ma khong ton tai");
       return false;
     }
     return true;
+  }
+
+  private ArrayList<LichLamViecDTO> filterFromAll(
+    Predicate<LichLamViecDTO> predicate
+  ) {
+    ArrayList<LichLamViecDTO> result = new ArrayList<>();
+    for (LichLamViecDTO llv : dao.getAll()) {
+      if (predicate.test(llv)) {
+        result.add(llv);
+      }
+    }
+    return result;
   }
 
   private boolean isValidDate(String date) {

@@ -12,7 +12,7 @@ import phongkham.db.DBConnection;
 public class HoSoBenhAnDAO {
 
   //=============METHOD CHUNG===================
-  //✅METHOD DÙNG CHUNG ( TẠO DTO TỪ RESULTSET)
+  //METHOD DÙNG CHUNG ( TẠO DTO TỪ RESULTSET)
   private HoSoBenhAnDTO mapResultSet(ResultSet rs) throws SQLException {
     HoSoBenhAnDTO hsba = new HoSoBenhAnDTO();
     hsba.setMaHoSo(rs.getString("MaHoSo"));
@@ -33,7 +33,7 @@ public class HoSoBenhAnDAO {
     return hsba;
   }
 
-  //✅METHOD DÙNG CHUNG (EXECUTE QUERY TRẢ VỀ LIST)
+  //METHOD DÙNG CHUNG (EXECUTE QUERY TRẢ VỀ LIST)
   private ArrayList<HoSoBenhAnDTO> executeQuery(String sql, Object... params) {
     ArrayList<HoSoBenhAnDTO> list = new ArrayList<>();
     try (
@@ -114,17 +114,9 @@ public class HoSoBenhAnDAO {
   // Tra cứu theo Trạng thái
   public ArrayList<HoSoBenhAnDTO> getByTrangThai(String trangThai) {
     String trangThaiChuan = StatusNormalizer.normalizeHoSoStatus(trangThai);
-    ArrayList<HoSoBenhAnDTO> ketQua = new ArrayList<>();
-    for (HoSoBenhAnDTO hs : getAll()) {
-      if (
-        trangThaiChuan.equals(
-          StatusNormalizer.normalizeHoSoStatus(hs.getTrangThai())
-        )
-      ) {
-        ketQua.add(hs);
-      }
-    }
-    return ketQua;
+    String sql =
+      "SELECT * FROM HoSoBenhAn WHERE TrangThai = ? ORDER BY NgayKham DESC";
+    return executeQuery(sql, trangThaiChuan);
   }
 
   // Cập nhật trạng thái

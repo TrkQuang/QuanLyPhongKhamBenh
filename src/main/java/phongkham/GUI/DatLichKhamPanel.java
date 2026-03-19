@@ -2,7 +2,6 @@ package phongkham.gui;
 
 import com.toedter.calendar.JDateChooser;
 import java.awt.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import javax.swing.*;
@@ -11,6 +10,7 @@ import phongkham.DTO.BacSiDTO;
 import phongkham.DTO.GoiDichVuDTO;
 import phongkham.DTO.HoSoBenhAnDTO;
 import phongkham.gui.datlich.DatLichKhamDialogs;
+import phongkham.gui.datlich.DatLichKhamFormHelper;
 import phongkham.gui.datlich.DatLichKhamService;
 
 public class DatLichKhamPanel extends JPanel {
@@ -231,7 +231,7 @@ public class DatLichKhamPanel extends JPanel {
   private void onGoiDichVuChanged() {
     String selected = (String) GoiDV.getSelectedItem();
     if (selected != null && !selected.isEmpty()) {
-      String MaGoi = selected.split(" - ")[0].trim();
+      String MaGoi = DatLichKhamFormHelper.extractCode(selected);
       GoiDichVuDTO goi = datLichService.layGoiDichVuTheoMa(MaGoi);
       if (goi != null) {
         txtMoTaGoi.setText(goi.getMoTa());
@@ -242,10 +242,26 @@ public class DatLichKhamPanel extends JPanel {
   }
 
   private void onDangKy() {
-    if (!validateInput()) return;
+    DatLichKhamFormHelper.ValidationResult validation =
+      DatLichKhamFormHelper.validate(
+        txtHoTen,
+        txtSDT,
+        txtCCCD,
+        dateNgaySinh,
+        dateNgayKham,
+        GoiDV,
+        BacSi
+      );
+    if (!validation.valid) {
+      JOptionPane.showMessageDialog(this, validation.message);
+      if (validation.focusTarget != null) {
+        validation.focusTarget.requestFocus();
+      }
+      return;
+    }
 
     String selectedGoi = (String) GoiDV.getSelectedItem();
-    String maGoi = selectedGoi.split(" - ")[0].trim();
+    String maGoi = DatLichKhamFormHelper.extractCode(selectedGoi);
     GoiDichVuDTO goiDV = datLichService.layGoiDichVuTheoMa(maGoi);
 
     if (goiDV == null) {
@@ -265,7 +281,7 @@ public class DatLichKhamPanel extends JPanel {
       JOptionPane.showMessageDialog(this, "Vui lòng chọn bác sĩ");
       return;
     }
-    String maBacSi = maBS.split(" - ")[0];
+    String maBacSi = DatLichKhamFormHelper.extractCode(maBS);
 
     DatLichKhamService.DangKyInput input = new DatLichKhamService.DangKyInput(
       txtHoTen.getText().trim(),
@@ -299,17 +315,20 @@ public class DatLichKhamPanel extends JPanel {
   }
 
   private void onRefresh() {
-    txtHoTen.setText("");
-    txtSDT.setText("");
-    txtCCCD.setText("");
-    txtDiaChi.setText("");
-    dateNgaySinh.setDate(null);
-    dateNgayKham.setDate(new Date());
-    radNam.setSelected(true);
-    GoiDV.setSelectedIndex(0);
-    BacSi.setSelectedIndex(0);
-    txtMoTaGoi.setText("");
+    DatLichKhamFormHelper.resetForm(
+      txtHoTen,
+      txtSDT,
+      txtCCCD,
+      txtDiaChi,
+      dateNgaySinh,
+      dateNgayKham,
+      radNam,
+      GoiDV,
+      BacSi,
+      txtMoTaGoi
+    );
     lblGiaGoi.setText("0 VND");
+    onGoiDichVuChanged();
   }
 
   private void onSearch() {
@@ -334,72 +353,5 @@ public class DatLichKhamPanel extends JPanel {
     } else {
       DatLichKhamDialogs.showHoSoDialog(this, list);
     }
-  }
-
-  private boolean validateInput() {
-    if (txtHoTen.getText().trim().isEmpty()) {
-      JOptionPane.showMessageDialog(this, "Vui lòng nhập họ tên!");
-      txtHoTen.requestFocus();
-      return false;
-    }
-
-    if (txtSDT.getText().trim().isEmpty()) {
-      JOptionPane.showMessageDialog(this, "Vui lòng nhập số điện thoại!");
-      txtSDT.requestFocus();
-      return false;
-    }
-
-    if (!txtSDT.getText().matches("^0\\d{9}$")) {
-      JOptionPane.showMessageDialog(this, "Số điện thoại không hợp lệ!");
-      txtSDT.requestFocus();
-      return false;
-    }
-
-    if (txtCCCD.getText().trim().isEmpty()) {
-      JOptionPane.showMessageDialog(this, "Vui lòng nhập CCCD!");
-      txtCCCD.requestFocus();
-      return false;
-    }
-
-    if (!txtCCCD.getText().trim().matches("^\\d{9,12}$")) {
-      JOptionPane.showMessageDialog(this, "CCCD không hợp lệ!");
-      txtCCCD.requestFocus();
-      return false;
-    }
-
-    if (dateNgaySinh.getDate() == null) {
-      JOptionPane.showMessageDialog(this, "Vui lòng chọn ngày sinh!");
-      return false;
-    }
-
-    if (dateNgayKham.getDate() == null) {
-      JOptionPane.showMessageDialog(this, "Vui lòng chọn ngày khám!");
-      return false;
-    }
-
-    if (GoiDV.getSelectedItem() == null) {
-      JOptionPane.showMessageDialog(this, "Vui lòng chọn gói dịch vụ!");
-      return false;
-    }
-
-    if (BacSi.getSelectedItem() == null) {
-      JOptionPane.showMessageDialog(this, "Vui lòng chọn bác sĩ!");
-      return false;
-    }
-
-    if (dateNgayKham.getDate() != null) {
-      LocalDate ngayKham = new java.sql.Date(
-        dateNgayKham.getDate().getTime()
-      ).toLocalDate();
-      if (ngayKham.isBefore(LocalDate.now())) {
-        JOptionPane.showMessageDialog(
-          this,
-          "Ngày khám không được trong quá khứ!"
-        );
-        return false;
-      }
-    }
-
-    return true;
   }
 }

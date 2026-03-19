@@ -60,6 +60,45 @@ public class LichKhamDAO {
     return false;
   }
 
+  private int queryCount(String sql, Object... params) {
+    try (
+      Connection conn = DBConnection.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql)
+    ) {
+      for (int i = 0; i < params.length; i++) {
+        ps.setObject(i + 1, params[i]);
+      }
+      try (ResultSet rs = ps.executeQuery()) {
+        return rs.next() ? rs.getInt(1) : 0;
+      }
+    } catch (SQLException e) {
+      System.err.println("❌ Lỗi truy vấn đếm: " + e.getMessage());
+    }
+    return 0;
+  }
+
+  private boolean hasOverlapSchedule(
+    String sql,
+    String maBacSi,
+    String thoiGianBatDau,
+    String thoiGianKetThuc,
+    Object... extraParams
+  ) {
+    Object[] params = new Object[1 + extraParams.length + 6];
+    int idx = 0;
+    params[idx++] = maBacSi;
+    for (Object extra : extraParams) {
+      params[idx++] = extra;
+    }
+    params[idx++] = thoiGianBatDau;
+    params[idx++] = thoiGianBatDau;
+    params[idx++] = thoiGianKetThuc;
+    params[idx++] = thoiGianKetThuc;
+    params[idx++] = thoiGianBatDau;
+    params[idx] = thoiGianKetThuc;
+    return queryCount(sql, params) > 0;
+  }
+
   // ===== CRUD OPERATIONS =====
 
   public ArrayList<LichKhamDTO> getAll() {
@@ -225,25 +264,7 @@ public class LichKhamDAO {
       "OR (ThoiGianBatDau < ? AND ThoiGianKetThuc >= ?) " +
       "OR (ThoiGianBatDau >= ? AND ThoiGianKetThuc <= ?))";
 
-    try (
-      Connection conn = DBConnection.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql)
-    ) {
-      ps.setString(1, maBacSi);
-      ps.setString(2, thoiGianBatDau);
-      ps.setString(3, thoiGianBatDau);
-      ps.setString(4, thoiGianKetThuc);
-      ps.setString(5, thoiGianKetThuc);
-      ps.setString(6, thoiGianBatDau);
-      ps.setString(7, thoiGianKetThuc);
-
-      try (ResultSet rs = ps.executeQuery()) {
-        return rs.next() && rs.getInt(1) > 0;
-      }
-    } catch (SQLException e) {
-      System.err.println("❌ Lỗi kiểm tra trùng lịch: " + e.getMessage());
-    }
-    return false;
+    return hasOverlapSchedule(sql, maBacSi, thoiGianBatDau, thoiGianKetThuc);
   }
 
   public boolean checkTrungLichWhenUpdate(
@@ -259,80 +280,40 @@ public class LichKhamDAO {
       "OR (ThoiGianBatDau < ? AND ThoiGianKetThuc >= ?) " +
       "OR (ThoiGianBatDau >= ? AND ThoiGianKetThuc <= ?))";
 
-    try (
-      Connection conn = DBConnection.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql)
-    ) {
-      ps.setString(1, maBacSi);
-      ps.setString(2, maLichKham);
-      ps.setString(3, thoiGianBatDau);
-      ps.setString(4, thoiGianBatDau);
-      ps.setString(5, thoiGianKetThuc);
-      ps.setString(6, thoiGianKetThuc);
-      ps.setString(7, thoiGianBatDau);
-      ps.setString(8, thoiGianKetThuc);
-
-      try (ResultSet rs = ps.executeQuery()) {
-        return rs.next() && rs.getInt(1) > 0;
-      }
-    } catch (SQLException e) {
-      System.err.println("❌ Lỗi kiểm tra trùng lịch: " + e.getMessage());
-    }
-    return false;
+    return hasOverlapSchedule(
+      sql,
+      maBacSi,
+      thoiGianBatDau,
+      thoiGianKetThuc,
+      maLichKham
+    );
   }
 
   // ===== UTILITY OPERATIONS =====
 
   public int countByTrangThai(String trangThai) {
-    String sql = "SELECT COUNT(*) FROM LichKham WHERE TrangThai = ?";
-
-    try (
-      Connection conn = DBConnection.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql)
-    ) {
-      ps.setString(1, trangThai);
-      try (ResultSet rs = ps.executeQuery()) {
-        return rs.next() ? rs.getInt(1) : 0;
-      }
-    } catch (SQLException e) {
-      System.err.println("❌ Lỗi đếm: " + e.getMessage());
-    }
-    return 0;
+    return queryCount(
+      "SELECT COUNT(*) FROM LichKham WHERE TrangThai = ?",
+      trangThai
+    );
   }
 
-  // ✅ THÊM: Đếm lịch khám theo bác sĩ
+  // Đếm lịch khám theo bác sĩ
   public int countByBacSi(String maBacSi) {
-    String sql = "SELECT COUNT(*) FROM LichKham WHERE MaBacSi = ?";
-
-    try (
-      Connection conn = DBConnection.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql)
-    ) {
-      ps.setString(1, maBacSi);
-      try (ResultSet rs = ps.executeQuery()) {
-        return rs.next() ? rs.getInt(1) : 0;
-      }
-    } catch (SQLException e) {
-      System.err.println("❌ Lỗi đếm: " + e.getMessage());
-    }
-    return 0;
+    return queryCount(
+      "SELECT COUNT(*) FROM LichKham WHERE MaBacSi = ?",
+      maBacSi
+    );
   }
 
-  // ✅ THÊM: Kiểm tra lịch khám tồn tại
+  // Kiểm tra lịch khám tồn tại
   public boolean exists(String maLichKham) {
-    String sql = "SELECT COUNT(*) FROM LichKham WHERE MaLichKham = ?";
-
-    try (
-      Connection conn = DBConnection.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql)
-    ) {
-      ps.setString(1, maLichKham);
-      try (ResultSet rs = ps.executeQuery()) {
-        return rs.next() && rs.getInt(1) > 0;
-      }
-    } catch (SQLException e) {
-      System.err.println("❌ Lỗi kiểm tra: " + e.getMessage());
-    }
-    return false;
+    return (
+      queryCount(
+        "SELECT COUNT(*) FROM LichKham WHERE MaLichKham = ?",
+        maLichKham
+      ) >
+      0
+    );
   }
 }

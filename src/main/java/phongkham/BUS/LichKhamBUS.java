@@ -57,7 +57,7 @@ public class LichKhamBUS {
       return "❌ Mã lịch khám không được để trống";
     }
 
-    LichKhamDTO lk = dao.getById(maLichKham);
+    LichKhamDTO lk = requireExisting(maLichKham);
     if (lk == null) {
       return "❌ Lịch khám không tồn tại";
     }
@@ -166,7 +166,7 @@ public class LichKhamBUS {
       return "❌ Mã lịch khám không được để trống";
     }
 
-    LichKhamDTO lk = dao.getById(maLichKham);
+    LichKhamDTO lk = requireExisting(maLichKham);
     if (lk == null) {
       return "❌ Lịch khám không tồn tại";
     }
@@ -195,7 +195,7 @@ public class LichKhamBUS {
     if (!isValidStatus(trangThaiChuan)) {
       return "❌ Trạng thái không hợp lệ (Đã đặt/Đang khám/Hoàn thành/Đã hủy)";
     }
-    if (!dao.exists(maLichKham)) {
+    if (requireExisting(maLichKham) == null) {
       return "❌ Lịch khám không tồn tại";
     }
 
@@ -233,17 +233,7 @@ public class LichKhamBUS {
       return new ArrayList<>();
     }
     String trangThaiChuan = StatusNormalizer.normalizeLichKhamStatus(trangThai);
-    ArrayList<LichKhamDTO> ketQua = new ArrayList<>();
-    for (LichKhamDTO item : dao.getAll()) {
-      if (
-        trangThaiChuan.equals(
-          StatusNormalizer.normalizeLichKhamStatus(item.getTrangThai())
-        )
-      ) {
-        ketQua.add(item);
-      }
-    }
-    return ketQua;
+    return dao.getByTrangThai(trangThaiChuan);
   }
 
   public ArrayList<LichKhamDTO> getByNgay(String ngay) {
@@ -368,5 +358,12 @@ public class LichKhamBUS {
     } catch (Exception e) {
       return false;
     }
+  }
+
+  private LichKhamDTO requireExisting(String maLichKham) {
+    if (isEmpty(maLichKham)) {
+      return null;
+    }
+    return dao.getById(maLichKham);
   }
 }

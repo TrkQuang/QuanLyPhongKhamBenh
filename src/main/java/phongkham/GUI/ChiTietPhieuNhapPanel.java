@@ -15,13 +15,12 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import phongkham.BUS.CTPhieuNhapBUS;
 import phongkham.BUS.PhieuNhapBUS;
-import phongkham.BUS.ThuocBUS;
 import phongkham.DTO.CTPhieuNhapDTO;
 import phongkham.DTO.PhieuNhapDTO;
-import phongkham.DTO.ThuocDTO;
 import phongkham.Utils.StatusColorUtil;
 import phongkham.Utils.StatusDisplayUtil;
 import phongkham.Utils.StatusNormalizer;
+import phongkham.gui.phieunhap.ThuocNhapDialogHelper;
 
 public class ChiTietPhieuNhapPanel extends JPanel {
 
@@ -164,7 +163,7 @@ public class ChiTietPhieuNhapPanel extends JPanel {
   }
 
   private void themDong() {
-    ThuocNhapDialogInput input = hienThiDialogThuoc(null);
+    ThuocNhapDialogHelper.Input input = hienThiDialogThuoc(null);
     if (input == null) {
       return;
     }
@@ -194,8 +193,8 @@ public class ChiTietPhieuNhapPanel extends JPanel {
     }
     String maCTPN = model.getValueAt(row, 0).toString();
 
-    ThuocNhapDialogInput input = hienThiDialogThuoc(
-      new ThuocNhapDialogInput(
+    ThuocNhapDialogHelper.Input input = hienThiDialogThuoc(
+      new ThuocNhapDialogHelper.Input(
         model.getValueAt(row, 1).toString(),
         Integer.parseInt(model.getValueAt(row, 2).toString()),
         parseBigDecimalFromFormatted(model.getValueAt(row, 3).toString()),
@@ -319,120 +318,15 @@ public class ChiTietPhieuNhapPanel extends JPanel {
     return "CTPN" + System.currentTimeMillis();
   }
 
-  private ThuocNhapDialogInput hienThiDialogThuoc(
-    ThuocNhapDialogInput macDinh
+  private ThuocNhapDialogHelper.Input hienThiDialogThuoc(
+    ThuocNhapDialogHelper.Input macDinh
   ) {
-    ArrayList<ThuocDTO> dsThuoc = new ThuocBUS().list();
-    if (dsThuoc == null || dsThuoc.isEmpty()) {
-      JOptionPane.showMessageDialog(this, "Không có thuốc để thêm!");
-      return null;
-    }
-
-    JComboBox<String> cbThuoc = new JComboBox<>();
-    NumberFormat formatter = NumberFormat.getInstance(new Locale("vi", "VN"));
-    int selectedIndex = 0;
-    for (int i = 0; i < dsThuoc.size(); i++) {
-      ThuocDTO t = dsThuoc.get(i);
-      cbThuoc.addItem(
-        t.getMaThuoc() +
-          " - " +
-          t.getTenThuoc() +
-          " (Giá bán: " +
-          formatter.format(t.getDonGiaBan()) +
-          " đ)"
-      );
-      if (macDinh != null && t.getMaThuoc().equals(macDinh.maThuoc)) {
-        selectedIndex = i;
-      }
-    }
-    cbThuoc.setSelectedIndex(selectedIndex);
-
-    JSpinner spinnerSoLuong = new JSpinner(
-      new SpinnerNumberModel(
-        macDinh == null ? 1 : macDinh.soLuong,
-        1,
-        100000,
-        1
-      )
-    );
-    JTextField txtDonGia = new JTextField(
-      macDinh == null
-        ? String.valueOf(dsThuoc.get(selectedIndex).getDonGiaBan())
-        : macDinh.donGia.toPlainString()
-    );
-    JTextField txtHanSuDung = new JTextField(
-      macDinh == null || macDinh.hanSuDung == null
-        ? ""
-        : macDinh.hanSuDung
-            .toLocalDate()
-            .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-    );
-
-    cbThuoc.addActionListener(e -> {
-      int idx = cbThuoc.getSelectedIndex();
-      if (idx >= 0 && idx < dsThuoc.size()) {
-        txtDonGia.setText(String.valueOf(dsThuoc.get(idx).getDonGiaBan()));
-      }
-    });
-
-    Object[] message = {
-      "Chọn thuốc:",
-      cbThuoc,
-      "Số lượng:",
-      spinnerSoLuong,
-      "Đơn giá nhập:",
-      txtDonGia,
-      "Hạn sử dụng (dd/MM/yyyy, tùy chọn):",
-      txtHanSuDung,
-    };
-
-    int option = JOptionPane.showConfirmDialog(
+    return ThuocNhapDialogHelper.show(
       this,
-      message,
-      macDinh == null ? "Thêm thuốc vào phiếu" : "Sửa dòng thuốc",
-      JOptionPane.OK_CANCEL_OPTION,
-      JOptionPane.PLAIN_MESSAGE
+      new phongkham.BUS.ThuocBUS().list(),
+      macDinh,
+      macDinh == null ? "Thêm thuốc vào phiếu" : "Sửa dòng thuốc"
     );
-
-    if (option != JOptionPane.OK_OPTION) {
-      return null;
-    }
-
-    try {
-      int idx = cbThuoc.getSelectedIndex();
-      if (idx < 0 || idx >= dsThuoc.size()) {
-        JOptionPane.showMessageDialog(this, "Vui lòng chọn thuốc!");
-        return null;
-      }
-
-      int soLuong = (int) spinnerSoLuong.getValue();
-      BigDecimal donGia = new BigDecimal(txtDonGia.getText().trim());
-      if (donGia.compareTo(BigDecimal.ZERO) <= 0) {
-        JOptionPane.showMessageDialog(this, "Đơn giá phải lớn hơn 0!");
-        return null;
-      }
-
-      LocalDateTime hanSuDung = parseHanSuDung(txtHanSuDung.getText().trim());
-      if (
-        hanSuDung != null && hanSuDung.toLocalDate().isBefore(LocalDate.now())
-      ) {
-        JOptionPane.showMessageDialog(
-          this,
-          "Hạn sử dụng phải từ hôm nay trở đi!"
-        );
-        return null;
-      }
-
-      return new ThuocNhapDialogInput(
-        dsThuoc.get(idx).getMaThuoc(),
-        soLuong,
-        donGia,
-        hanSuDung
-      );
-    } catch (Exception ex) {
-      JOptionPane.showMessageDialog(this, "Dữ liệu không hợp lệ!");
-      return null;
-    }
   }
 
   private BigDecimal parseBigDecimalFromFormatted(String text) {
@@ -452,25 +346,5 @@ public class ChiTietPhieuNhapPanel extends JPanel {
       DateTimeFormatter.ofPattern("dd/MM/yyyy")
     );
     return date.atStartOfDay();
-  }
-
-  private static class ThuocNhapDialogInput {
-
-    private final String maThuoc;
-    private final int soLuong;
-    private final BigDecimal donGia;
-    private final LocalDateTime hanSuDung;
-
-    private ThuocNhapDialogInput(
-      String maThuoc,
-      int soLuong,
-      BigDecimal donGia,
-      LocalDateTime hanSuDung
-    ) {
-      this.maThuoc = maThuoc;
-      this.soLuong = soLuong;
-      this.donGia = donGia;
-      this.hanSuDung = hanSuDung;
-    }
   }
 }

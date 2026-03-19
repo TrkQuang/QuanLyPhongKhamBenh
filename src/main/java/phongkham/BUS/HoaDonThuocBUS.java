@@ -19,23 +19,7 @@ public class HoaDonThuocBUS {
 
   // Thêm HoaDonThuoc
   public boolean addHoaDonThuoc(HoaDonThuocDTO hoaDon) {
-    if (hoaDon == null) {
-      System.err.println("Hóa đơn không được null");
-      return false;
-    }
-    if (
-      hoaDon.getTenBenhNhan() == null ||
-      hoaDon.getTenBenhNhan().trim().isEmpty()
-    ) {
-      System.err.println("Tên bệnh nhân không được để trống");
-      return false;
-    }
-    if (!isSoDienThoaiHopLe(hoaDon.getSdtBenhNhan())) {
-      System.err.println("Số điện thoại bệnh nhân không hợp lệ");
-      return false;
-    }
-    if (hoaDon.getTongTien() < 0) {
-      System.err.println("Tổng tiền không được âm");
+    if (!validateHoaDonInput(hoaDon, false)) {
       return false;
     }
 
@@ -44,27 +28,7 @@ public class HoaDonThuocBUS {
 
   // Cập nhật HoaDonThuoc
   public boolean updateHoaDonThuoc(HoaDonThuocDTO hoaDon) {
-    if (hoaDon == null) {
-      System.err.println("Hóa đơn không được null");
-      return false;
-    }
-    if (hoaDon.getMaHoaDon() == null || hoaDon.getMaHoaDon().trim().isEmpty()) {
-      System.err.println("Mã hóa đơn không được rỗng");
-      return false;
-    }
-    if (
-      hoaDon.getTenBenhNhan() == null ||
-      hoaDon.getTenBenhNhan().trim().isEmpty()
-    ) {
-      System.err.println("Tên bệnh nhân không được để trống");
-      return false;
-    }
-    if (!isSoDienThoaiHopLe(hoaDon.getSdtBenhNhan())) {
-      System.err.println("Số điện thoại bệnh nhân không hợp lệ");
-      return false;
-    }
-    if (hoaDon.getTongTien() < 0) {
-      System.err.println("Tổng tiền không được âm");
+    if (!validateHoaDonInput(hoaDon, true)) {
       return false;
     }
     return hoaDonThuocDAO.update(hoaDon);
@@ -72,7 +36,7 @@ public class HoaDonThuocBUS {
 
   // Xóa HoaDonThuoc
   public boolean deleteHoaDonThuoc(String maHoaDon) {
-    HoaDonThuocDTO hoaDon = hoaDonThuocDAO.getById(maHoaDon);
+    HoaDonThuocDTO hoaDon = getHoaDonOrNull(maHoaDon);
     if (hoaDon == null) {
       System.err.println("Hóa đơn không tồn tại");
       return false;
@@ -108,37 +72,17 @@ public class HoaDonThuocBUS {
 
   // Lấy hóa đơn chưa thanh toán
   public List<HoaDonThuocDTO> getUnpaidInvoices() {
-    java.util.List<HoaDonThuocDTO> result = new java.util.ArrayList<>();
-    for (HoaDonThuocDTO hd : hoaDonThuocDAO.getAll()) {
-      if (
-        "CHUA_THANH_TOAN".equals(
-          StatusNormalizer.normalizePaymentStatus(hd.getTrangThaiThanhToan())
-        )
-      ) {
-        result.add(hd);
-      }
-    }
-    return result;
+    return filterByPaymentStatus("CHUA_THANH_TOAN");
   }
 
   // Lấy hóa đơn đã thanh toán
   public List<HoaDonThuocDTO> getPaidInvoices() {
-    java.util.List<HoaDonThuocDTO> result = new java.util.ArrayList<>();
-    for (HoaDonThuocDTO hd : hoaDonThuocDAO.getAll()) {
-      if (
-        "DA_THANH_TOAN".equals(
-          StatusNormalizer.normalizePaymentStatus(hd.getTrangThaiThanhToan())
-        )
-      ) {
-        result.add(hd);
-      }
-    }
-    return result;
+    return filterByPaymentStatus("DA_THANH_TOAN");
   }
 
   // Thanh toán hóa đơn
   public boolean payInvoice(String maHoaDon) {
-    HoaDonThuocDTO hoaDon = hoaDonThuocDAO.getById(maHoaDon);
+    HoaDonThuocDTO hoaDon = getHoaDonOrNull(maHoaDon);
     if (hoaDon == null) {
       System.err.println("Hóa đơn không tồn tại");
       return false;
@@ -159,7 +103,7 @@ public class HoaDonThuocBUS {
   // Hoàn hóa đơn
   // Cập nhật trạng thái thành "Hoàn hóa đơn" và xóa thời gian thanh toán
   public boolean refundInvoice(String maHoaDon) {
-    HoaDonThuocDTO hoaDon = hoaDonThuocDAO.getById(maHoaDon);
+    HoaDonThuocDTO hoaDon = getHoaDonOrNull(maHoaDon);
     if (hoaDon == null) {
       System.err.println("Hóa đơn không tồn tại");
       return false;
@@ -193,7 +137,7 @@ public class HoaDonThuocBUS {
 
   // Kiểm tra xem hóa đơn có thể chỉnh sửa không
   public boolean canEditInvoice(String maHoaDon) {
-    HoaDonThuocDTO hoaDon = hoaDonThuocDAO.getById(maHoaDon);
+    HoaDonThuocDTO hoaDon = getHoaDonOrNull(maHoaDon);
     if (hoaDon == null) return false;
 
     // Không cho chỉnh sửa hóa đơn đã thanh toán
@@ -233,7 +177,7 @@ public class HoaDonThuocBUS {
       return false;
     }
 
-    HoaDonThuocDTO hoaDon = hoaDonThuocDAO.getById(maHoaDon);
+    HoaDonThuocDTO hoaDon = getHoaDonOrNull(maHoaDon);
     if (hoaDon == null) {
       System.err.println("Hóa đơn không tồn tại");
       return false;
@@ -397,5 +341,57 @@ public class HoaDonThuocBUS {
       }
     }
     return result;
+  }
+
+  private boolean validateHoaDonInput(
+    HoaDonThuocDTO hoaDon,
+    boolean requireMaHoaDon
+  ) {
+    if (hoaDon == null) {
+      System.err.println("Hóa đơn không được null");
+      return false;
+    }
+    if (requireMaHoaDon && isBlank(hoaDon.getMaHoaDon())) {
+      System.err.println("Mã hóa đơn không được rỗng");
+      return false;
+    }
+    if (isBlank(hoaDon.getTenBenhNhan())) {
+      System.err.println("Tên bệnh nhân không được để trống");
+      return false;
+    }
+    if (!isSoDienThoaiHopLe(hoaDon.getSdtBenhNhan())) {
+      System.err.println("Số điện thoại bệnh nhân không hợp lệ");
+      return false;
+    }
+    if (hoaDon.getTongTien() < 0) {
+      System.err.println("Tổng tiền không được âm");
+      return false;
+    }
+    return true;
+  }
+
+  private java.util.List<HoaDonThuocDTO> filterByPaymentStatus(String status) {
+    java.util.List<HoaDonThuocDTO> result = new java.util.ArrayList<>();
+    for (HoaDonThuocDTO hd : hoaDonThuocDAO.getAll()) {
+      if (
+        status.equals(
+          StatusNormalizer.normalizePaymentStatus(hd.getTrangThaiThanhToan())
+        )
+      ) {
+        result.add(hd);
+      }
+    }
+    return result;
+  }
+
+  private HoaDonThuocDTO getHoaDonOrNull(String maHoaDon) {
+    if (isBlank(maHoaDon)) {
+      return null;
+    }
+    return hoaDonThuocDAO.getById(maHoaDon);
+  }
+
+  private boolean isBlank(String value) {
+    return value == null || value.trim().isEmpty();
   }
 }

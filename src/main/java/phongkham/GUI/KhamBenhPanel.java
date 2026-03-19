@@ -88,10 +88,7 @@ public class KhamBenhPanel extends JPanel {
     btnRefreshList.setPreferredSize(new Dimension(125, 32));
     btnExportExcel.setPreferredSize(new Dimension(145, 32));
     btnExportPdf.setPreferredSize(new Dimension(145, 32));
-    btnRefreshList.addActionListener(e -> {
-      loadDanhSachHoSoChoKham();
-      lamMoi();
-    });
+    btnRefreshList.addActionListener(e -> lamMoi());
     btnExportExcel.addActionListener(e -> xuatDanhSachHoSoExcel());
     btnExportPdf.addActionListener(e -> xuatHoSoDangChonPdf());
     topActions.add(btnRefreshList);
@@ -390,22 +387,8 @@ public class KhamBenhPanel extends JPanel {
       return;
     }
 
-    // Hiển thị thông tin bệnh nhân
-    lblMaHS.setText(hs.getMaHoSo());
-    lblHoTen.setText(hs.getHoTen());
-    lblSDT.setText(hs.getSoDienThoai());
-    lblNgaySinh.setText(
-      hs.getNgaySinh() != null ? hs.getNgaySinh().toString() : ""
-    );
-    lblGioiTinh.setText(hs.getGioiTinh());
-    lblDiaChi.setText(hs.getDiaChi());
-
-    // Clear form
-    txtTrieuChung.setText("");
-    txtChanDoan.setText("");
-    txtKetLuan.setText("");
-    txtLoiDan.setText("");
-    modelDonThuoc.setRowCount(0);
+    hienThiThongTinHoSo(hs);
+    clearKhamForm();
   }
 
   private void themThuocVaoDon() {
@@ -536,26 +519,48 @@ public class KhamBenhPanel extends JPanel {
   private void lamMoi() {
     loadDanhSachHoSoChoKham();
     maHoSoHienTai = null;
+    clearThongTinBenhNhan();
+    clearKhamForm();
+    clearThuocInputForm();
 
+    tableDanhSachHS.clearSelection();
+  }
+
+  private void hienThiThongTinHoSo(HoSoBenhAnDTO hs) {
+    lblMaHS.setText(hs.getMaHoSo());
+    lblHoTen.setText(hs.getHoTen());
+    lblSDT.setText(hs.getSoDienThoai());
+    lblNgaySinh.setText(
+      hs.getNgaySinh() != null ? hs.getNgaySinh().toString() : ""
+    );
+    lblGioiTinh.setText(hs.getGioiTinh());
+    lblDiaChi.setText(hs.getDiaChi());
+  }
+
+  private void clearThongTinBenhNhan() {
     lblMaHS.setText("-");
     lblHoTen.setText("-");
     lblSDT.setText("-");
     lblNgaySinh.setText("-");
     lblGioiTinh.setText("-");
     lblDiaChi.setText("-");
+  }
 
+  private void clearKhamForm() {
     txtTrieuChung.setText("");
     txtChanDoan.setText("");
     txtKetLuan.setText("");
     txtLoiDan.setText("");
+    modelDonThuoc.setRowCount(0);
+  }
 
+  private void clearThuocInputForm() {
     txtSoLuong.setText("");
     txtLieuDung.setText("");
     txtCachDung.setText("");
-
-    modelDonThuoc.setRowCount(0);
-
-    tableDanhSachHS.clearSelection();
+    if (cboThuoc.getItemCount() > 0) {
+      cboThuoc.setSelectedIndex(0);
+    }
   }
 
   private void xuatDanhSachHoSoExcel() {

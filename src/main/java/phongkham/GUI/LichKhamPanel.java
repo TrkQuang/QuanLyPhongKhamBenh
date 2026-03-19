@@ -173,85 +173,27 @@ public class LichKhamPanel extends JPanel {
   }
 
   private void loadData() {
-    tableModel.setRowCount(0);
-    ArrayList<LichKhamDTO> danhSach = lichKhamBUS.getAll();
-
-    for (LichKhamDTO lk : danhSach) {
-      Object[] row = {
-        lk.getMaLichKham(),
-        lk.getMaGoi(),
-        lk.getMaBacSi(),
-        lk.getThoiGianBatDau(),
-        lk.getThoiGianKetThuc(),
-        StatusDisplayUtil.lichKham(lk.getTrangThai()),
-        lk.getMaDinhDanhTam(),
-      };
-      tableModel.addRow(row);
-    }
+    hienThiDanhSach(lichKhamBUS.getAll());
   }
 
   private void timKiem() {
-    tableModel.setRowCount(0);
     String keyword = txtTimKiem.getText().trim();
     String trangThai = (String) cboTrangThai.getSelectedItem();
-
-    ArrayList<LichKhamDTO> danhSach;
-
-    if (trangThai.equals("Tất cả")) {
-      if (keyword.isEmpty()) {
-        danhSach = lichKhamBUS.getAll();
-      } else {
-        danhSach = lichKhamBUS.search(keyword);
-      }
-    } else {
-      String trangThaiTimKiem = mapTrangThaiLoc(trangThai);
-      danhSach = lichKhamBUS.getByTrangThai(trangThaiTimKiem);
-      if (!keyword.isEmpty()) {
-        ArrayList<LichKhamDTO> filtered = new ArrayList<>();
-        for (LichKhamDTO lk : danhSach) {
-          if (
-            lk.getMaLichKham().toLowerCase().contains(keyword.toLowerCase()) ||
-            lk.getMaBacSi().toLowerCase().contains(keyword.toLowerCase()) ||
-            lk.getMaGoi().toLowerCase().contains(keyword.toLowerCase())
-          ) {
-            filtered.add(lk);
-          }
-        }
-        danhSach = filtered;
-      }
-    }
-
-    for (LichKhamDTO lk : danhSach) {
-      Object[] row = {
-        lk.getMaLichKham(),
-        lk.getMaGoi(),
-        lk.getMaBacSi(),
-        lk.getThoiGianBatDau(),
-        lk.getThoiGianKetThuc(),
-        StatusDisplayUtil.lichKham(lk.getTrangThai()),
-        lk.getMaDinhDanhTam(),
-      };
-      tableModel.addRow(row);
-    }
+    hienThiDanhSach(layDanhSachTheoBoLoc(keyword, trangThai));
   }
 
   private void huyLichKham() {
-    int selectedRow = tableLichKham.getSelectedRow();
-    if (selectedRow == -1) {
-      JOptionPane.showMessageDialog(this, "Vui lòng chọn lịch khám cần hủy!");
+    String maLichKham = layMaLichDangChon("Vui lòng chọn lịch khám cần hủy!");
+    if (maLichKham == null) {
       return;
     }
 
-    String maLichKham = tableModel.getValueAt(selectedRow, 0).toString();
-
-    int confirm = JOptionPane.showConfirmDialog(
-      this,
-      "Bạn có chắc muốn hủy lịch khám " + maLichKham + "?",
-      "Xác nhận hủy",
-      JOptionPane.YES_NO_OPTION
-    );
-
-    if (confirm == JOptionPane.YES_OPTION) {
+    if (
+      xacNhanHanhDong(
+        "Bạn có chắc muốn hủy lịch khám " + maLichKham + "?",
+        "Xác nhận hủy"
+      )
+    ) {
       String result = lichKhamBUS.huyLichKham(maLichKham);
       JOptionPane.showMessageDialog(this, result);
 
@@ -262,17 +204,17 @@ public class LichKhamPanel extends JPanel {
   }
 
   private void xacNhanLichKham() {
-    int selectedRow = tableLichKham.getSelectedRow();
-    if (selectedRow == -1) {
-      JOptionPane.showMessageDialog(
-        this,
-        "Vui lòng chọn lịch khám cần xác nhận!"
-      );
+    String maLichKham = layMaLichDangChon(
+      "Vui lòng chọn lịch khám cần xác nhận!"
+    );
+    if (maLichKham == null) {
       return;
     }
-
-    String maLichKham = tableModel.getValueAt(selectedRow, 0).toString();
     LichKhamDTO lk = lichKhamBUS.getById(maLichKham);
+    if (lk == null) {
+      JOptionPane.showMessageDialog(this, "Không tìm thấy lịch khám!");
+      return;
+    }
     String trangThaiHienTai = StatusNormalizer.normalizeLichKhamStatus(
       lk.getTrangThai()
     );
@@ -285,14 +227,7 @@ public class LichKhamPanel extends JPanel {
       return;
     }
 
-    int confirm = JOptionPane.showConfirmDialog(
-      this,
-      "Xác nhận lịch khám " + maLichKham + "?",
-      "Xác nhận",
-      JOptionPane.YES_NO_OPTION
-    );
-
-    if (confirm == JOptionPane.YES_OPTION) {
+    if (xacNhanHanhDong("Xác nhận lịch khám " + maLichKham + "?", "Xác nhận")) {
       lichKhamBUS.updateTrangThai(maLichKham, "DA_XAC_NHAN");
       JOptionPane.showMessageDialog(this, "Đã xác nhận lịch khám thành công!");
       loadData();
@@ -300,17 +235,17 @@ public class LichKhamPanel extends JPanel {
   }
 
   private void tuChoiLichKham() {
-    int selectedRow = tableLichKham.getSelectedRow();
-    if (selectedRow == -1) {
-      JOptionPane.showMessageDialog(
-        this,
-        "Vui lòng chọn lịch khám cần từ chối!"
-      );
+    String maLichKham = layMaLichDangChon(
+      "Vui lòng chọn lịch khám cần từ chối!"
+    );
+    if (maLichKham == null) {
       return;
     }
-
-    String maLichKham = tableModel.getValueAt(selectedRow, 0).toString();
     LichKhamDTO lk = lichKhamBUS.getById(maLichKham);
+    if (lk == null) {
+      JOptionPane.showMessageDialog(this, "Không tìm thấy lịch khám!");
+      return;
+    }
     String trangThaiHienTai = StatusNormalizer.normalizeLichKhamStatus(
       lk.getTrangThai()
     );
@@ -322,14 +257,12 @@ public class LichKhamPanel extends JPanel {
       return;
     }
 
-    int confirm = JOptionPane.showConfirmDialog(
-      this,
-      "Xác nhận từ chối lịch khám " + maLichKham + "?",
-      "Xác nhận",
-      JOptionPane.YES_NO_OPTION
-    );
-
-    if (confirm == JOptionPane.YES_OPTION) {
+    if (
+      xacNhanHanhDong(
+        "Xác nhận từ chối lịch khám " + maLichKham + "?",
+        "Xác nhận"
+      )
+    ) {
       String result = lichKhamBUS.updateTrangThai(maLichKham, "DA_HUY");
       JOptionPane.showMessageDialog(
         this,
@@ -342,14 +275,15 @@ public class LichKhamPanel extends JPanel {
   }
 
   private void batDauKham() {
-    int selectedRow = tableLichKham.getSelectedRow();
-    if (selectedRow == -1) {
-      JOptionPane.showMessageDialog(this, "Vui lòng chọn lịch khám!");
+    String maLichKham = layMaLichDangChon("Vui lòng chọn lịch khám!");
+    if (maLichKham == null) {
       return;
     }
-
-    String maLichKham = tableModel.getValueAt(selectedRow, 0).toString();
     LichKhamDTO lk = lichKhamBUS.getById(maLichKham);
+    if (lk == null) {
+      JOptionPane.showMessageDialog(this, "Không tìm thấy lịch khám!");
+      return;
+    }
     String trangThaiHienTai = StatusNormalizer.normalizeLichKhamStatus(
       lk.getTrangThai()
     );
@@ -362,20 +296,85 @@ public class LichKhamPanel extends JPanel {
       return;
     }
 
-    int confirm = JOptionPane.showConfirmDialog(
-      this,
-      "Bắt đầu khám cho lịch " + maLichKham + "?",
-      "Xác nhận",
-      JOptionPane.YES_NO_OPTION
-    );
-
-    if (confirm == JOptionPane.YES_OPTION) {
+    if (
+      xacNhanHanhDong("Bắt đầu khám cho lịch " + maLichKham + "?", "Xác nhận")
+    ) {
       String result = lichKhamBUS.updateTrangThai(maLichKham, "DANG_KHAM");
       JOptionPane.showMessageDialog(this, result);
       if (result.contains("thành công")) {
         loadData();
       }
     }
+  }
+
+  private ArrayList<LichKhamDTO> layDanhSachTheoBoLoc(
+    String keyword,
+    String trangThaiHienThi
+  ) {
+    if ("Tất cả".equals(trangThaiHienThi)) {
+      return keyword.isEmpty()
+        ? lichKhamBUS.getAll()
+        : lichKhamBUS.search(keyword);
+    }
+
+    String trangThaiTimKiem = mapTrangThaiLoc(trangThaiHienThi);
+    ArrayList<LichKhamDTO> danhSachTheoTrangThai = lichKhamBUS.getByTrangThai(
+      trangThaiTimKiem
+    );
+    if (keyword.isEmpty()) {
+      return danhSachTheoTrangThai;
+    }
+
+    ArrayList<LichKhamDTO> ketQua = new ArrayList<>();
+    String keywordLower = keyword.toLowerCase();
+    for (LichKhamDTO lichKham : danhSachTheoTrangThai) {
+      if (
+        lichKham.getMaLichKham().toLowerCase().contains(keywordLower) ||
+        lichKham.getMaBacSi().toLowerCase().contains(keywordLower) ||
+        lichKham.getMaGoi().toLowerCase().contains(keywordLower)
+      ) {
+        ketQua.add(lichKham);
+      }
+    }
+    return ketQua;
+  }
+
+  private void hienThiDanhSach(ArrayList<LichKhamDTO> danhSach) {
+    tableModel.setRowCount(0);
+    for (LichKhamDTO lichKham : danhSach) {
+      tableModel.addRow(
+        new Object[] {
+          lichKham.getMaLichKham(),
+          lichKham.getMaGoi(),
+          lichKham.getMaBacSi(),
+          lichKham.getThoiGianBatDau(),
+          lichKham.getThoiGianKetThuc(),
+          StatusDisplayUtil.lichKham(lichKham.getTrangThai()),
+          lichKham.getMaDinhDanhTam(),
+        }
+      );
+    }
+  }
+
+  private String layMaLichDangChon(String messageNeuChuaChon) {
+    int selectedRow = tableLichKham.getSelectedRow();
+    if (selectedRow == -1) {
+      JOptionPane.showMessageDialog(this, messageNeuChuaChon);
+      return null;
+    }
+    return tableModel.getValueAt(selectedRow, 0).toString();
+  }
+
+  private boolean xacNhanHanhDong(String message, String title) {
+    return (
+      JOptionPane.showConfirmDialog(
+        this,
+        message,
+        title,
+        JOptionPane.YES_NO_OPTION
+      ) ==
+      JOptionPane.YES_OPTION
+    );
   }
 
   private void showThongKe() {

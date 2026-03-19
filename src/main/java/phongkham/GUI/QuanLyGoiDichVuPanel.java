@@ -7,14 +7,11 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.GridLayout;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -24,7 +21,7 @@ import javax.swing.SwingConstants;
 import phongkham.BUS.GoiDichVuBUS;
 import phongkham.BUS.KhoaBUS;
 import phongkham.DTO.GoiDichVuDTO;
-import phongkham.DTO.KhoaDTO;
+import phongkham.gui.goidichvu.GoiDichVuDialogHelper;
 
 public class QuanLyGoiDichVuPanel extends JPanel {
 
@@ -196,138 +193,35 @@ public class QuanLyGoiDichVuPanel extends JPanel {
     return btn;
   }
 
-  private JComboBox<String> taoComboKhoa(String maKhoaMacDinh) {
-    JComboBox<String> cboKhoa = new JComboBox<>();
-    ArrayList<KhoaDTO> danhSachKhoa = khoaBUS.getAll();
-    for (KhoaDTO khoa : danhSachKhoa) {
-      String giaTri = khoa.getMaKhoa() + " - " + khoa.getTenKhoa();
-      cboKhoa.addItem(giaTri);
-      if (
-        maKhoaMacDinh != null &&
-        maKhoaMacDinh.equalsIgnoreCase(khoa.getMaKhoa())
-      ) {
-        cboKhoa.setSelectedItem(giaTri);
-      }
-    }
-    return cboKhoa;
-  }
-
   private void moDialogThem() {
-    JTextField txtMaGoi = new JTextField();
-    JTextField txtTenGoi = new JTextField();
-    JTextField txtGia = new JTextField();
-    JTextField txtThoiGian = new JTextField();
-    JTextField txtMoTa = new JTextField();
-    JComboBox<String> cboKhoa = taoComboKhoa(null);
-
-    JPanel panelNhap = new JPanel(new GridLayout(0, 2, 10, 10));
-    panelNhap.add(new JLabel("Mã gói:"));
-    panelNhap.add(txtMaGoi);
-    panelNhap.add(new JLabel("Tên gói:"));
-    panelNhap.add(txtTenGoi);
-    panelNhap.add(new JLabel("Giá dịch vụ:"));
-    panelNhap.add(txtGia);
-    panelNhap.add(new JLabel("Thời gian khám (phút):"));
-    panelNhap.add(txtThoiGian);
-    panelNhap.add(new JLabel("Khoa phụ trách:"));
-    panelNhap.add(cboKhoa);
-    panelNhap.add(new JLabel("Mô tả:"));
-    panelNhap.add(txtMoTa);
-
-    int luaChon = JOptionPane.showConfirmDialog(
-      this,
-      panelNhap,
-      "Thêm gói dịch vụ",
-      JOptionPane.OK_CANCEL_OPTION,
-      JOptionPane.PLAIN_MESSAGE
-    );
-
-    if (luaChon != JOptionPane.OK_OPTION) {
+    GoiDichVuDTO goiMoi = GoiDichVuDialogHelper.showCreateDialog(this, khoaBUS);
+    if (goiMoi == null) {
       return;
     }
 
-    try {
-      GoiDichVuDTO goiMoi = new GoiDichVuDTO();
-      goiMoi.setMaGoi(txtMaGoi.getText().trim());
-      goiMoi.setTenGoi(txtTenGoi.getText().trim());
-      goiMoi.setGiaDichVu(new BigDecimal(txtGia.getText().trim()));
-      goiMoi.setThoiGianKham(txtThoiGian.getText().trim());
-      goiMoi.setMoTa(txtMoTa.getText().trim());
-      goiMoi.setMaKhoa(
-        ((String) cboKhoa.getSelectedItem()).split(" - ")[0].trim()
-      );
-
-      if (goiDichVuBUS.insert(goiMoi)) {
-        JOptionPane.showMessageDialog(this, "✅ Thêm gói dịch vụ thành công");
-        loadData();
-      } else {
-        JOptionPane.showMessageDialog(this, "❌ Không thể thêm gói dịch vụ");
-      }
-    } catch (Exception ex) {
-      JOptionPane.showMessageDialog(this, "❌ Dữ liệu không hợp lệ");
+    if (goiDichVuBUS.insert(goiMoi)) {
+      JOptionPane.showMessageDialog(this, "✅ Thêm gói dịch vụ thành công");
+      loadData();
+    } else {
+      JOptionPane.showMessageDialog(this, "❌ Không thể thêm gói dịch vụ");
     }
   }
 
   private void moDialogSua(GoiDichVuDTO goiDichVu) {
-    JTextField txtTenGoi = new JTextField(goiDichVu.getTenGoi());
-    JTextField txtGia = new JTextField(
-      String.valueOf(goiDichVu.getGiaDichVu())
-    );
-    JTextField txtThoiGian = new JTextField(goiDichVu.getThoiGianKham());
-    JTextField txtMoTa = new JTextField(goiDichVu.getMoTa());
-    JComboBox<String> cboKhoa = taoComboKhoa(goiDichVu.getMaKhoa());
-
-    JPanel panelNhap = new JPanel(new GridLayout(0, 2, 10, 10));
-    panelNhap.add(new JLabel("Mã gói:"));
-    panelNhap.add(new JLabel(goiDichVu.getMaGoi()));
-    panelNhap.add(new JLabel("Tên gói:"));
-    panelNhap.add(txtTenGoi);
-    panelNhap.add(new JLabel("Giá dịch vụ:"));
-    panelNhap.add(txtGia);
-    panelNhap.add(new JLabel("Thời gian khám (phút):"));
-    panelNhap.add(txtThoiGian);
-    panelNhap.add(new JLabel("Khoa phụ trách:"));
-    panelNhap.add(cboKhoa);
-    panelNhap.add(new JLabel("Mô tả:"));
-    panelNhap.add(txtMoTa);
-
-    int luaChon = JOptionPane.showConfirmDialog(
+    GoiDichVuDTO capNhat = GoiDichVuDialogHelper.showEditDialog(
       this,
-      panelNhap,
-      "Sửa gói dịch vụ",
-      JOptionPane.OK_CANCEL_OPTION,
-      JOptionPane.PLAIN_MESSAGE
+      khoaBUS,
+      goiDichVu
     );
-
-    if (luaChon != JOptionPane.OK_OPTION) {
+    if (capNhat == null) {
       return;
     }
 
-    try {
-      GoiDichVuDTO capNhat = new GoiDichVuDTO();
-      capNhat.setMaGoi(goiDichVu.getMaGoi());
-      capNhat.setTenGoi(txtTenGoi.getText().trim());
-      capNhat.setGiaDichVu(new BigDecimal(txtGia.getText().trim()));
-      capNhat.setThoiGianKham(txtThoiGian.getText().trim());
-      capNhat.setMoTa(txtMoTa.getText().trim());
-      capNhat.setMaKhoa(
-        ((String) cboKhoa.getSelectedItem()).split(" - ")[0].trim()
-      );
-
-      if (goiDichVuBUS.update(capNhat)) {
-        JOptionPane.showMessageDialog(
-          this,
-          "✅ Cập nhật gói dịch vụ thành công"
-        );
-        loadData();
-      } else {
-        JOptionPane.showMessageDialog(
-          this,
-          "❌ Không thể cập nhật gói dịch vụ"
-        );
-      }
-    } catch (Exception ex) {
-      JOptionPane.showMessageDialog(this, "❌ Dữ liệu không hợp lệ");
+    if (goiDichVuBUS.update(capNhat)) {
+      JOptionPane.showMessageDialog(this, "✅ Cập nhật gói dịch vụ thành công");
+      loadData();
+    } else {
+      JOptionPane.showMessageDialog(this, "❌ Không thể cập nhật gói dịch vụ");
     }
   }
 

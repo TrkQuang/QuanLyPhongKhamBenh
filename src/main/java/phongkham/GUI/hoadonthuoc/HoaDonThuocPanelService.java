@@ -29,7 +29,9 @@ public class HoaDonThuocPanelService {
           tenBenhNhan.contains(key);
       }
 
-      if (match && fromDate != null && toDate != null && hd.getNgayLap() != null) {
+      if (
+        match && fromDate != null && toDate != null && hd.getNgayLap() != null
+      ) {
         LocalDate hoaDonDate = hd.getNgayLap().toLocalDate();
         match = !hoaDonDate.isBefore(fromDate) && !hoaDonDate.isAfter(toDate);
       }
@@ -42,7 +44,10 @@ public class HoaDonThuocPanelService {
     return ketQua;
   }
 
-  public ActionResult xacNhanGiaoThuoc(HoaDonThuocBUS hdBUS, HoaDonThuocDTO hd) {
+  public ActionResult xacNhanGiaoThuoc(
+    HoaDonThuocBUS hdBUS,
+    HoaDonThuocDTO hd
+  ) {
     if (hd == null) {
       return ActionResult.thatBai("Không tìm thấy hóa đơn!");
     }
@@ -67,7 +72,9 @@ public class HoaDonThuocPanelService {
 
     boolean success = hdBUS.completePickup(hd.getMaHoaDon());
     return success
-      ? ActionResult.thanhCong("Xác nhận giao thuốc thành công!\nĐã trừ tồn kho.")
+      ? ActionResult.thanhCong(
+          "Xác nhận giao thuốc thành công!\nĐã trừ tồn kho."
+        )
       : ActionResult.thatBai("Giao thuốc thất bại! Vui lòng kiểm tra lại.");
   }
 

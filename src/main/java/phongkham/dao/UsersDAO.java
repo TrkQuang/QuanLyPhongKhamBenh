@@ -12,82 +12,121 @@ import phongkham.db.DBConnection;
 
 public class UsersDAO {
 
-  public UsersDTO checkLogin(String username, String password) {
-    String sql =
-      "SELECT * FROM Users WHERE Username = ? AND Password = ? AND Active = 1";
+  private UsersDTO mapUser(ResultSet rs) throws SQLException {
+    UsersDTO u = new UsersDTO();
+    u.setUserID(rs.getString("UserID"));
+    u.setUsername(rs.getString("Username"));
+    u.setPassword(rs.getString("Password"));
+    u.setEmail(rs.getString("Email"));
+    u.setRoleID((Integer) rs.getObject("RoleID"));
+    u.setActive(rs.getBoolean("Active"));
+    return u;
+  }
+
+  private ArrayList<UsersDTO> executeUserQuery(String sql, Object... params) {
+    ArrayList<UsersDTO> ds = new ArrayList<>();
     try (
       Connection c = DBConnection.getConnection();
       PreparedStatement ps = c.prepareStatement(sql)
     ) {
-      ps.setString(1, username);
-      ps.setString(2, password);
-
+      for (int i = 0; i < params.length; i++) {
+        ps.setObject(i + 1, params[i]);
+      }
       try (ResultSet rs = ps.executeQuery()) {
-        if (rs.next()) {
-          UsersDTO u = new UsersDTO();
-          u.setUserID(rs.getString("UserID"));
-          u.setUsername(rs.getString("Username"));
-          u.setPassword(rs.getString("Password"));
-          u.setEmail(rs.getString("Email"));
-          u.setRoleID((Integer) rs.getObject("RoleID"));
-          u.setActive(rs.getBoolean("Active"));
-          return u;
+        while (rs.next()) {
+          ds.add(mapUser(rs));
         }
       }
     } catch (SQLException e) {
       e.printStackTrace();
     }
-    return null;
+    return ds;
+  }
+
+  private boolean existsByField(String sql, String value) {
+    try (
+      Connection c = DBConnection.getConnection();
+      PreparedStatement ps = c.prepareStatement(sql)
+    ) {
+      ps.setString(1, value);
+      try (ResultSet rs = ps.executeQuery()) {
+        return rs.next();
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    return false;
+  }
+
+  private boolean updateActiveByUserId(Object userID, boolean active) {
+    String sql = "UPDATE Users SET Active = ? WHERE UserID = ?";
+    try (
+      Connection c = DBConnection.getConnection();
+      PreparedStatement ps = c.prepareStatement(sql)
+    ) {
+      ps.setBoolean(1, active);
+      ps.setObject(2, userID);
+      return ps.executeUpdate() > 0;
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    return false;
+  }
+
+  private String generateNextPrefixedId(
+    String table,
+    String column,
+    String prefix,
+    int fromIndex,
+    int padLength,
+    String defaultValue
+  ) {
+    String sql =
+      "SELECT " +
+      column +
+      " FROM " +
+      table +
+      " WHERE " +
+      column +
+      " LIKE ? ORDER BY " +
+      column +
+      " DESC LIMIT 1";
+    try (
+      Connection c = DBConnection.getConnection();
+      PreparedStatement ps = c.prepareStatement(sql)
+    ) {
+      ps.setString(1, prefix + "%");
+      try (ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) {
+          String last = rs.getString(column);
+          int number = Integer.parseInt(last.substring(fromIndex));
+          return String.format(prefix + "%0" + padLength + "d", number + 1);
+        }
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return defaultValue;
+  }
+
+  public UsersDTO checkLogin(String username, String password) {
+    ArrayList<UsersDTO> list = executeUserQuery(
+      "SELECT * FROM Users WHERE Username = ? AND Password = ? AND Active = 1",
+      username,
+      password
+    );
+    return list.isEmpty() ? null : list.get(0);
   }
 
   public ArrayList<UsersDTO> getAll() {
-    ArrayList<UsersDTO> ds = new ArrayList<>();
-    String sql = "SELECT * FROM Users";
-    try (
-      Connection c = DBConnection.getConnection();
-      Statement stm = c.createStatement();
-      ResultSet rs = stm.executeQuery(sql)
-    ) {
-      while (rs.next()) {
-        UsersDTO u = new UsersDTO();
-        u.setUserID(rs.getString("UserID"));
-        u.setUsername(rs.getString("Username"));
-        u.setPassword(rs.getString("Password"));
-        u.setEmail(rs.getString("Email"));
-        u.setRoleID((Integer) rs.getObject("RoleID"));
-        u.setActive(rs.getBoolean("Active"));
-        ds.add(u);
-      }
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-    return ds;
+    return executeUserQuery("SELECT * FROM Users");
   }
 
   public ArrayList<UsersDTO> getByRole(int roleId) {
-    ArrayList<UsersDTO> ds = new ArrayList<>();
-    String sql = "SELECT * FROM Users WHERE RoleID = ? ORDER BY UserID";
-    try (
-      Connection c = DBConnection.getConnection();
-      PreparedStatement ps = c.prepareStatement(sql)
-    ) {
-      ps.setInt(1, roleId);
-      try (ResultSet rs = ps.executeQuery()) {
-        while (rs.next()) {
-          UsersDTO u = new UsersDTO();
-          u.setUserID(rs.getString("UserID"));
-          u.setUsername(rs.getString("Username"));
-          u.setPassword(rs.getString("Password"));
-          u.setEmail(rs.getString("Email"));
-          u.setRoleID((Integer) rs.getObject("RoleID"));
-          u.setActive(rs.getBoolean("Active"));
-          ds.add(u);
-        }
-      }
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-    return ds;
+    return executeUserQuery(
+      "SELECT * FROM Users WHERE RoleID = ? ORDER BY UserID",
+      roleId
+    );
   }
 
   public boolean insertUser(UsersDTO u) {
@@ -141,71 +180,23 @@ public class UsersDAO {
   }
 
   public boolean deleteUser(int userID) {
-    String sql = "UPDATE Users SET Active = 0 WHERE UserID = ?";
-    try (
-      Connection c = DBConnection.getConnection();
-      PreparedStatement ps = c.prepareStatement(sql)
-    ) {
-      ps.setInt(1, userID);
-      return ps.executeUpdate() > 0;
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-    return false;
+    return updateActiveByUserId(userID, false);
   }
 
   public boolean disableUser(String userID) {
-    String sql = "UPDATE Users SET Active = 0 WHERE UserID = ?";
-    try (
-      Connection c = DBConnection.getConnection();
-      PreparedStatement ps = c.prepareStatement(sql)
-    ) {
-      ps.setString(1, userID);
-      return ps.executeUpdate() > 0;
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-    return false;
+    return updateActiveByUserId(userID, false);
   }
 
   public boolean enableUser(String userID) {
-    String sql = "UPDATE Users SET Active = 1 WHERE UserID = ?";
-    try (
-      Connection c = DBConnection.getConnection();
-      PreparedStatement ps = c.prepareStatement(sql)
-    ) {
-      ps.setString(1, userID);
-      return ps.executeUpdate() > 0;
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-    return false;
+    return updateActiveByUserId(userID, true);
   }
 
   public UsersDTO getUserByID(String userID) {
-    String sql = "SELECT * FROM Users WHERE UserID = ?";
-    try (
-      Connection c = DBConnection.getConnection();
-      PreparedStatement ps = c.prepareStatement(sql)
-    ) {
-      ps.setString(1, userID);
-
-      try (ResultSet rs = ps.executeQuery()) {
-        if (rs.next()) {
-          UsersDTO u = new UsersDTO();
-          u.setUserID(rs.getString("UserID"));
-          u.setUsername(rs.getString("Username"));
-          u.setPassword(rs.getString("Password"));
-          u.setEmail(rs.getString("Email"));
-          u.setRoleID((Integer) rs.getObject("RoleID"));
-          u.setActive(rs.getBoolean("Active"));
-          return u;
-        }
-      }
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-    return null;
+    ArrayList<UsersDTO> list = executeUserQuery(
+      "SELECT * FROM Users WHERE UserID = ?",
+      userID
+    );
+    return list.isEmpty() ? null : list.get(0);
   }
 
   public boolean resetPassword(String userID, String newPassword) {
@@ -224,89 +215,26 @@ public class UsersDAO {
   }
 
   public boolean existsUsername(String username) {
-    String sql = "SELECT 1 FROM Users WHERE Username = ? LIMIT 1";
-    try (
-      Connection c = DBConnection.getConnection();
-      PreparedStatement ps = c.prepareStatement(sql)
-    ) {
-      ps.setString(1, username);
-      try (ResultSet rs = ps.executeQuery()) {
-        return rs.next();
-      }
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-    return false;
+    return existsByField(
+      "SELECT 1 FROM Users WHERE Username = ? LIMIT 1",
+      username
+    );
   }
 
   public boolean existsEmail(String email) {
-    String sql = "SELECT 1 FROM Users WHERE Email = ? LIMIT 1";
-    try (
-      Connection c = DBConnection.getConnection();
-      PreparedStatement ps = c.prepareStatement(sql)
-    ) {
-      ps.setString(1, email);
-      try (ResultSet rs = ps.executeQuery()) {
-        return rs.next();
-      }
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-    return false;
+    return existsByField("SELECT 1 FROM Users WHERE Email = ? LIMIT 1", email);
   }
 
   public boolean existsBacSiEmail(String email) {
-    String sql = "SELECT 1 FROM BacSi WHERE Email = ? LIMIT 1";
-    try (
-      Connection c = DBConnection.getConnection();
-      PreparedStatement ps = c.prepareStatement(sql)
-    ) {
-      ps.setString(1, email);
-      try (ResultSet rs = ps.executeQuery()) {
-        return rs.next();
-      }
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-    return false;
+    return existsByField("SELECT 1 FROM BacSi WHERE Email = ? LIMIT 1", email);
   }
 
   public String generateNextUserID() {
-    String sql =
-      "SELECT UserID FROM Users WHERE UserID LIKE 'U%' ORDER BY UserID DESC LIMIT 1";
-    try (
-      Connection c = DBConnection.getConnection();
-      Statement stm = c.createStatement();
-      ResultSet rs = stm.executeQuery(sql)
-    ) {
-      if (rs.next()) {
-        String last = rs.getString("UserID");
-        int number = Integer.parseInt(last.substring(1));
-        return String.format("U%03d", number + 1);
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return "U001";
+    return generateNextPrefixedId("Users", "UserID", "U", 1, 3, "U001");
   }
 
   public String generateNextBacSiID() {
-    String sql =
-      "SELECT MaBacSi FROM BacSi WHERE MaBacSi LIKE 'BS%' ORDER BY MaBacSi DESC LIMIT 1";
-    try (
-      Connection c = DBConnection.getConnection();
-      Statement stm = c.createStatement();
-      ResultSet rs = stm.executeQuery(sql)
-    ) {
-      if (rs.next()) {
-        String last = rs.getString("MaBacSi");
-        int number = Integer.parseInt(last.substring(2));
-        return String.format("BS%02d", number + 1);
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return "BS01";
+    return generateNextPrefixedId("BacSi", "MaBacSi", "BS", 2, 2, "BS01");
   }
 
   public boolean createDoctorAccountWithProfile(UsersDTO user, BacSiDTO bacSi) {

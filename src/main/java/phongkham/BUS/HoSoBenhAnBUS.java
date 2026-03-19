@@ -42,48 +42,39 @@ public class HoSoBenhAnBUS {
 
   // Validate khi đăng ký (thông tin cơ bản)
   private String validateInsert(HoSoBenhAnDTO hs) {
-    if (hs == null) return "Hồ sơ không được null";
-    if (hs.getMaHoSo() == null || hs.getMaHoSo().trim().isEmpty()) {
-      return "Mã hồ sơ không được để trống";
-    }
-    if (hs.getHoTen() == null || hs.getHoTen().trim().isEmpty()) {
-      return "Họ tên không được để trống";
-    }
-    if (hs.getSoDienThoai() == null || hs.getSoDienThoai().trim().isEmpty()) {
-      return "Số điện thoại không được để trống";
-    }
-    if (!isValidPhoneNumber(hs.getSoDienThoai())) {
-      return "Số điện thoại không hợp lệ";
-    }
-    if (hs.getNgaySinh() != null) {
-      if (hs.getNgaySinh().after(new Date(System.currentTimeMillis()))) {
-        return "Ngày sinh không được lớn hơn ngày hiện tại";
-      }
-    }
-    String gioiTinhChuan = normalizeGender(hs.getGioiTinh());
-    if (!gioiTinhChuan.isEmpty()) {
-      if (!"Nam".equals(gioiTinhChuan) && !"Nu".equals(gioiTinhChuan)) {
-        return "Giới tính không hợp lệ";
-      }
-      hs.setGioiTinh(gioiTinhChuan);
-    }
-    return null; // Hợp lệ
+    return validateHoSo(hs, true);
   }
 
   private String validateUpdate(HoSoBenhAnDTO hs) {
+    return validateHoSo(hs, false);
+  }
+
+  private String validateHoSo(
+    HoSoBenhAnDTO hs,
+    boolean checkNgaySinhKhongVuotHienTai
+  ) {
     if (hs == null) return "Hồ sơ không được null";
-    if (hs.getMaHoSo() == null || hs.getMaHoSo().trim().isEmpty()) {
+    if (isBlank(hs.getMaHoSo())) {
       return "Mã hồ sơ không được để trống";
     }
-    if (hs.getHoTen() == null || hs.getHoTen().trim().isEmpty()) {
+    if (isBlank(hs.getHoTen())) {
       return "Họ tên không được để trống";
     }
-    if (hs.getSoDienThoai() == null || hs.getSoDienThoai().trim().isEmpty()) {
+    if (isBlank(hs.getSoDienThoai())) {
       return "Số điện thoại không được để trống";
     }
     if (!isValidPhoneNumber(hs.getSoDienThoai())) {
       return "Số điện thoại không hợp lệ";
     }
+
+    if (
+      checkNgaySinhKhongVuotHienTai &&
+      hs.getNgaySinh() != null &&
+      hs.getNgaySinh().after(new Date(System.currentTimeMillis()))
+    ) {
+      return "Ngày sinh không được lớn hơn ngày hiện tại";
+    }
+
     String gioiTinhChuan = normalizeGender(hs.getGioiTinh());
     if (!gioiTinhChuan.isEmpty()) {
       if (!"Nam".equals(gioiTinhChuan) && !"Nu".equals(gioiTinhChuan)) {
@@ -91,6 +82,7 @@ public class HoSoBenhAnBUS {
       }
       hs.setGioiTinh(gioiTinhChuan);
     }
+
     return null;
   }
 
@@ -124,7 +116,7 @@ public class HoSoBenhAnBUS {
   }
 
   public HoSoBenhAnDTO getByMaHoSo(String MaHS) {
-    if (MaHS == null || MaHS.trim().isEmpty()) {
+    if (isBlank(MaHS)) {
       System.out.println("Không được rỗng dữ liệu");
       return null;
     }
@@ -153,15 +145,15 @@ public class HoSoBenhAnBUS {
     String loiDan
   ) {
     // Validate
-    if (maHoSo == null || maHoSo.trim().isEmpty()) {
+    if (isBlank(maHoSo)) {
       System.err.println("Mã hồ sơ không được để trống");
       return false;
     }
-    if (maBacSi == null || maBacSi.trim().isEmpty()) {
+    if (isBlank(maBacSi)) {
       System.err.println("Mã bác sĩ không được để trống");
       return false;
     }
-    if (chanDoan == null || chanDoan.trim().isEmpty()) {
+    if (isBlank(chanDoan)) {
       System.err.println("Chẩn đoán không được để trống");
       return false;
     }
@@ -177,7 +169,7 @@ public class HoSoBenhAnBUS {
   }
 
   public boolean updateTrangThai(String MaHS, String trangThai) {
-    if (MaHS == null || MaHS.trim().isEmpty()) {
+    if (isBlank(MaHS)) {
       System.out.println("Mã hồ sơ k đc trống");
       return false;
     }
@@ -189,7 +181,7 @@ public class HoSoBenhAnBUS {
   }
 
   public boolean delete(String maHS) {
-    if (maHS == null || maHS.trim().isEmpty()) {
+    if (isBlank(maHS)) {
       System.out.println("Mã hồ sơ không được rỗng");
       return false;
     }
@@ -198,14 +190,14 @@ public class HoSoBenhAnBUS {
 
   //các hàm tìm kiếm, lọc
   public HoSoBenhAnDTO getByMaLichKham(String MaLichKham) {
-    if (MaLichKham == null || MaLichKham.trim().isEmpty()) {
+    if (isBlank(MaLichKham)) {
       return null;
     }
     return hsDAO.getByMaLichKham(MaLichKham);
   }
 
   public ArrayList<HoSoBenhAnDTO> getBySDT(String sdt) {
-    if (sdt == null || sdt.trim().isEmpty()) {
+    if (isBlank(sdt)) {
       System.out.println("Số điện thoại không được rỗng");
       return null;
     }
@@ -218,7 +210,7 @@ public class HoSoBenhAnBUS {
   }
 
   public ArrayList<HoSoBenhAnDTO> getByCCCD(String cccd) {
-    if (cccd == null || cccd.trim().isEmpty()) {
+    if (isBlank(cccd)) {
       System.out.println("CCCD không được rỗng");
       return null;
     }
@@ -251,5 +243,9 @@ public class HoSoBenhAnBUS {
       return false;
     }
     return hsDAO.update(hs);
+  }
+
+  private boolean isBlank(String value) {
+    return value == null || value.trim().isEmpty();
   }
 }
