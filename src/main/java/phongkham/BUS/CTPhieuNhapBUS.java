@@ -389,13 +389,10 @@ public class CTPhieuNhapBUS {
       ct.getDonGiaNhap().compareTo(BigDecimal.ZERO) <= 0
     ) return false;
 
-    // Không cho nhập lô có HSD <= hôm nay.
+    // Không cho nhập lô đã quá hạn (cho phép HSD = hôm nay).
     if (
       ct.getHanSuDung() != null &&
-      !ct
-        .getHanSuDung()
-        .toLocalDate()
-        .isAfter(LocalDateTime.now().toLocalDate())
+      ct.getHanSuDung().toLocalDate().isBefore(LocalDate.now())
     ) return false;
 
     return true;

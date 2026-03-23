@@ -397,11 +397,13 @@ public class PhieuNhapPanel extends BasePanel {
           : StatusNormalizer.normalizePhieuNhapStatus(source.getTrangThai())
       );
 
+      boolean createdHeader = false;
       if (isCreate) {
         if (!phieuNhapBUS.insert(pn)) {
           DialogHelper.error(dialog, "Tạo phiếu nhập thất bại.");
           return;
         }
+        createdHeader = true;
       } else {
         if (!phieuNhapBUS.update(pn)) {
           DialogHelper.error(dialog, "Cập nhật thông tin phiếu nhập thất bại.");
@@ -421,6 +423,7 @@ public class PhieuNhapPanel extends BasePanel {
         }
       }
 
+      ArrayList<String> insertedDetailIds = new ArrayList<>();
       for (LineItem item : lineItems) {
         boolean ok = ctPhieuNhapBUS.insert(
           item.maCTPN,
@@ -432,12 +435,18 @@ public class PhieuNhapPanel extends BasePanel {
           item.hanSuDung
         );
         if (!ok) {
+          if (isCreate && createdHeader) {
+            rollbackCreatedReceipt(maPhieuNhap, insertedDetailIds);
+          }
           DialogHelper.error(
             dialog,
-            "Lưu chi tiết thuốc thất bại tại mã thuốc " + item.maThuoc + "."
+            "Lưu chi tiết thuốc thất bại tại mã thuốc " +
+            item.maThuoc +
+            ". Vui lòng kiểm tra hạn sử dụng, số lô và dữ liệu thuốc."
           );
           return;
         }
+        insertedDetailIds.add(item.maCTPN);
       }
 
       DialogHelper.info(
@@ -817,6 +826,21 @@ public class PhieuNhapPanel extends BasePanel {
       total += item.getThanhTien().doubleValue();
     }
     return total;
+  }
+
+  private void rollbackCreatedReceipt(
+    String maPhieuNhap,
+    ArrayList<String> insertedDetailIds
+  ) {
+    if (insertedDetailIds != null) {
+      for (String maCTPN : insertedDetailIds) {
+        if (maCTPN == null || maCTPN.trim().isEmpty()) {
+          continue;
+        }
+        ctPhieuNhapBUS.delete(maCTPN);
+      }
+    }
+    phieuNhapBUS.hardDeleteForRollback(maPhieuNhap);
   }
 
   private void updateActionButtons() {

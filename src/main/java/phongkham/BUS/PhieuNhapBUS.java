@@ -126,6 +126,16 @@ public class PhieuNhapBUS {
     return dao.hasPhieuNhap(maNCC);
   }
 
+  /**
+   * Dùng cho rollback nội bộ khi tạo phiếu thất bại giữa chừng.
+   */
+  public boolean hardDeleteForRollback(String maPhieuNhap) {
+    if (maPhieuNhap == null || maPhieuNhap.trim().isEmpty()) {
+      return false;
+    }
+    return dao.delete(maPhieuNhap.trim());
+  }
+
   public double getTongTienByTrangThai(String trangThai) {
     return dao.getTongTienByTrangThai(
       StatusNormalizer.normalizePhieuNhapStatus(trangThai)
