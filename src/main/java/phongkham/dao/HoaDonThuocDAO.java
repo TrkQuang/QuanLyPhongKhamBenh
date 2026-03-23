@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import phongkham.DTO.HoaDonThuocDTO;
+import phongkham.DTO.XuatThuocTheoLoDTO;
 import phongkham.Utils.StatusNormalizer;
 import phongkham.db.DBConnection;
 
@@ -227,6 +228,60 @@ public class HoaDonThuocDAO {
       ngayThanhToan,
       maHoaDon
     );
+  }
+
+  public boolean updatePaymentAndPickupStatus(
+    String maHoaDon,
+    String trangThaiThanhToan,
+    LocalDateTime ngayThanhToan,
+    String trangThaiLayThuoc
+  ) {
+    String paymentStatus = StatusNormalizer.normalizePaymentStatus(
+      trangThaiThanhToan
+    );
+    String pickupStatus = StatusNormalizer.normalizePickupStatus(
+      trangThaiLayThuoc
+    );
+    return executeUpdate(
+      "UPDATE HoaDonThuoc SET TrangThaiThanhToan = ?, NgayThanhToan = ?, TrangThaiLayThuoc = ? WHERE MaHoaDon = ?",
+      paymentStatus,
+      ngayThanhToan,
+      pickupStatus,
+      maHoaDon
+    );
+  }
+
+  public List<XuatThuocTheoLoDTO> getXuatTheoLoByMaHoaDon(String maHoaDon) {
+    List<XuatThuocTheoLoDTO> list = new ArrayList<>();
+    String sql =
+      "SELECT MaXuatLo, MaHoaDon, MaCTHDThuoc, MaCTPN, MaThuoc, SoLo, HanSuDung, SoLuongXuat, NgayXuat " +
+      "FROM XuatThuocTheoLo WHERE MaHoaDon = ? ORDER BY HanSuDung ASC, MaXuatLo ASC";
+    try (
+      Connection conn = DBConnection.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql)
+    ) {
+      ps.setString(1, maHoaDon);
+      try (ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) {
+          XuatThuocTheoLoDTO dto = new XuatThuocTheoLoDTO();
+          dto.setMaXuatLo(rs.getLong("MaXuatLo"));
+          dto.setMaHoaDon(rs.getString("MaHoaDon"));
+          dto.setMaCTHDThuoc(rs.getString("MaCTHDThuoc"));
+          dto.setMaCTPN(rs.getString("MaCTPN"));
+          dto.setMaThuoc(rs.getString("MaThuoc"));
+          dto.setSoLo(rs.getString("SoLo"));
+          dto.setHanSuDung(
+            rs.getObject("HanSuDung", java.time.LocalDate.class)
+          );
+          dto.setSoLuongXuat(rs.getInt("SoLuongXuat"));
+          dto.setNgayXuat(rs.getObject("NgayXuat", LocalDateTime.class));
+          list.add(dto);
+        }
+      }
+    } catch (SQLException e) {
+      System.err.println("✗ Error query XuatThuocTheoLo: " + e.getMessage());
+    }
+    return list;
   }
 
   // Map ResultSet thành DTO

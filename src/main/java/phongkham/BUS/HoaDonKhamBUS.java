@@ -3,6 +3,7 @@ package phongkham.BUS;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Locale;
 import phongkham.DTO.HoaDonKhamDTO;
 import phongkham.Utils.StatusNormalizer;
 import phongkham.dao.HoaDonKhamDAO;
@@ -67,13 +68,54 @@ public class HoaDonKhamBUS {
     return result;
   }
 
+  public ArrayList<HoaDonKhamDTO> filterForView(
+    String maKeyword,
+    String maGoiKeyword,
+    LocalDate from,
+    LocalDate to
+  ) {
+    String key =
+      maKeyword == null ? "" : maKeyword.trim().toLowerCase(Locale.ROOT);
+    String goi =
+      maGoiKeyword == null ? "" : maGoiKeyword.trim().toLowerCase(Locale.ROOT);
+
+    LocalDateTime fromTime = from != null ? from.atStartOfDay() : null;
+    LocalDateTime toTime = to != null ? to.plusDays(1).atStartOfDay() : null;
+
+    ArrayList<HoaDonKhamDTO> result = new ArrayList<>();
+    for (HoaDonKhamDTO hd : hdDAO.getAll()) {
+      if (!key.isEmpty()) {
+        String maHD = safeLower(hd.getMaHDKham());
+        String maHS = safeLower(hd.getMaHoSo());
+        if (!maHD.contains(key) && !maHS.contains(key)) {
+          continue;
+        }
+      }
+
+      if (!goi.isEmpty()) {
+        String maGoi = safeLower(hd.getMaGoi());
+        if (!maGoi.contains(goi)) {
+          continue;
+        }
+      }
+
+      if (fromTime != null && toTime != null) {
+        LocalDateTime ngay = hd.getNgayThanhToan();
+        if (ngay == null || ngay.isBefore(fromTime) || !ngay.isBefore(toTime)) {
+          continue;
+        }
+      }
+
+      result.add(hd);
+    }
+    return result;
+  }
+
   // ================= ADD =================
   public boolean add(HoaDonKhamDTO hd) {
     if (!validateHoaDon(hd)) return false;
     return hdDAO.Insert(hd);
   }
-
-
 
   // ================= DELETE =================
   public boolean delete(String maHD) {
@@ -84,6 +126,38 @@ public class HoaDonKhamBUS {
       return false;
     }
     return hdDAO.Delete(maHD);
+  }
+
+  public boolean xacNhanThanhToan(String maHD) {
+    HoaDonKhamDTO hd = hdDAO.Search(maHD);
+    if (hd == null) {
+      return false;
+    }
+    String trangThai = StatusNormalizer.normalizeToken(hd.getTrangThai());
+    if ("HOAN_TIEN".equals(trangThai) || "DA_HUY".equals(trangThai)) {
+      return false;
+    }
+    return hdDAO.updateTrangThaiAndNgayThanhToan(
+      maHD,
+      StatusNormalizer.DA_THANH_TOAN,
+      LocalDateTime.now()
+    );
+  }
+
+  public boolean huyHoaDon(String maHD) {
+    HoaDonKhamDTO hd = hdDAO.Search(maHD);
+    if (hd == null) {
+      return false;
+    }
+    String trangThai = StatusNormalizer.normalizeToken(hd.getTrangThai());
+    if ("HOAN_TIEN".equals(trangThai) || "DA_HUY".equals(trangThai)) {
+      return false;
+    }
+    return hdDAO.updateTrangThaiAndNgayThanhToan(
+      maHD,
+      "HOAN_TIEN",
+      LocalDateTime.now()
+    );
   }
 
   // ================= VALIDATE =================
@@ -112,5 +186,9 @@ public class HoaDonKhamBUS {
     return "DA_THANH_TOAN".equals(
       StatusNormalizer.normalizePaymentStatus(trangThai)
     );
+  }
+
+  private String safeLower(String value) {
+    return value == null ? "" : value.toLowerCase(Locale.ROOT);
   }
 }

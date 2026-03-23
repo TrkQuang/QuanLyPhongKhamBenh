@@ -180,13 +180,17 @@ CREATE TABLE ChiTietPhieuNhap (
   MaCTPN VARCHAR(20) PRIMARY KEY,
   MaPhieuNhap VARCHAR(20) NOT NULL,
   MaThuoc VARCHAR(20) NOT NULL,
+  SoLo VARCHAR(50) NOT NULL,
   SoLuongNhap INT NOT NULL,
+  SoLuongConLai INT NOT NULL,
   DonGiaNhap DECIMAL(18,2) NOT NULL,
   HanSuDung DATE,
   CONSTRAINT fk_ctpn_phieunhap FOREIGN KEY (MaPhieuNhap) REFERENCES PhieuNhap(MaPhieuNhap),
   CONSTRAINT fk_ctpn_thuoc FOREIGN KEY (MaThuoc) REFERENCES Thuoc(MaThuoc),
   CONSTRAINT chk_ctpn_soluong CHECK (SoLuongNhap > 0),
-  CONSTRAINT chk_ctpn_dongia CHECK (DonGiaNhap > 0)
+  CONSTRAINT chk_ctpn_soluong_con_lai CHECK (SoLuongConLai >= 0 AND SoLuongConLai <= SoLuongNhap),
+  CONSTRAINT chk_ctpn_dongia CHECK (DonGiaNhap > 0),
+  UNIQUE KEY uq_ctpn_lot (MaPhieuNhap, MaThuoc, SoLo, HanSuDung)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE HoaDonThuoc (
@@ -223,6 +227,37 @@ CREATE TABLE CTHDThuoc (
   CONSTRAINT chk_cthd_thanhtien CHECK (ThanhTien >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE XuatThuocTheoLo (
+  MaXuatLo BIGINT PRIMARY KEY AUTO_INCREMENT,
+  MaHoaDon VARCHAR(20) NOT NULL,
+  MaCTHDThuoc VARCHAR(20) NOT NULL,
+  MaCTPN VARCHAR(20) NOT NULL,
+  MaThuoc VARCHAR(20) NOT NULL,
+  SoLo VARCHAR(50),
+  HanSuDung DATE,
+  SoLuongXuat INT NOT NULL,
+  NgayXuat DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_xuatlo_hd FOREIGN KEY (MaHoaDon) REFERENCES HoaDonThuoc(MaHoaDon),
+  CONSTRAINT fk_xuatlo_cthd FOREIGN KEY (MaCTHDThuoc) REFERENCES CTHDThuoc(MaCTHDThuoc),
+  CONSTRAINT fk_xuatlo_ctpn FOREIGN KEY (MaCTPN) REFERENCES ChiTietPhieuNhap(MaCTPN),
+  CONSTRAINT chk_xuatlo_soluong CHECK (SoLuongXuat > 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE TieuHuyLoThuoc (
+  MaTieuHuy BIGINT PRIMARY KEY AUTO_INCREMENT,
+  MaCTPN VARCHAR(20) NOT NULL,
+  MaPhieuNhap VARCHAR(20) NOT NULL,
+  MaThuoc VARCHAR(20) NOT NULL,
+  SoLo VARCHAR(50),
+  SoLuongTieuHuy INT NOT NULL,
+  HanSuDung DATETIME,
+  NgayTieuHuy DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  LyDo VARCHAR(255) NOT NULL,
+  NguoiThucHien VARCHAR(120) NOT NULL,
+  CONSTRAINT fk_tieuhuy_ctpn FOREIGN KEY (MaCTPN) REFERENCES ChiTietPhieuNhap(MaCTPN),
+  CONSTRAINT chk_tieuhuy_soluong CHECK (SoLuongTieuHuy > 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE HoaDonKham (
   MaHDKham VARCHAR(20) PRIMARY KEY,
   MaHoSo VARCHAR(20) NOT NULL,
@@ -250,9 +285,33 @@ CREATE INDEX idx_hosobenhan_cccd ON HoSoBenhAn (CCCD);
 CREATE INDEX idx_thuoc_active_ten ON Thuoc (Active, TenThuoc);
 CREATE INDEX idx_goidv_khoa ON GoiDichVu (MaKhoa);
 CREATE INDEX idx_phieunhap_trangthai_ngay ON PhieuNhap (TrangThai, NgayNhap);
+CREATE INDEX idx_ctpn_hsd ON ChiTietPhieuNhap (HanSuDung);
+CREATE INDEX idx_ctpn_thuoc_hsd ON ChiTietPhieuNhap (MaThuoc, HanSuDung);
+CREATE INDEX idx_ctpn_lot_lookup ON ChiTietPhieuNhap (MaThuoc, SoLo, HanSuDung);
 CREATE INDEX idx_hdthuoc_ngay_status ON HoaDonThuoc (NgayLap, TrangThaiThanhToan, Active);
 CREATE INDEX idx_hdthuoc_pickup_status ON HoaDonThuoc (TrangThaiLayThuoc);
 CREATE INDEX idx_hdkham_ngay_status ON HoaDonKham (NgayThanhToan, TrangThai);
+
+-- View quản lý theo NCC + HSD + lô hàng
+CREATE OR REPLACE VIEW vw_ThuocNhapTheoNCC_HSD AS
+SELECT
+  ctpn.MaCTPN,
+  ctpn.MaPhieuNhap,
+  pn.MaNCC,
+  ncc.TenNhaCungCap,
+  ctpn.MaThuoc,
+  t.TenThuoc,
+  ctpn.SoLo,
+  ctpn.HanSuDung,
+  ctpn.SoLuongNhap,
+  ctpn.DonGiaNhap,
+  (ctpn.SoLuongNhap * ctpn.DonGiaNhap) AS ThanhTienNhap,
+  pn.NgayNhap,
+  pn.TrangThai
+FROM ChiTietPhieuNhap ctpn
+JOIN PhieuNhap pn ON pn.MaPhieuNhap = ctpn.MaPhieuNhap
+JOIN NhaCungCap ncc ON ncc.MaNhaCungCap = pn.MaNCC
+JOIN Thuoc t ON t.MaThuoc = ctpn.MaThuoc;
 
 -- =========================
 -- TRIGGERS / PROCEDURES

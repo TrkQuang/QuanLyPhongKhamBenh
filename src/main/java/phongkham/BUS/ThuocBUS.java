@@ -13,6 +13,10 @@ public class ThuocBUS {
     return thuocDAO.getAllThuoc();
   }
 
+  public ArrayList<ThuocDTO> listForManagement() {
+    return thuocDAO.getAllThuocForManagement();
+  }
+
   //thêm thuốc mới
   public boolean addThuoc(ThuocDTO t) {
     if (t == null) {
@@ -81,6 +85,10 @@ public class ThuocBUS {
     return thuocDAO.deleteThuoc(maThuoc);
   }
 
+  public boolean reactivateByMa(String maThuoc) {
+    return thuocDAO.reactivateThuoc(maThuoc);
+  }
+
   //tìm theo mã
   public ThuocDTO getByMa(String maThuoc) {
     return thuocDAO.searchById(maThuoc);
@@ -136,5 +144,18 @@ public class ThuocBUS {
   // Lấy danh sách thuốc còn tồn
   public ArrayList<ThuocDTO> getThuocConTon() {
     return thuocDAO.getThuocConTon();
+  }
+
+  // Đồng bộ tồn kho 1 thuốc theo hạn sử dụng lô nhập
+  public boolean dongBoTonKhoTheoHanSuDung(String maThuoc) {
+    if (maThuoc == null || maThuoc.trim().isEmpty()) {
+      return false;
+    }
+    return thuocDAO.recalculateSoLuongTonExcludingExpired(maThuoc.trim());
+  }
+
+  // Đồng bộ tồn kho toàn bộ thuốc theo hạn sử dụng lô nhập
+  public int dongBoTonKhoTheoHanSuDungToanBo() {
+    return thuocDAO.recalculateSoLuongTonExcludingExpiredForAll();
   }
 }

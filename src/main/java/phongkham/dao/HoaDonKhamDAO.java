@@ -83,8 +83,6 @@ public class HoaDonKhamDAO {
     return executeUpdate("DELETE FROM HoaDonKham WHERE MaHDKham = ?", MaHDKham);
   }
 
-
-
   public HoaDonKhamDTO Search(String MaHDKham) {
     ArrayList<HoaDonKhamDTO> list = executeQuery(
       "SELECT * FROM HoaDonKham WHERE MaHDKham = ?",
@@ -111,6 +109,19 @@ public class HoaDonKhamDAO {
     return executeUpdate(
       "UPDATE HoaDonKham SET TrangThai = ? WHERE MaHDKham = ?",
       trangThaiMoi,
+      maHDKham
+    );
+  }
+
+  public boolean updateTrangThaiAndNgayThanhToan(
+    String maHDKham,
+    String trangThaiMoi,
+    LocalDateTime ngayThanhToan
+  ) {
+    return executeUpdate(
+      "UPDATE HoaDonKham SET TrangThai = ?, NgayThanhToan = ? WHERE MaHDKham = ?",
+      trangThaiMoi,
+      ngayThanhToan,
       maHDKham
     );
   }

@@ -4,9 +4,11 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import phongkham.DTO.CTPhieuNhapDTO;
+import phongkham.DTO.LoThuocNhapDTO;
 import phongkham.DTO.PhieuNhapDTO;
 import phongkham.Utils.StatusNormalizer;
 import phongkham.dao.CTPhieuNhapDAO;
@@ -17,10 +19,12 @@ public class CTPhieuNhapBUS {
 
   private PhieuNhapDAO phieuNhapDAO;
   private CTPhieuNhapDAO ctDAO;
+  private ThuocBUS thuocBUS;
 
   public CTPhieuNhapBUS() {
     ctDAO = new CTPhieuNhapDAO();
     phieuNhapDAO = new PhieuNhapDAO();
+    thuocBUS = new ThuocBUS();
   }
 
   // ================= LOAD =================
@@ -29,11 +33,139 @@ public class CTPhieuNhapBUS {
     return ctDAO.getByMaPhieuNhap(maPN);
   }
 
+  public ArrayList<LoThuocNhapDTO> getLotOverview(
+    String keyword,
+    String maNCC,
+    String hsdFilter
+  ) {
+    ArrayList<LoThuocNhapDTO> raw = ctDAO.getLotOverview(keyword, maNCC);
+    ArrayList<LoThuocNhapDTO> filtered = new ArrayList<>();
+
+    String filter = hsdFilter == null ? "TAT_CA" : hsdFilter.trim();
+    LocalDate today = LocalDate.now();
+    LocalDate warning30 = today.plusDays(30);
+    LocalDate warning60 = today.plusDays(60);
+    LocalDate warning90 = today.plusDays(90);
+
+    for (LoThuocNhapDTO row : raw) {
+      LocalDate hsd = row.getHanSuDung();
+      if ("CON_HAN".equals(filter)) {
+        if (hsd != null && hsd.isBefore(today)) {
+          continue;
+        }
+      } else if ("HET_HAN".equals(filter)) {
+        if (hsd == null || !hsd.isBefore(today)) {
+          continue;
+        }
+      } else if ("SAP_HET_HAN_30".equals(filter)) {
+        if (hsd == null || hsd.isBefore(today) || hsd.isAfter(warning30)) {
+          continue;
+        }
+      } else if ("SAP_HET_HAN_60".equals(filter)) {
+        if (hsd == null || hsd.isBefore(today) || hsd.isAfter(warning60)) {
+          continue;
+        }
+      } else if ("SAP_HET_HAN_90".equals(filter)) {
+        if (hsd == null || hsd.isBefore(today) || hsd.isAfter(warning90)) {
+          continue;
+        }
+      }
+      filtered.add(row);
+    }
+
+    return filtered;
+  }
+
+  public ArrayList<LoThuocNhapDTO> getAllLotsForMonitoring() {
+    return ctDAO.getLotOverview("", "");
+  }
+
+  public int createDisposalForExpiredLots(String lyDo, String nguoiThucHien) {
+    String reason =
+      lyDo == null || lyDo.trim().isEmpty() ? "HET_HAN" : lyDo.trim();
+    String actor =
+      nguoiThucHien == null || nguoiThucHien.trim().isEmpty()
+        ? "SYSTEM"
+        : nguoiThucHien.trim();
+
+    int disposedRows = 0;
+    String sqlSelect =
+      "SELECT ctpn.MaCTPN, ctpn.MaPhieuNhap, ctpn.MaThuoc, ctpn.SoLo, ctpn.HanSuDung, ctpn.SoLuongConLai " +
+      "FROM ChiTietPhieuNhap ctpn " +
+      "JOIN PhieuNhap pn ON pn.MaPhieuNhap = ctpn.MaPhieuNhap " +
+      "WHERE ctpn.SoLuongConLai > 0 " +
+      "  AND ctpn.HanSuDung IS NOT NULL " +
+      "  AND DATE(ctpn.HanSuDung) <= CURDATE() " +
+      "  AND UPPER(TRIM(COALESCE(pn.TrangThai, ''))) IN ('DA_NHAP', 'DA_NHAP_KHO') " +
+      "FOR UPDATE";
+    String sqlUpdate =
+      "UPDATE ChiTietPhieuNhap SET SoLuongConLai = 0 WHERE MaCTPN = ? AND SoLuongConLai > 0";
+    String sqlInsertHistory =
+      "INSERT INTO TieuHuyLoThuoc (MaCTPN, MaPhieuNhap, MaThuoc, SoLo, SoLuongTieuHuy, HanSuDung, NgayTieuHuy, LyDo, NguoiThucHien) " +
+      "VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?)";
+
+    try (Connection conn = DBConnection.getConnection()) {
+      conn.setAutoCommit(false);
+      try (
+        PreparedStatement psSelect = conn.prepareStatement(sqlSelect);
+        PreparedStatement psUpdate = conn.prepareStatement(sqlUpdate);
+        PreparedStatement psInsert = conn.prepareStatement(sqlInsertHistory)
+      ) {
+        java.sql.ResultSet rs = psSelect.executeQuery();
+        while (rs.next()) {
+          String maCTPN = rs.getString("MaCTPN");
+          String maPN = rs.getString("MaPhieuNhap");
+          String maThuoc = rs.getString("MaThuoc");
+          String soLo = rs.getString("SoLo");
+          LocalDateTime hanSuDung = rs.getObject(
+            "HanSuDung",
+            LocalDateTime.class
+          );
+          int soLuongTieuHuy = rs.getInt("SoLuongConLai");
+
+          psUpdate.setString(1, maCTPN);
+          int updated = psUpdate.executeUpdate();
+          if (updated <= 0) {
+            continue;
+          }
+
+          psInsert.setString(1, maCTPN);
+          psInsert.setString(2, maPN);
+          psInsert.setString(3, maThuoc);
+          psInsert.setString(4, soLo);
+          psInsert.setInt(5, soLuongTieuHuy);
+          psInsert.setObject(6, hanSuDung);
+          psInsert.setString(7, reason);
+          psInsert.setString(8, actor);
+          psInsert.executeUpdate();
+
+          disposedRows++;
+        }
+
+        conn.commit();
+      } catch (Exception ex) {
+        conn.rollback();
+        throw ex;
+      } finally {
+        conn.setAutoCommit(true);
+      }
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      return -1;
+    }
+
+    if (disposedRows > 0) {
+      thuocBUS.dongBoTonKhoTheoHanSuDungToanBo();
+    }
+    return disposedRows;
+  }
+
   // ================= THÊM =================
   public boolean insert(
     String maCTPN,
     String maPN,
     String maThuoc,
+    String soLo,
     int soLuong,
     BigDecimal donGia,
     LocalDateTime hanSuDung
@@ -50,6 +182,7 @@ public class CTPhieuNhapBUS {
     ct.setMaCTPN(maCTPN);
     ct.setMaPhieuNhap(maPN);
     ct.setMaThuoc(maThuoc);
+    ct.setSoLo(soLo);
     ct.setSoLuong(soLuong);
     ct.setDonGiaNhap(donGia);
     ct.setHanSuDung(hanSuDung);
@@ -145,11 +278,15 @@ public class CTPhieuNhapBUS {
         )
       ) return false;
 
+      String status = StatusNormalizer.normalizePhieuNhapStatus(
+        pn.getTrangThai()
+      );
       if (
-        !StatusNormalizer.DA_DUYET.equals(
-          StatusNormalizer.normalizePhieuNhapStatus(pn.getTrangThai())
-        )
-      ) return false;
+        !StatusNormalizer.CHO_DUYET.equals(status) &&
+        !StatusNormalizer.DA_DUYET.equals(status)
+      ) {
+        return false;
+      }
 
       ArrayList<CTPhieuNhapDTO> list = getByMaPhieuNhap(maPN);
       if (list == null || list.isEmpty()) {
@@ -243,6 +380,8 @@ public class CTPhieuNhapBUS {
       ct.getMaThuoc() == null || ct.getMaThuoc().trim().isEmpty()
     ) return false;
 
+    if (ct.getSoLo() == null || ct.getSoLo().trim().isEmpty()) return false;
+
     if (ct.getSoLuongNhap() <= 0) return false;
 
     if (
@@ -250,10 +389,13 @@ public class CTPhieuNhapBUS {
       ct.getDonGiaNhap().compareTo(BigDecimal.ZERO) <= 0
     ) return false;
 
-    // Không cho nhập lô thuốc đã hết hạn.
+    // Không cho nhập lô có HSD <= hôm nay.
     if (
       ct.getHanSuDung() != null &&
-      ct.getHanSuDung().isBefore(LocalDateTime.now())
+      !ct
+        .getHanSuDung()
+        .toLocalDate()
+        .isAfter(LocalDateTime.now().toLocalDate())
     ) return false;
 
     return true;

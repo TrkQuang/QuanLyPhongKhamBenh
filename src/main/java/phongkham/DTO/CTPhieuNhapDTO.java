@@ -8,7 +8,9 @@ public class CTPhieuNhapDTO {
   private String MaCTPN;
   private String MaPhieuNhap;
   private String MaThuoc;
+  private String SoLo;
   private int SoLuongNhap;
+  private int SoLuongConLai;
   private BigDecimal DonGiaNhap = BigDecimal.ZERO;
   private LocalDateTime HanSuDung;
 
@@ -18,14 +20,18 @@ public class CTPhieuNhapDTO {
     String MaCTPN,
     String MaPhieuNhap,
     String MaThuoc,
+    String SoLo,
     int SoLuongNhap,
+    int SoLuongConLai,
     BigDecimal DonGiaNhap,
     LocalDateTime HanSuDung
   ) {
     this.MaCTPN = MaCTPN;
     this.MaPhieuNhap = MaPhieuNhap;
     this.MaThuoc = MaThuoc;
+    this.SoLo = SoLo;
     this.SoLuongNhap = SoLuongNhap;
+    this.SoLuongConLai = SoLuongConLai;
     this.DonGiaNhap = DonGiaNhap;
     this.HanSuDung = HanSuDung;
   }
@@ -42,8 +48,16 @@ public class CTPhieuNhapDTO {
     return this.MaThuoc;
   }
 
+  public String getSoLo() {
+    return this.SoLo;
+  }
+
   public int getSoLuongNhap() {
     return this.SoLuongNhap;
+  }
+
+  public int getSoLuongConLai() {
+    return this.SoLuongConLai;
   }
 
   public BigDecimal getDonGiaNhap() {
@@ -70,12 +84,20 @@ public class CTPhieuNhapDTO {
     this.MaThuoc = MaThuoc;
   }
 
+  public void setSoLo(String SoLo) {
+    this.SoLo = SoLo;
+  }
+
   public void setSoLuong(int SoLuongNhap) {
     this.SoLuongNhap = SoLuongNhap;
   }
 
   public void setSoLuongNhap(int SoLuongNhap) {
     this.SoLuongNhap = SoLuongNhap;
+  }
+
+  public void setSoLuongConLai(int SoLuongConLai) {
+    this.SoLuongConLai = SoLuongConLai;
   }
 
   public void setDonGiaNhap(BigDecimal DonGiaNhap) {

@@ -113,6 +113,9 @@ public class StatusNormalizer {
     if ("CHUA_DUYET".equals(token)) {
       return CHO_DUYET;
     }
+    if ("CHUA_XAC_NHAN".equals(token)) {
+      return CHO_DUYET;
+    }
     if ("DA_DUYET".equals(token)) {
       return DA_DUYET;
     }

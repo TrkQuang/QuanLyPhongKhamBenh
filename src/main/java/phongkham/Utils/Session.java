@@ -3,7 +3,7 @@ package phongkham.Utils;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
-import phongkham.BUS.PermissionBUS; // ✅ Import BUS
+import phongkham.BUS.PermissionBUS;
 import phongkham.DTO.UsersDTO;
 
 public class Session {
@@ -21,7 +21,7 @@ public class Session {
     }
     currentUser = user;
 
-    // ✅ TỰ ĐỘNG LOAD PERMISSIONS QUA BUS
+    // TỰ ĐỘNG LOAD PERMISSIONS QUA BUS
     PermissionBUS permBUS = new PermissionBUS();
     permBUS.loadPermission(user.getUserID());
 
@@ -68,6 +68,10 @@ public class Session {
     return currentUser != null ? currentUser.getUsername() : null;
   }
 
+  public static String getCurrentUserEmail() {
+    return currentUser != null ? currentUser.getEmail() : null;
+  }
+
   /**
    * Kiểm tra quyền
    */
@@ -83,7 +87,7 @@ public class Session {
    */
   public static void printInfo() {
     if (!isLoggedIn()) {
-      System.out.println("❌ Chưa đăng nhập");
+      System.out.println("Chưa đăng nhập");
       return;
     }
 
