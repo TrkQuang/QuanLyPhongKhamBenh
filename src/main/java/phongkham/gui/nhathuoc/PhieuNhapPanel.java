@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -221,6 +220,7 @@ public class PhieuNhapPanel extends BasePanel {
       24
     );
     JLabel lblTongTien = new JLabel("Tổng tiền: 0");
+    final String receiptLotCode = generateReceiptLotCode(maPhieuNhap);
 
     gbc.gridx = 0;
     gbc.gridy = 0;
@@ -303,7 +303,7 @@ public class PhieuNhapPanel extends BasePanel {
     JButton btnRemoveLine = UIUtils.ghostButton("Xóa dòng");
 
     btnAddLine.addActionListener(e -> {
-      LineItem item = showLineItemDialog(dialog, null);
+      LineItem item = showLineItemDialog(dialog, null, receiptLotCode);
       if (item == null) {
         return;
       }
@@ -321,7 +321,7 @@ public class PhieuNhapPanel extends BasePanel {
       }
       int modelRow = detailTable.convertRowIndexToModel(row);
       LineItem old = lineItems.get(modelRow);
-      LineItem edited = showLineItemDialog(dialog, old);
+      LineItem edited = showLineItemDialog(dialog, old, receiptLotCode);
       if (edited == null) {
         return;
       }
@@ -442,8 +442,8 @@ public class PhieuNhapPanel extends BasePanel {
           DialogHelper.error(
             dialog,
             "Lưu chi tiết thuốc thất bại tại mã thuốc " +
-            item.maThuoc +
-            ". Vui lòng kiểm tra hạn sử dụng, số lô và dữ liệu thuốc."
+              item.maThuoc +
+              ". Vui lòng kiểm tra hạn sử dụng, số lô và dữ liệu thuốc."
           );
           return;
         }
@@ -664,7 +664,11 @@ public class PhieuNhapPanel extends BasePanel {
     dialog.setVisible(true);
   }
 
-  private LineItem showLineItemDialog(JDialog owner, LineItem source) {
+  private LineItem showLineItemDialog(
+    JDialog owner,
+    LineItem source,
+    String receiptLotCode
+  ) {
     List<ThuocDTO> medicines = new ArrayList<>();
     for (ThuocDTO t : thuocBUS.list()) {
       if (t != null && t.isActive()) {
@@ -691,7 +695,9 @@ public class PhieuNhapPanel extends BasePanel {
     );
     JTextField txtSoLo = new JTextField(22);
     txtSoLo.setEditable(false);
-    txtSoLo.setToolTipText("Số lô được tự sinh để tránh trùng/sai định dạng");
+    txtSoLo.setToolTipText(
+      "Số lô dùng chung theo phiếu nhập để đồng nhất quản lý"
+    );
     JSpinner spDonGia = new JSpinner(
       new javax.swing.SpinnerNumberModel(
         source == null ? 1000.0 : source.donGiaNhap.doubleValue(),
@@ -722,40 +728,17 @@ public class PhieuNhapPanel extends BasePanel {
           break;
         }
       }
-      txtSoLo.setText(source.soLo == null ? "" : source.soLo);
+      txtSoLo.setText(
+        receiptLotCode == null || receiptLotCode.trim().isEmpty()
+          ? ""
+          : receiptLotCode
+      );
     } else {
-      ThuocDTO initial = medicines.get(Math.max(0, cbThuoc.getSelectedIndex()));
-      LocalDate initialHsd = LocalDateTime.ofInstant(
-        ((Date) spHsd.getValue()).toInstant(),
-        ZoneId.systemDefault()
-      ).toLocalDate();
-      txtSoLo.setText(generateAutoSoLo(initial.getMaThuoc(), initialHsd));
-
-      cbThuoc.addActionListener(e -> {
-        int idx = cbThuoc.getSelectedIndex();
-        if (idx < 0) {
-          return;
-        }
-        ThuocDTO selected = medicines.get(idx);
-        LocalDate hsd = LocalDateTime.ofInstant(
-          ((Date) spHsd.getValue()).toInstant(),
-          ZoneId.systemDefault()
-        ).toLocalDate();
-        txtSoLo.setText(generateAutoSoLo(selected.getMaThuoc(), hsd));
-      });
-
-      spHsd.addChangeListener(e -> {
-        int idx = cbThuoc.getSelectedIndex();
-        if (idx < 0) {
-          return;
-        }
-        ThuocDTO selected = medicines.get(idx);
-        LocalDate hsd = LocalDateTime.ofInstant(
-          ((Date) spHsd.getValue()).toInstant(),
-          ZoneId.systemDefault()
-        ).toLocalDate();
-        txtSoLo.setText(generateAutoSoLo(selected.getMaThuoc(), hsd));
-      });
+      txtSoLo.setText(
+        receiptLotCode == null || receiptLotCode.trim().isEmpty()
+          ? ""
+          : receiptLotCode
+      );
     }
 
     JPanel panel = new JPanel(new GridBagLayout());
@@ -811,12 +794,11 @@ public class PhieuNhapPanel extends BasePanel {
     ThuocDTO selected = medicines.get(index);
     String soLo = txtSoLo.getText() == null ? "" : txtSoLo.getText().trim();
     if (soLo.isEmpty()) {
-      Date hsdDate = (Date) spHsd.getValue();
-      LocalDate hsd = LocalDateTime.ofInstant(
-        hsdDate.toInstant(),
-        ZoneId.systemDefault()
-      ).toLocalDate();
-      soLo = generateAutoSoLo(selected.getMaThuoc(), hsd);
+      soLo = receiptLotCode == null ? "" : receiptLotCode.trim();
+    }
+    if (soLo.isEmpty()) {
+      DialogHelper.warn(owner, "Không thể sinh số lô cho phiếu nhập này.");
+      return null;
     }
 
     LineItem item = new LineItem();
@@ -958,22 +940,10 @@ public class PhieuNhapPanel extends BasePanel {
   }
 
   private String generateNextMaCTPN() {
-    int max = 0;
-    for (PhieuNhapDTO pn : phieuNhapBUS.getAll()) {
-      ArrayList<CTPhieuNhapDTO> details = ctPhieuNhapBUS.getByMaPhieuNhap(
-        pn.getMaPhieuNhap()
-      );
-      for (CTPhieuNhapDTO ct : details) {
-        String ma = ct.getMaCTPN();
-        if (ma == null || !ma.startsWith("CTPN")) {
-          continue;
-        }
-        try {
-          max = Math.max(max, Integer.parseInt(ma.substring(4)));
-        } catch (NumberFormatException ignored) {}
-      }
-    }
-    return String.format("CTPN%03d", max + 1);
+    // Dùng timestamp + random để tránh trùng khi thêm nhiều dòng trước khi lưu DB.
+    long ts = System.currentTimeMillis() % 1000000000L;
+    int rand = (int) (Math.random() * 1000);
+    return String.format("CTPN%09d%03d", ts, rand);
   }
 
   private void addInfoRow(
@@ -1235,13 +1205,13 @@ public class PhieuNhapPanel extends BasePanel {
     return text == null ? "" : text;
   }
 
-  private String generateAutoSoLo(String maThuoc, LocalDate hsd) {
-    String ma = maThuoc == null ? "THUOC" : maThuoc.trim().toUpperCase(Locale.ROOT);
-    String datePart = hsd == null
-      ? LocalDate.now().format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE)
-      : hsd.format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
-    String rand = UUID.randomUUID().toString().replace("-", "").substring(0, 6).toUpperCase(Locale.ROOT);
-    return "LO-" + ma + "-" + datePart + "-" + rand;
+  private String generateReceiptLotCode(String maPhieuNhap) {
+    String ma =
+      maPhieuNhap == null ? "PN" : maPhieuNhap.trim().toUpperCase(Locale.ROOT);
+    String datePart = LocalDate.now().format(
+      java.time.format.DateTimeFormatter.BASIC_ISO_DATE
+    );
+    return "LO-" + ma + "-" + datePart;
   }
 
   private void openQuickReportDialog() {

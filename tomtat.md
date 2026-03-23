@@ -239,6 +239,7 @@ Trong `init()`:
 
 1. Gọi `collectMetrics()` gom toàn bộ dữ liệu thống kê.
 2. Dựng 3 khối UI:
+
 - hàng số liệu tổng quan (4 card)
 - khối giữa gồm chart + trạng thái hệ thống (split 72/28)
 - khối dưới là 2 bảng cảnh báo thuốc
@@ -278,13 +279,18 @@ Luồng dữ liệu:
 
 1. `buildChartData()` tạo map 6 tháng gần nhất (T10, T11, ...).
 2. Duyệt `HoaDonKhamDTO`:
+
 - lấy `NgayThanhToan`
 - group theo `YearMonth`
 - cộng dồn `TongTien`
+
 3. Đổ sang 2 mảng:
+
 - `monthLabels[]`
 - `monthValues[]`
+
 4. `ChartPanel` nhận mảng và tự vẽ:
+
 - trục X/Y
 - cột bo góc
 - đường line nối các điểm
@@ -300,7 +306,7 @@ Mốc code:
 Chi tiết vẽ chart (để bạn giải thích khi thuyết trình):
 
 - Chiều cao cột dùng công thức chuẩn hóa theo max:
-    `barHeight = (value / max) * (chartHeight - 8)`
+  `barHeight = (value / max) * (chartHeight - 8)`
 - Đường line đi qua tâm từng cột.
 - Nhãn tháng in ở đáy chart.
 
@@ -336,9 +342,9 @@ Cách tính từng chỉ số:
 - `stockSafetyRate` = `100 - (soThuocTonThap / tongSoThuoc * 100)`
 - Thuốc tồn thấp: `SoLuongTon < 20`
 - Hết hạn và sắp hết hạn lấy từ danh sách lô nhập (`ChiTietPhieuNhap`) có:
-    - trạng thái phiếu nhập là `DA_NHAP` hoặc `DA_NHAP_KHO`
-    - `SoLuongConLai > 0`
-    - có `HanSuDung`
+  - trạng thái phiếu nhập là `DA_NHAP` hoặc `DA_NHAP_KHO`
+  - `SoLuongConLai > 0`
+  - có `HanSuDung`
 
 Mốc code:
 
