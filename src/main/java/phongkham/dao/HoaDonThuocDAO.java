@@ -72,7 +72,10 @@ public class HoaDonThuocDAO {
     String sql =
       "SELECT COALESCE(MAX(CAST(SUBSTRING(MaHoaDon, 4) AS UNSIGNED)), 0) " +
       "FROM HoaDonThuoc WHERE MaHoaDon REGEXP '^HDT[0-9]+$'";
-    try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+    try (
+      PreparedStatement ps = conn.prepareStatement(sql);
+      ResultSet rs = ps.executeQuery()
+    ) {
       int next = 1;
       if (rs.next()) {
         next = rs.getInt(1) + 1;
@@ -82,7 +85,9 @@ public class HoaDonThuocDAO {
   }
 
   private boolean isDuplicateKey(SQLException e) {
-    return e != null && (e.getErrorCode() == 1062 || "23000".equals(e.getSQLState()));
+    return (
+      e != null && (e.getErrorCode() == 1062 || "23000".equals(e.getSQLState()))
+    );
   }
 
   // Thêm mới
@@ -99,7 +104,8 @@ public class HoaDonThuocDAO {
       "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     String providedMaHoaDon = hoaDon.getMaHoaDon();
-    boolean autoGenerate = providedMaHoaDon == null || providedMaHoaDon.trim().isEmpty();
+    boolean autoGenerate =
+      providedMaHoaDon == null || providedMaHoaDon.trim().isEmpty();
 
     try (Connection conn = DBConnection.getConnection()) {
       for (int attempt = 0; attempt < MAX_INSERT_RETRY; attempt++) {
@@ -126,10 +132,12 @@ public class HoaDonThuocDAO {
           }
           return false;
         } catch (SQLException e) {
-          if (autoGenerate && isDuplicateKey(e) && attempt < MAX_INSERT_RETRY - 1) {
+          if (
+            autoGenerate && isDuplicateKey(e) && attempt < MAX_INSERT_RETRY - 1
+          ) {
             continue;
           }
-            System.err.println("✗ Error insert HoaDonThuoc: " + e.getMessage());
+          System.err.println("✗ Error insert HoaDonThuoc: " + e.getMessage());
           return false;
         }
       }

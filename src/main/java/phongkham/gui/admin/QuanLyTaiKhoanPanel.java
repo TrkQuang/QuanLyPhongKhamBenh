@@ -156,7 +156,8 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
       form.add(txtMaKhoa);
 
       Runnable syncDoctorFields = () -> {
-        boolean isDoctor = parseRoleId(String.valueOf(cbRole.getSelectedItem())) == 2;
+        boolean isDoctor =
+          parseRoleId(String.valueOf(cbRole.getSelectedItem())) == 2;
         setComponentVisibility(lblMaBacSi, isDoctor);
         setComponentVisibility(txtMaBacSi, isDoctor);
         setComponentVisibility(lblHoTen, isDoctor);
@@ -202,7 +203,9 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
           user.setEmail(txtEmail.getText().trim());
           user.setRoleID(roleId);
           user.setActive(isCreate || source.isActive());
-          message = isCreate ? usersBUS.insertUser(user) : usersBUS.updateUser(user);
+          message = isCreate
+            ? usersBUS.insertUser(user)
+            : usersBUS.updateUser(user);
         }
 
         if (
@@ -212,10 +215,7 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
           DialogHelper.warn(this, message);
           return false;
         }
-        DialogHelper.info(
-          this,
-          message
-        );
+        DialogHelper.info(this, message);
         loadData();
         return true;
       },

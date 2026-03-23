@@ -9,8 +9,8 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -170,8 +170,8 @@ public class BenhAnPanel extends BasePanel {
     );
     txtMaHoSo.setText(
       selected.getMaHoSo() == null ||
-      selected.getMaHoSo().trim().isEmpty() ||
-      selected.getMaHoSo().startsWith(HO_SO_CHUA_TAO_PREFIX)
+        selected.getMaHoSo().trim().isEmpty() ||
+        selected.getMaHoSo().startsWith(HO_SO_CHUA_TAO_PREFIX)
         ? generateMaHoSo()
         : selected.getMaHoSo()
     );
@@ -690,9 +690,10 @@ public class BenhAnPanel extends BasePanel {
       );
     }
 
-    ArrayList<LichKhamDTO> dsLich = maBacSi == null || maBacSi.trim().isEmpty()
-      ? lichKhamBUS.getAll()
-      : lichKhamBUS.getByMaBacSi(maBacSi);
+    ArrayList<LichKhamDTO> dsLich =
+      maBacSi == null || maBacSi.trim().isEmpty()
+        ? lichKhamBUS.getAll()
+        : lichKhamBUS.getByMaBacSi(maBacSi);
     for (LichKhamDTO lich : dsLich) {
       if (lich == null || lich.getMaLichKham() == null) {
         continue;

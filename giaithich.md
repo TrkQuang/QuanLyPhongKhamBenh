@@ -92,14 +92,17 @@ Luồng:
 
 1. `init()` gọi `collectMetrics()`.
 2. `collectMetrics()` gọi nhiều BUS để gom dữ liệu:
+
 - bác sĩ
 - user
 - hóa đơn khám
 - lịch khám
 - thuốc
 - lô thuốc nhập
+
 3. Dữ liệu được gói vào `DashboardMetrics`.
 4. Render:
+
 - stat cards
 - chart
 - thanh trạng thái
@@ -171,9 +174,11 @@ Luồng tạo phiếu:
 2. Mở popup tạo phiếu.
 3. Thêm nhiều line item thuốc vào bảng tạm.
 4. Bấm lưu:
+
 - lưu header phiếu nhập
 - lưu chi tiết từng dòng qua `CTPhieuNhapBUS.insert(...)`
 - lỗi giữa chừng có rollback cleanup
+
 5. Sau đó `reloadData()`.
 
 Các BUS gọi:
@@ -236,14 +241,17 @@ ArrayList<ThuocDTO> rows = new ArrayList<>(hoaDonThuocBUS.getAllHoaDonThuoc());
 3 kiểu return hay gặp:
 
 1. `boolean`
+
 - cho thao tác insert/update/delete.
 - panel tự quyết định show thông báo success/fail.
 
 2. `String` message
+
 - BUS trả thẳng message nghiệp vụ.
 - panel show message đó luôn.
 
 3. `ArrayList/ List<DTO>`
+
 - để đổ vào bảng/filter/sort.
 
 Ví dụ thực tế:

@@ -165,7 +165,9 @@ public class QuanLyGoiDichVuPanel extends BasePanel {
           goi.setGiaDichVu(new BigDecimal(txtGia.getText().trim()));
           goi.setThoiGianKham(txtThoiGian.getText().trim());
           goi.setMoTa(txtMoTa.getText().trim());
-          goi.setMaKhoa(extractMaKhoa(String.valueOf(cbMaKhoa.getSelectedItem())));
+          goi.setMaKhoa(
+            extractMaKhoa(String.valueOf(cbMaKhoa.getSelectedItem()))
+          );
         } catch (Exception ex) {
           DialogHelper.warn(this, "Giá dịch vụ không hợp lệ.");
           return false;
@@ -175,7 +177,10 @@ public class QuanLyGoiDichVuPanel extends BasePanel {
           DialogHelper.warn(this, "Tên gói không được để trống.");
           return false;
         }
-        if (goi.getThoiGianKham() == null || goi.getThoiGianKham().trim().isEmpty()) {
+        if (
+          goi.getThoiGianKham() == null ||
+          goi.getThoiGianKham().trim().isEmpty()
+        ) {
           DialogHelper.warn(this, "Thời gian khám không được để trống.");
           return false;
         }

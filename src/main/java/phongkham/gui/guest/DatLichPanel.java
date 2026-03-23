@@ -10,11 +10,11 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
-import java.sql.Date;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -558,12 +558,17 @@ public class DatLichPanel extends BasePanel {
     loadComboboxData();
   }
 
-  private boolean createInitialMedicalRecord(LichKhamDTO lich, java.util.Date ngaySinh) {
+  private boolean createInitialMedicalRecord(
+    LichKhamDTO lich,
+    java.util.Date ngaySinh
+  ) {
     if (lich == null || lich.getMaLichKham() == null) {
       return false;
     }
 
-    HoSoBenhAnDTO existing = hoSoBenhAnBUS.getByMaLichKham(lich.getMaLichKham());
+    HoSoBenhAnDTO existing = hoSoBenhAnBUS.getByMaLichKham(
+      lich.getMaLichKham()
+    );
     if (existing != null) {
       return true;
     }
@@ -574,10 +579,14 @@ public class DatLichPanel extends BasePanel {
     hs.setHoTen(txtHoTen.getText().trim());
     hs.setSoDienThoai(txtSoDienThoai.getText().trim());
     hs.setCCCD(txtCCCD.getText().trim());
-    hs.setNgaySinh(ngaySinh == null ? null : new Date(ngaySinh.getTime()));
+    hs.setNgaySinh(
+      ngaySinh == null ? null : new java.sql.Date(ngaySinh.getTime())
+    );
     hs.setGioiTinh("Nam");
     hs.setDiaChi("");
-    hs.setNgayKham(new Date(((java.util.Date) spNgayKham.getValue()).getTime()));
+    hs.setNgayKham(
+      new java.sql.Date(((java.util.Date) spNgayKham.getValue()).getTime())
+    );
     hs.setTrieuChung("");
     hs.setChanDoan("");
     hs.setKetLuan("");
