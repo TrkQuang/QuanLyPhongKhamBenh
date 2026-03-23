@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -688,7 +689,9 @@ public class PhieuNhapPanel extends BasePanel {
         1
       )
     );
-    JTextField txtSoLo = new JTextField(source == null ? "" : source.soLo, 18);
+    JTextField txtSoLo = new JTextField(22);
+    txtSoLo.setEditable(false);
+    txtSoLo.setToolTipText("Số lô được tự sinh để tránh trùng/sai định dạng");
     JSpinner spDonGia = new JSpinner(
       new javax.swing.SpinnerNumberModel(
         source == null ? 1000.0 : source.donGiaNhap.doubleValue(),
@@ -719,6 +722,40 @@ public class PhieuNhapPanel extends BasePanel {
           break;
         }
       }
+      txtSoLo.setText(source.soLo == null ? "" : source.soLo);
+    } else {
+      ThuocDTO initial = medicines.get(Math.max(0, cbThuoc.getSelectedIndex()));
+      LocalDate initialHsd = LocalDateTime.ofInstant(
+        ((Date) spHsd.getValue()).toInstant(),
+        ZoneId.systemDefault()
+      ).toLocalDate();
+      txtSoLo.setText(generateAutoSoLo(initial.getMaThuoc(), initialHsd));
+
+      cbThuoc.addActionListener(e -> {
+        int idx = cbThuoc.getSelectedIndex();
+        if (idx < 0) {
+          return;
+        }
+        ThuocDTO selected = medicines.get(idx);
+        LocalDate hsd = LocalDateTime.ofInstant(
+          ((Date) spHsd.getValue()).toInstant(),
+          ZoneId.systemDefault()
+        ).toLocalDate();
+        txtSoLo.setText(generateAutoSoLo(selected.getMaThuoc(), hsd));
+      });
+
+      spHsd.addChangeListener(e -> {
+        int idx = cbThuoc.getSelectedIndex();
+        if (idx < 0) {
+          return;
+        }
+        ThuocDTO selected = medicines.get(idx);
+        LocalDate hsd = LocalDateTime.ofInstant(
+          ((Date) spHsd.getValue()).toInstant(),
+          ZoneId.systemDefault()
+        ).toLocalDate();
+        txtSoLo.setText(generateAutoSoLo(selected.getMaThuoc(), hsd));
+      });
     }
 
     JPanel panel = new JPanel(new GridBagLayout());
@@ -774,8 +811,12 @@ public class PhieuNhapPanel extends BasePanel {
     ThuocDTO selected = medicines.get(index);
     String soLo = txtSoLo.getText() == null ? "" : txtSoLo.getText().trim();
     if (soLo.isEmpty()) {
-      DialogHelper.warn(owner, "Số lô không được để trống.");
-      return null;
+      Date hsdDate = (Date) spHsd.getValue();
+      LocalDate hsd = LocalDateTime.ofInstant(
+        hsdDate.toInstant(),
+        ZoneId.systemDefault()
+      ).toLocalDate();
+      soLo = generateAutoSoLo(selected.getMaThuoc(), hsd);
     }
 
     LineItem item = new LineItem();
@@ -1192,6 +1233,15 @@ public class PhieuNhapPanel extends BasePanel {
 
   private String safe(String text) {
     return text == null ? "" : text;
+  }
+
+  private String generateAutoSoLo(String maThuoc, LocalDate hsd) {
+    String ma = maThuoc == null ? "THUOC" : maThuoc.trim().toUpperCase(Locale.ROOT);
+    String datePart = hsd == null
+      ? LocalDate.now().format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE)
+      : hsd.format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
+    String rand = UUID.randomUUID().toString().replace("-", "").substring(0, 6).toUpperCase(Locale.ROOT);
+    return "LO-" + ma + "-" + datePart + "-" + rand;
   }
 
   private void openQuickReportDialog() {
