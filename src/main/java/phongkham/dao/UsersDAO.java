@@ -228,6 +228,13 @@ public class UsersDAO {
     return existsByField("SELECT 1 FROM BacSi WHERE Email = ? LIMIT 1", email);
   }
 
+  public boolean existsBacSiId(String maBacSi) {
+    return existsByField(
+      "SELECT 1 FROM BacSi WHERE MaBacSi = ? LIMIT 1",
+      maBacSi
+    );
+  }
+
   public String generateNextUserID() {
     return generateNextPrefixedId("Users", "UserID", "U", 1, 3, "U001");
   }

@@ -33,6 +33,12 @@ public class UsersBUS {
     if (u.getUsername().trim().isEmpty() || u.getPassword().trim().isEmpty()) {
       return "Tên TK và MK ko được trống!";
     }
+    if (u.getUserID() == null || u.getUserID().trim().isEmpty()) {
+      u.setUserID(userDAO.generateNextUserID());
+    }
+    if (userDAO.getUserByID(u.getUserID()) != null) {
+      return "UserID đã tồn tại";
+    }
     if (userDAO.existsUsername(u.getUsername().trim())) {
       return "Tên tài khoản đã tồn tại";
     }
@@ -105,6 +111,7 @@ public class UsersBUS {
   }
 
   public String createDoctorAccountWithProfile(
+    String maBacSi,
     String username,
     String password,
     String email,
@@ -113,6 +120,9 @@ public class UsersBUS {
     String chuyenKhoa,
     String maKhoa
   ) {
+    if (maBacSi == null || maBacSi.trim().isEmpty()) {
+      return "Mã bác sĩ không được để trống";
+    }
     if (username == null || username.trim().isEmpty()) {
       return "Tên tài khoản không được để trống";
     }
@@ -137,6 +147,9 @@ public class UsersBUS {
     ) {
       return "Email đã tồn tại";
     }
+    if (userDAO.existsBacSiId(maBacSi.trim())) {
+      return "Mã bác sĩ đã tồn tại";
+    }
 
     UsersDTO user = new UsersDTO();
     user.setUserID(userDAO.generateNextUserID());
@@ -147,7 +160,7 @@ public class UsersBUS {
     user.setActive(true);
 
     BacSiDTO bacSi = new BacSiDTO();
-    bacSi.setMaBacSi(userDAO.generateNextBacSiID());
+    bacSi.setMaBacSi(maBacSi.trim());
     bacSi.setHoTen(hoTen.trim());
     bacSi.setSoDienThoai(soDienThoai == null ? "" : soDienThoai.trim());
     bacSi.setEmail(email.trim());
@@ -162,6 +175,27 @@ public class UsersBUS {
         bacSi.getMaBacSi() +
         ")"
       : "Tạo tài khoản bác sĩ thất bại";
+  }
+
+  public String createDoctorAccountWithProfile(
+    String username,
+    String password,
+    String email,
+    String hoTen,
+    String soDienThoai,
+    String chuyenKhoa,
+    String maKhoa
+  ) {
+    return createDoctorAccountWithProfile(
+      userDAO.generateNextBacSiID(),
+      username,
+      password,
+      email,
+      hoTen,
+      soDienThoai,
+      chuyenKhoa,
+      maKhoa
+    );
   }
 
   public String createPharmacyAccount(

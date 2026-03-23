@@ -9,7 +9,9 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Date;
+import java.util.Set;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -45,6 +47,7 @@ import phongkham.gui.common.components.CustomTextField;
 public class BenhAnPanel extends BasePanel {
 
   private static final String GHI_CHU_PLACEHOLDER = "Ghi chú";
+  private static final String HO_SO_CHUA_TAO_PREFIX = "CHUA_TAO_";
 
   private final HoSoBenhAnBUS hoSoBenhAnBUS = new HoSoBenhAnBUS();
   private final LichKhamBUS lichKhamBUS = new LichKhamBUS();
@@ -111,6 +114,10 @@ public class BenhAnPanel extends BasePanel {
       return;
     }
 
+    boolean isPendingRecord =
+      selected.getMaHoSo() == null ||
+      selected.getMaHoSo().startsWith(HO_SO_CHUA_TAO_PREFIX);
+
     String trangThaiHoSo = StatusNormalizer.normalizeHoSoStatus(
       safe(selected.getTrangThai())
     );
@@ -162,7 +169,9 @@ public class BenhAnPanel extends BasePanel {
       18
     );
     txtMaHoSo.setText(
-      selected.getMaHoSo() == null || selected.getMaHoSo().trim().isEmpty()
+      selected.getMaHoSo() == null ||
+      selected.getMaHoSo().trim().isEmpty() ||
+      selected.getMaHoSo().startsWith(HO_SO_CHUA_TAO_PREFIX)
         ? generateMaHoSo()
         : selected.getMaHoSo()
     );
@@ -182,24 +191,30 @@ public class BenhAnPanel extends BasePanel {
       18
     );
     txtHoTen.setText(safe(selected.getHoTen()));
-    txtHoTen.setEditable(false);
-    applyReadOnlyStyle(txtHoTen);
+    txtHoTen.setEditable(isPendingRecord);
+    if (!isPendingRecord) {
+      applyReadOnlyStyle(txtHoTen);
+    }
 
     CustomTextField txtSdt = (CustomTextField) UIUtils.roundedTextField(
       "Số điện thoại",
       18
     );
     txtSdt.setText(safe(selected.getSoDienThoai()));
-    txtSdt.setEditable(false);
-    applyReadOnlyStyle(txtSdt);
+    txtSdt.setEditable(isPendingRecord);
+    if (!isPendingRecord) {
+      applyReadOnlyStyle(txtSdt);
+    }
 
     CustomTextField txtCCCD = (CustomTextField) UIUtils.roundedTextField(
       "CCCD",
       18
     );
     txtCCCD.setText(safe(selected.getCCCD()));
-    txtCCCD.setEditable(false);
-    applyReadOnlyStyle(txtCCCD);
+    txtCCCD.setEditable(isPendingRecord);
+    if (!isPendingRecord) {
+      applyReadOnlyStyle(txtCCCD);
+    }
 
     JComboBox<String> cbGioiTinh = new JComboBox<>(
       new String[] { "Nam", "Nữ" }
@@ -207,7 +222,7 @@ public class BenhAnPanel extends BasePanel {
     cbGioiTinh.setSelectedItem(
       "Nu".equalsIgnoreCase(safe(selected.getGioiTinh())) ? "Nữ" : "Nam"
     );
-    cbGioiTinh.setEnabled(false);
+    cbGioiTinh.setEnabled(isPendingRecord);
 
     JSpinner spNgaySinh = new JSpinner(
       new SpinnerDateModel(
@@ -220,7 +235,7 @@ public class BenhAnPanel extends BasePanel {
       )
     );
     spNgaySinh.setEditor(new JSpinner.DateEditor(spNgaySinh, "dd/MM/yyyy"));
-    spNgaySinh.setEnabled(false);
+    spNgaySinh.setEnabled(isPendingRecord);
 
     JSpinner spNgayKham = new JSpinner(
       new SpinnerDateModel(
@@ -241,8 +256,10 @@ public class BenhAnPanel extends BasePanel {
       18
     );
     txtDiaChi.setText(safe(selected.getDiaChi()));
-    txtDiaChi.setEditable(false);
-    applyReadOnlyStyle(txtDiaChi);
+    txtDiaChi.setEditable(isPendingRecord);
+    if (!isPendingRecord) {
+      applyReadOnlyStyle(txtDiaChi);
+    }
 
     JTextArea txtTrieuChung = new JTextArea(
       safe(selected.getTrieuChung()),
@@ -439,7 +456,16 @@ public class BenhAnPanel extends BasePanel {
       hs.setMaBacSi(currentDoctorId);
       hs.setTrangThai(StatusNormalizer.DA_KHAM);
 
-      boolean saved = hoSoBenhAnBUS.updateHoSo(hs);
+      HoSoBenhAnDTO existingByLich = hoSoBenhAnBUS.getByMaLichKham(
+        hs.getMaLichKham()
+      );
+      boolean saved;
+      if (existingByLich != null) {
+        hs.setMaHoSo(existingByLich.getMaHoSo());
+        saved = hoSoBenhAnBUS.updateHoSo(hs);
+      } else {
+        saved = hoSoBenhAnBUS.dangKyBenhNhan(hs);
+      }
       if (!saved) {
         DialogHelper.error(dialog, "Cập nhật hồ sơ bệnh án thất bại.");
         return;
@@ -610,6 +636,21 @@ public class BenhAnPanel extends BasePanel {
     String maHoSo = String.valueOf(
       model.getValueAt(table.convertRowIndexToModel(row), 0)
     );
+    if (maHoSo.startsWith(HO_SO_CHUA_TAO_PREFIX)) {
+      HoSoBenhAnDTO pending = new HoSoBenhAnDTO();
+      int modelRow = table.convertRowIndexToModel(row);
+      pending.setMaHoSo("");
+      pending.setMaLichKham(String.valueOf(model.getValueAt(modelRow, 1)));
+      pending.setHoTen("");
+      pending.setSoDienThoai("");
+      pending.setCCCD("");
+      pending.setDiaChi("");
+      pending.setGioiTinh("Nam");
+      pending.setNgaySinh(new java.sql.Date(new Date().getTime()));
+      pending.setNgayKham(new java.sql.Date(new Date().getTime()));
+      pending.setTrangThai(StatusNormalizer.CHO_KHAM);
+      return pending;
+    }
     return hoSoBenhAnBUS.getById(maHoSo);
   }
 
@@ -617,8 +658,15 @@ public class BenhAnPanel extends BasePanel {
     model.setRowCount(0);
     String maBacSi = resolveCurrentDoctorId();
     ArrayList<HoSoBenhAnDTO> dsHoSo = hoSoBenhAnBUS.getAll();
+    Set<String> maLichDaCoHoSo = new HashSet<>();
 
     for (HoSoBenhAnDTO hoSo : dsHoSo) {
+      if (hoSo.getMaLichKham() != null) {
+        maLichDaCoHoSo.add(hoSo.getMaLichKham());
+      }
+      if (!isVisibleByLinkedScheduleStatus(hoSo)) {
+        continue;
+      }
       if (
         maBacSi != null &&
         !maBacSi.trim().isEmpty() &&
@@ -641,7 +689,62 @@ public class BenhAnPanel extends BasePanel {
         }
       );
     }
+
+    ArrayList<LichKhamDTO> dsLich = maBacSi == null || maBacSi.trim().isEmpty()
+      ? lichKhamBUS.getAll()
+      : lichKhamBUS.getByMaBacSi(maBacSi);
+    for (LichKhamDTO lich : dsLich) {
+      if (lich == null || lich.getMaLichKham() == null) {
+        continue;
+      }
+      String trangThaiLich = StatusNormalizer.normalizeLichKhamStatus(
+        lich.getTrangThai()
+      );
+      if (!StatusNormalizer.DA_XAC_NHAN.equals(trangThaiLich)) {
+        continue;
+      }
+      if (maLichDaCoHoSo.contains(lich.getMaLichKham())) {
+        continue;
+      }
+
+      model.addRow(
+        new Object[] {
+          HO_SO_CHUA_TAO_PREFIX + lich.getMaLichKham(),
+          lich.getMaLichKham(),
+          "",
+          "",
+          lich.getThoiGianBatDau(),
+          lich.getMaBacSi(),
+          StatusNormalizer.CHO_KHAM,
+          "",
+        }
+      );
+    }
     updateKeHoSoButtonState();
+  }
+
+  private boolean isVisibleByLinkedScheduleStatus(HoSoBenhAnDTO hoSo) {
+    if (hoSo == null) {
+      return false;
+    }
+    String maLich = hoSo.getMaLichKham();
+    if (maLich == null || maLich.trim().isEmpty()) {
+      return true;
+    }
+
+    LichKhamDTO lich = lichKhamBUS.getById(maLich);
+    if (lich == null) {
+      return true;
+    }
+
+    String trangThaiLich = StatusNormalizer.normalizeLichKhamStatus(
+      lich.getTrangThai()
+    );
+    return (
+      StatusNormalizer.DA_XAC_NHAN.equals(trangThaiLich) ||
+      StatusNormalizer.DANG_KHAM.equals(trangThaiLich) ||
+      StatusNormalizer.HOAN_THANH.equals(trangThaiLich)
+    );
   }
 
   private void updateKeHoSoButtonState() {

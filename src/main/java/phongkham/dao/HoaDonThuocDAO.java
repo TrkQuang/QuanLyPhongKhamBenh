@@ -11,6 +11,8 @@ import phongkham.db.DBConnection;
 
 public class HoaDonThuocDAO {
 
+  private static final int MAX_INSERT_RETRY = 5;
+
   private String normalizePaymentOrDefault(String rawStatus) {
     String status = StatusNormalizer.normalizePaymentStatus(rawStatus);
     return status.isEmpty() ? StatusNormalizer.CHUA_THANH_TOAN : status;
@@ -58,35 +60,33 @@ public class HoaDonThuocDAO {
 
   // Tự động sinh mã hóa đơn
   public String generateMaHoaDon() {
-    String sql =
-      "SELECT MaHoaDon FROM HoaDonThuoc ORDER BY MaHoaDon DESC LIMIT 1";
-    try (
-      Connection conn = DBConnection.getConnection();
-      Statement stmt = conn.createStatement();
-      ResultSet rs = stmt.executeQuery(sql)
-    ) {
-      if (rs.next()) {
-        String lastMa = rs.getString("MaHoaDon");
-        // Giả sử mã có dạng HDT001, HDT002, ...
-        if (lastMa != null && lastMa.startsWith("HDT")) {
-          int num = Integer.parseInt(lastMa.substring(3));
-          return String.format("HDT%03d", num + 1);
-        }
-      }
+    try (Connection conn = DBConnection.getConnection()) {
+      return generateMaHoaDon(conn);
     } catch (SQLException e) {
       System.err.println("Lỗi sinh mã hóa đơn: " + e.getMessage());
+      return "HDT001";
     }
-    // Nếu chưa có hóa đơn nào, bắt đầu từ HDT001
-    return "HDT001";
+  }
+
+  private String generateMaHoaDon(Connection conn) throws SQLException {
+    String sql =
+      "SELECT COALESCE(MAX(CAST(SUBSTRING(MaHoaDon, 4) AS UNSIGNED)), 0) " +
+      "FROM HoaDonThuoc WHERE MaHoaDon REGEXP '^HDT[0-9]+$'";
+    try (PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+      int next = 1;
+      if (rs.next()) {
+        next = rs.getInt(1) + 1;
+      }
+      return String.format("HDT%03d", next);
+    }
+  }
+
+  private boolean isDuplicateKey(SQLException e) {
+    return e != null && (e.getErrorCode() == 1062 || "23000".equals(e.getSQLState()));
   }
 
   // Thêm mới
   public boolean insert(HoaDonThuocDTO hoaDon) {
-    // Tự động sinh mã nếu chưa có
-    if (hoaDon.getMaHoaDon() == null || hoaDon.getMaHoaDon().isEmpty()) {
-      hoaDon.setMaHoaDon(generateMaHoaDon());
-    }
-
     String trangThaiThanhToan = normalizePaymentOrDefault(
       hoaDon.getTrangThaiThanhToan()
     );
@@ -98,20 +98,47 @@ public class HoaDonThuocDAO {
       "INSERT INTO HoaDonThuoc (MaHoaDon, MaDonThuoc, NgayLap, TongTien, GhiChu, TrangThaiThanhToan, NgayThanhToan, TrangThaiLayThuoc, TenBenhNhan, SdtBenhNhan, Active) " +
       "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-    return executeUpdate(
-      sql,
-      hoaDon.getMaHoaDon(),
-      hoaDon.getMaDonThuoc(),
-      hoaDon.getNgayLap(),
-      hoaDon.getTongTien(),
-      hoaDon.getGhiChu(),
-      trangThaiThanhToan,
-      hoaDon.getNgayThanhToan(),
-      trangThaiLayThuoc,
-      hoaDon.getTenBenhNhan(),
-      hoaDon.getSdtBenhNhan(),
-      hoaDon.isActive()
-    );
+    String providedMaHoaDon = hoaDon.getMaHoaDon();
+    boolean autoGenerate = providedMaHoaDon == null || providedMaHoaDon.trim().isEmpty();
+
+    try (Connection conn = DBConnection.getConnection()) {
+      for (int attempt = 0; attempt < MAX_INSERT_RETRY; attempt++) {
+        String maHoaDon = autoGenerate
+          ? generateMaHoaDon(conn)
+          : providedMaHoaDon.trim();
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+          pstmt.setString(1, maHoaDon);
+          pstmt.setObject(2, hoaDon.getMaDonThuoc());
+          pstmt.setObject(3, hoaDon.getNgayLap());
+          pstmt.setDouble(4, hoaDon.getTongTien());
+          pstmt.setString(5, hoaDon.getGhiChu());
+          pstmt.setString(6, trangThaiThanhToan);
+          pstmt.setObject(7, hoaDon.getNgayThanhToan());
+          pstmt.setString(8, trangThaiLayThuoc);
+          pstmt.setString(9, hoaDon.getTenBenhNhan());
+          pstmt.setString(10, hoaDon.getSdtBenhNhan());
+          pstmt.setBoolean(11, hoaDon.isActive());
+
+          if (pstmt.executeUpdate() > 0) {
+            hoaDon.setMaHoaDon(maHoaDon);
+            return true;
+          }
+          return false;
+        } catch (SQLException e) {
+          if (autoGenerate && isDuplicateKey(e) && attempt < MAX_INSERT_RETRY - 1) {
+            continue;
+          }
+            System.err.println("✗ Error insert HoaDonThuoc: " + e.getMessage());
+          return false;
+        }
+      }
+    } catch (SQLException e) {
+      System.err.println("✗ Error insert HoaDonThuoc: " + e.getMessage());
+      return false;
+    }
+
+    return false;
   }
 
   // Cập nhật

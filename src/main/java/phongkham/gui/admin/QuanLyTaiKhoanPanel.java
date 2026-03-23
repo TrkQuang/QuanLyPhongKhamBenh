@@ -1,6 +1,7 @@
 package phongkham.gui.admin;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.GridLayout;
 import java.util.ArrayList;
 import javax.swing.JComboBox;
@@ -95,11 +96,12 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
   private void openUserDialog(UsersDTO source) {
     boolean isCreate = source == null;
 
-    JPanel form = new JPanel(new GridLayout(5, 2, 10, 10));
+    JPanel form = new JPanel(new GridLayout(isCreate ? 10 : 5, 2, 10, 10));
     form.setOpaque(false);
 
     JTextField txtUserId = new JTextField(isCreate ? "" : source.getUserID());
-    txtUserId.setEditable(isCreate);
+    txtUserId.setEditable(false);
+    txtUserId.setText(isCreate ? "(Tự động)" : source.getUserID());
 
     JTextField txtUsername = new JTextField(
       isCreate ? "" : source.getUsername()
@@ -119,6 +121,17 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
       }
     }
 
+    JLabel lblMaBacSi = new JLabel("Mã bác sĩ");
+    JTextField txtMaBacSi = new JTextField();
+    JLabel lblHoTen = new JLabel("Họ tên bác sĩ");
+    JTextField txtHoTen = new JTextField();
+    JLabel lblChuyenKhoa = new JLabel("Chuyên khoa");
+    JTextField txtChuyenKhoa = new JTextField();
+    JLabel lblSdt = new JLabel("SĐT bác sĩ");
+    JTextField txtSdt = new JTextField();
+    JLabel lblMaKhoa = new JLabel("Mã khoa");
+    JTextField txtMaKhoa = new JTextField();
+
     form.add(new JLabel("UserID"));
     form.add(txtUserId);
     form.add(new JLabel("Username"));
@@ -130,22 +143,68 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
     form.add(new JLabel("Role"));
     form.add(cbRole);
 
+    if (isCreate) {
+      form.add(lblMaBacSi);
+      form.add(txtMaBacSi);
+      form.add(lblHoTen);
+      form.add(txtHoTen);
+      form.add(lblChuyenKhoa);
+      form.add(txtChuyenKhoa);
+      form.add(lblSdt);
+      form.add(txtSdt);
+      form.add(lblMaKhoa);
+      form.add(txtMaKhoa);
+
+      Runnable syncDoctorFields = () -> {
+        boolean isDoctor = parseRoleId(String.valueOf(cbRole.getSelectedItem())) == 2;
+        setComponentVisibility(lblMaBacSi, isDoctor);
+        setComponentVisibility(txtMaBacSi, isDoctor);
+        setComponentVisibility(lblHoTen, isDoctor);
+        setComponentVisibility(txtHoTen, isDoctor);
+        setComponentVisibility(lblChuyenKhoa, isDoctor);
+        setComponentVisibility(txtChuyenKhoa, isDoctor);
+        setComponentVisibility(lblSdt, isDoctor);
+        setComponentVisibility(txtSdt, isDoctor);
+        setComponentVisibility(lblMaKhoa, isDoctor);
+        setComponentVisibility(txtMaKhoa, isDoctor);
+        form.revalidate();
+        form.repaint();
+      };
+
+      cbRole.addActionListener(e -> syncDoctorFields.run());
+      syncDoctorFields.run();
+    }
+
     AdminDialogs.showFormDialog(
       this,
       isCreate ? "Tạo tài khoản" : "Cập nhật tài khoản",
       form,
       () -> {
-        UsersDTO user = new UsersDTO();
-        user.setUserID(txtUserId.getText().trim());
-        user.setUsername(txtUsername.getText().trim());
-        user.setPassword(txtPassword.getText().trim());
-        user.setEmail(txtEmail.getText().trim());
-        user.setRoleID(parseRoleId(String.valueOf(cbRole.getSelectedItem())));
-        user.setActive(isCreate || source.isActive());
+        int roleId = parseRoleId(String.valueOf(cbRole.getSelectedItem()));
+        String message;
 
-        String message = isCreate
-          ? usersBUS.insertUser(user)
-          : usersBUS.updateUser(user);
+        if (isCreate && roleId == 2) {
+          message = usersBUS.createDoctorAccountWithProfile(
+            txtMaBacSi.getText().trim(),
+            txtUsername.getText().trim(),
+            txtPassword.getText().trim(),
+            txtEmail.getText().trim(),
+            txtHoTen.getText().trim(),
+            txtSdt.getText().trim(),
+            txtChuyenKhoa.getText().trim(),
+            txtMaKhoa.getText().trim()
+          );
+        } else {
+          UsersDTO user = new UsersDTO();
+          user.setUserID(isCreate ? "" : txtUserId.getText().trim());
+          user.setUsername(txtUsername.getText().trim());
+          user.setPassword(txtPassword.getText().trim());
+          user.setEmail(txtEmail.getText().trim());
+          user.setRoleID(roleId);
+          user.setActive(isCreate || source.isActive());
+          message = isCreate ? usersBUS.insertUser(user) : usersBUS.updateUser(user);
+        }
+
         if (
           !message.toLowerCase().contains("thành công") &&
           !message.toLowerCase().contains("thanh cong")
@@ -155,16 +214,19 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
         }
         DialogHelper.info(
           this,
-          isCreate
-            ? "Tạo tài khoản thành công."
-            : "Cập nhật tài khoản thành công."
+          message
         );
         loadData();
         return true;
       },
-      560,
-      340
+      620,
+      isCreate ? 500 : 340
     );
+  }
+
+  private void setComponentVisibility(Component component, boolean visible) {
+    component.setVisible(visible);
+    component.setEnabled(visible);
   }
 
   private void toggleActive() {

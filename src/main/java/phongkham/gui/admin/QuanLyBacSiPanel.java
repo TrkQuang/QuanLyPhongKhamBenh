@@ -5,12 +5,14 @@ import java.awt.GridLayout;
 import java.util.ArrayList;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import phongkham.BUS.BacSiBUS;
 import phongkham.BUS.KhoaBUS;
+import phongkham.BUS.UsersBUS;
 import phongkham.DTO.BacSiDTO;
 import phongkham.DTO.KhoaDTO;
 import phongkham.gui.admin.components.AdminDialogs;
@@ -22,6 +24,7 @@ public class QuanLyBacSiPanel extends BasePanel {
 
   private final BacSiBUS bacSiBUS = new BacSiBUS();
   private final KhoaBUS khoaBUS = new KhoaBUS();
+  private final UsersBUS usersBUS = new UsersBUS();
   private JTable table;
   private final DefaultTableModel model = new DefaultTableModel(
     new Object[] {
@@ -105,7 +108,8 @@ public class QuanLyBacSiPanel extends BasePanel {
   private void openDoctorDialog(BacSiDTO source) {
     boolean isCreate = source == null;
 
-    JPanel form = new JPanel(new GridLayout(6, 2, 10, 10));
+    int rows = isCreate ? 8 : 6;
+    JPanel form = new JPanel(new GridLayout(rows, 2, 10, 10));
     form.setOpaque(false);
 
     JTextField txtMa = new JTextField(isCreate ? "" : source.getMaBacSi());
@@ -117,6 +121,8 @@ public class QuanLyBacSiPanel extends BasePanel {
     JTextField txtSdt = new JTextField(isCreate ? "" : source.getSoDienThoai());
     JTextField txtEmail = new JTextField(isCreate ? "" : source.getEmail());
     JTextField txtMaKhoa = new JTextField(isCreate ? "" : source.getMaKhoa());
+    JTextField txtUsername = new JTextField();
+    JPasswordField txtPassword = new JPasswordField();
 
     form.add(new JLabel("Mã bác sĩ"));
     form.add(txtMa);
@@ -130,6 +136,12 @@ public class QuanLyBacSiPanel extends BasePanel {
     form.add(txtEmail);
     form.add(new JLabel("Mã khoa"));
     form.add(txtMaKhoa);
+    if (isCreate) {
+      form.add(new JLabel("Tên tài khoản"));
+      form.add(txtUsername);
+      form.add(new JLabel("Mật khẩu"));
+      form.add(txtPassword);
+    }
 
     AdminDialogs.showFormDialog(
       this,
@@ -144,19 +156,31 @@ public class QuanLyBacSiPanel extends BasePanel {
         bs.setEmail(txtEmail.getText().trim());
         bs.setMaKhoa(txtMaKhoa.getText().trim());
 
-        boolean ok = isCreate ? bacSiBUS.add(bs) : bacSiBUS.update(bs);
-        if (!ok) {
-          DialogHelper.error(
-            this,
-            isCreate ? "Thêm bác sĩ thất bại." : "Cập nhật bác sĩ thất bại."
+        if (isCreate) {
+          String result = usersBUS.createDoctorAccountWithProfile(
+            bs.getMaBacSi(),
+            txtUsername.getText().trim(),
+            new String(txtPassword.getPassword()),
+            bs.getEmail(),
+            bs.getHoTen(),
+            bs.getSoDienThoai(),
+            bs.getChuyenKhoa(),
+            bs.getMaKhoa()
           );
-          return false;
+          if (!result.startsWith("Tạo tài khoản bác sĩ thành công")) {
+            DialogHelper.error(this, result);
+            return false;
+          }
+          DialogHelper.info(this, result);
+        } else {
+          boolean ok = bacSiBUS.update(bs);
+          if (!ok) {
+            DialogHelper.error(this, "Cập nhật bác sĩ thất bại.");
+            return false;
+          }
+          DialogHelper.info(this, "Đã cập nhật bác sĩ.");
         }
 
-        DialogHelper.info(
-          this,
-          isCreate ? "Đã thêm bác sĩ mới." : "Đã cập nhật bác sĩ."
-        );
         loadData();
         return true;
       },

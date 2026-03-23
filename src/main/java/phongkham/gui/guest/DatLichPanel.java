@@ -10,11 +10,11 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.sql.Date;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -521,6 +521,16 @@ public class DatLichPanel extends BasePanel {
       return;
     }
 
+    boolean taoHoSoCoBan = createInitialMedicalRecord(lich, ngaySinh);
+    if (!taoHoSoCoBan) {
+      lichKhamBUS.delete(lich.getMaLichKham());
+      DialogHelper.error(
+        this,
+        "Đặt lịch thất bại do không thể tạo hồ sơ bệnh án ban đầu. Vui lòng thử lại."
+      );
+      return;
+    }
+
     lastReceipt = new BookingReceipt(
       lich.getMaLichKham(),
       txtHoTen.getText().trim(),
@@ -546,6 +556,44 @@ public class DatLichPanel extends BasePanel {
     DialogHelper.info(this, message);
     resetForm();
     loadComboboxData();
+  }
+
+  private boolean createInitialMedicalRecord(LichKhamDTO lich, java.util.Date ngaySinh) {
+    if (lich == null || lich.getMaLichKham() == null) {
+      return false;
+    }
+
+    HoSoBenhAnDTO existing = hoSoBenhAnBUS.getByMaLichKham(lich.getMaLichKham());
+    if (existing != null) {
+      return true;
+    }
+
+    HoSoBenhAnDTO hs = new HoSoBenhAnDTO();
+    hs.setMaHoSo(generateUniqueMaHoSo());
+    hs.setMaLichKham(lich.getMaLichKham());
+    hs.setHoTen(txtHoTen.getText().trim());
+    hs.setSoDienThoai(txtSoDienThoai.getText().trim());
+    hs.setCCCD(txtCCCD.getText().trim());
+    hs.setNgaySinh(ngaySinh == null ? null : new Date(ngaySinh.getTime()));
+    hs.setGioiTinh("Nam");
+    hs.setDiaChi("");
+    hs.setNgayKham(new Date(((java.util.Date) spNgayKham.getValue()).getTime()));
+    hs.setTrieuChung("");
+    hs.setChanDoan("");
+    hs.setKetLuan("");
+    hs.setLoiDan("");
+    hs.setMaBacSi(lich.getMaBacSi());
+    hs.setTrangThai(StatusNormalizer.CHO_KHAM);
+
+    return hoSoBenhAnBUS.dangKyBenhNhan(hs);
+  }
+
+  private String generateUniqueMaHoSo() {
+    String ma;
+    do {
+      ma = "HS" + System.currentTimeMillis();
+    } while (hoSoBenhAnBUS.getById(ma) != null);
+    return ma;
   }
 
   private boolean exportReceiptPdf(BookingReceipt receipt, File file) {

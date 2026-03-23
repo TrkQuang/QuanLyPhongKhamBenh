@@ -4,13 +4,16 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import phongkham.BUS.GoiDichVuBUS;
+import phongkham.BUS.KhoaBUS;
 import phongkham.DTO.GoiDichVuDTO;
+import phongkham.DTO.KhoaDTO;
 import phongkham.gui.admin.components.AdminDialogs;
 import phongkham.gui.common.BasePanel;
 import phongkham.gui.common.DialogHelper;
@@ -19,6 +22,7 @@ import phongkham.gui.common.UIUtils;
 public class QuanLyGoiDichVuPanel extends BasePanel {
 
   private final GoiDichVuBUS goiDichVuBUS = new GoiDichVuBUS();
+  private final KhoaBUS khoaBUS = new KhoaBUS();
   private JTable table;
   private final DefaultTableModel model = new DefaultTableModel(
     new Object[] { "Mã gói", "Tên gói", "Giá", "Thời gian khám", "Mã khoa" },
@@ -114,8 +118,10 @@ public class QuanLyGoiDichVuPanel extends BasePanel {
     );
     form.setOpaque(false);
 
-    JTextField txtMa = new JTextField(isCreate ? "" : source.getMaGoi());
-    txtMa.setEditable(isCreate);
+    JTextField txtMa = new JTextField(
+      isCreate ? goiDichVuBUS.generateNextMaGoi() : source.getMaGoi()
+    );
+    txtMa.setEditable(false);
     JTextField txtTen = new JTextField(isCreate ? "" : source.getTenGoi());
     JTextField txtGia = new JTextField(
       isCreate || source.getGiaDichVu() == null
@@ -126,7 +132,13 @@ public class QuanLyGoiDichVuPanel extends BasePanel {
       isCreate ? "" : source.getThoiGianKham()
     );
     JTextField txtMoTa = new JTextField(isCreate ? "" : source.getMoTa());
-    JTextField txtMaKhoa = new JTextField(isCreate ? "" : source.getMaKhoa());
+    JComboBox<String> cbMaKhoa = new JComboBox<>();
+    for (KhoaDTO khoa : khoaBUS.getAll()) {
+      cbMaKhoa.addItem(khoa.getMaKhoa() + " - " + khoa.getTenKhoa());
+    }
+    if (!isCreate && source.getMaKhoa() != null) {
+      selectKhoaInCombo(cbMaKhoa, source.getMaKhoa());
+    }
 
     form.add(new JLabel("Mã gói"));
     form.add(txtMa);
@@ -139,7 +151,7 @@ public class QuanLyGoiDichVuPanel extends BasePanel {
     form.add(new JLabel("Mô tả"));
     form.add(txtMoTa);
     form.add(new JLabel("Mã khoa"));
-    form.add(txtMaKhoa);
+    form.add(cbMaKhoa);
 
     AdminDialogs.showFormDialog(
       this,
@@ -153,9 +165,22 @@ public class QuanLyGoiDichVuPanel extends BasePanel {
           goi.setGiaDichVu(new BigDecimal(txtGia.getText().trim()));
           goi.setThoiGianKham(txtThoiGian.getText().trim());
           goi.setMoTa(txtMoTa.getText().trim());
-          goi.setMaKhoa(txtMaKhoa.getText().trim());
+          goi.setMaKhoa(extractMaKhoa(String.valueOf(cbMaKhoa.getSelectedItem())));
         } catch (Exception ex) {
           DialogHelper.warn(this, "Giá dịch vụ không hợp lệ.");
+          return false;
+        }
+
+        if (goi.getTenGoi() == null || goi.getTenGoi().trim().isEmpty()) {
+          DialogHelper.warn(this, "Tên gói không được để trống.");
+          return false;
+        }
+        if (goi.getThoiGianKham() == null || goi.getThoiGianKham().trim().isEmpty()) {
+          DialogHelper.warn(this, "Thời gian khám không được để trống.");
+          return false;
+        }
+        if (goi.getMaKhoa() == null || goi.getMaKhoa().isEmpty()) {
+          DialogHelper.warn(this, "Vui lòng chọn khoa cho gói dịch vụ.");
           return false;
         }
 
@@ -193,5 +218,23 @@ public class QuanLyGoiDichVuPanel extends BasePanel {
       model.getValueAt(table.convertRowIndexToModel(row), 0)
     );
     return goiDichVuBUS.getByMaGoi(maGoi);
+  }
+
+  private String extractMaKhoa(String comboText) {
+    if (comboText == null) {
+      return "";
+    }
+    String[] parts = comboText.split(" - ", 2);
+    return parts.length == 0 ? "" : parts[0].trim();
+  }
+
+  private void selectKhoaInCombo(JComboBox<String> combo, String maKhoa) {
+    for (int i = 0; i < combo.getItemCount(); i++) {
+      String item = combo.getItemAt(i);
+      if (maKhoa.equalsIgnoreCase(extractMaKhoa(item))) {
+        combo.setSelectedIndex(i);
+        return;
+      }
+    }
   }
 }
