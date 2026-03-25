@@ -109,62 +109,109 @@ public class Sidebar extends JPanel {
       addMenu("Mua thuốc", AppRoute.MUA_THUOC);
     } else {
       boolean hasBacSiSection =
-        hasAnyPermission("LICHLAMVIEC_VIEW", "LICHLAMVIEC_MANAGE") ||
-        hasAnyPermission("LICHKHAM_VIEW", "LICHKHAM_MANAGE") ||
-        hasAnyPermission("HOADONKHAM_VIEW", "HOADONKHAM_MANAGE") ||
-        hasAnyPermission("HOSO_VIEW", "HOSO_MANAGE") ||
-        hasAnyPermission("BACSI_PROFILE_VIEW", "BACSI_PROFILE_UPDATE_PASSWORD");
+        hasAnyPermission("LICHLAMVIEC_XEM", "LICHLAMVIEC_THEM") ||
+        hasAnyPermission("LICHKHAM_XEM", "LICHKHAM_SUA", "LICHKHAM_HUY") ||
+        hasAnyPermission(
+          "HOADONKHAM_XEM",
+          "HOADONKHAM_THEM",
+          "HOADONKHAM_SUA",
+          "HOADONKHAM_HUY"
+        ) ||
+        hasAnyPermission("HOSO_XEM", "HOSO_THEM", "HOSO_SUA") ||
+        hasAnyPermission("BACSI_PROFILE_XEM", "BACSI_PROFILE_DOI_MAT_KHAU");
       if (hasBacSiSection) {
         menuContainer.add(Box.createVerticalStrut(20));
         sectionTitle("BÁC SĨ");
-        if (hasAnyPermission("LICHLAMVIEC_VIEW", "LICHLAMVIEC_MANAGE")) {
+        if (hasAnyPermission("LICHLAMVIEC_XEM", "LICHLAMVIEC_THEM")) {
           addMenu("Lịch làm việc", AppRoute.BACSI_LICH_LAM_VIEC);
         }
-        if (hasAnyPermission("LICHKHAM_VIEW", "LICHKHAM_MANAGE")) {
+        if (hasAnyPermission("LICHKHAM_XEM", "LICHKHAM_SUA", "LICHKHAM_HUY")) {
           addMenu("Lịch khám", AppRoute.BACSI_LICH_KHAM);
-        }
-        if (hasAnyPermission("HOADONKHAM_VIEW", "HOADONKHAM_MANAGE")) {
-          addMenu("Hóa đơn khám", AppRoute.BACSI_HOA_DON_KHAM);
-        }
-        if (hasAnyPermission("HOSO_VIEW", "HOSO_MANAGE")) {
-          addMenu("Bệnh án", AppRoute.BACSI_BENH_AN);
         }
         if (
           hasAnyPermission(
-            "BACSI_PROFILE_VIEW",
-            "BACSI_PROFILE_UPDATE_PASSWORD"
+            "HOADONKHAM_XEM",
+            "HOADONKHAM_THEM",
+            "HOADONKHAM_SUA",
+            "HOADONKHAM_HUY"
           )
+        ) {
+          addMenu("Hóa đơn khám", AppRoute.BACSI_HOA_DON_KHAM);
+        }
+        if (hasAnyPermission("HOSO_XEM", "HOSO_THEM", "HOSO_SUA")) {
+          addMenu("Bệnh án", AppRoute.BACSI_BENH_AN);
+        }
+        if (
+          hasAnyPermission("BACSI_PROFILE_XEM", "BACSI_PROFILE_DOI_MAT_KHAU")
         ) {
           addMenu("Profile", AppRoute.BACSI_PROFILE);
         }
       }
 
       boolean hasNhaThuocSection =
-        hasAnyPermission("THUOC_VIEW", "THUOC_MANAGE") ||
-        hasAnyPermission("NCC_VIEW", "NCC_MANAGE") ||
-        hasAnyPermission("PHIEUNHAP_VIEW", "PHIEUNHAP_MANAGE") ||
         hasAnyPermission(
-          "HOADONTHUOC_VIEW",
-          "HOADONTHUOC_CREATE",
-          "HOADONTHUOC_MANAGE"
+          "THUOC_XEM",
+          "THUOC_THEM",
+          "THUOC_SUA",
+          "THUOC_XOA",
+          "THUOC_KICH_HOAT"
+        ) ||
+        hasAnyPermission("NCC_XEM", "NCC_THEM", "NCC_SUA", "NCC_XOA") ||
+        hasAnyPermission(
+          "PHIEUNHAP_XEM",
+          "PHIEUNHAP_THEM",
+          "PHIEUNHAP_SUA",
+          "PHIEUNHAP_XOA",
+          "PHIEUNHAP_XAC_NHAN_NHAP_KHO",
+          "PHIEUNHAP_XEM_LO_HSD"
+        ) ||
+        hasAnyPermission(
+          "HOADONTHUOC_XEM",
+          "HOADONTHUOC_THEM",
+          "HOADONTHUOC_SUA",
+          "HOADONTHUOC_XOA",
+          "HOADONTHUOC_XAC_NHAN_THANH_TOAN",
+          "HOADONTHUOC_XAC_NHAN_GIAO_THUOC",
+          "HOADONTHUOC_XEM_XUAT_THEO_LO"
         );
       if (hasNhaThuocSection) {
         menuContainer.add(Box.createVerticalStrut(20));
         sectionTitle("NHÀ THUỐC");
-        if (hasAnyPermission("THUOC_VIEW", "THUOC_MANAGE")) {
+        if (
+          hasAnyPermission(
+            "THUOC_XEM",
+            "THUOC_THEM",
+            "THUOC_SUA",
+            "THUOC_XOA",
+            "THUOC_KICH_HOAT"
+          )
+        ) {
           addMenu("Quản lý thuốc", AppRoute.THUOC);
         }
-        if (hasAnyPermission("NCC_VIEW", "NCC_MANAGE")) {
+        if (hasAnyPermission("NCC_XEM", "NCC_THEM", "NCC_SUA", "NCC_XOA")) {
           addMenu("Nhà cung cấp", AppRoute.NHA_CUNG_CAP);
         }
-        if (hasAnyPermission("PHIEUNHAP_VIEW", "PHIEUNHAP_MANAGE")) {
+        if (
+          hasAnyPermission(
+            "PHIEUNHAP_XEM",
+            "PHIEUNHAP_THEM",
+            "PHIEUNHAP_SUA",
+            "PHIEUNHAP_XOA",
+            "PHIEUNHAP_XAC_NHAN_NHAP_KHO",
+            "PHIEUNHAP_XEM_LO_HSD"
+          )
+        ) {
           addMenu("Phiếu nhập", AppRoute.PHIEU_NHAP);
         }
         if (
           hasAnyPermission(
-            "HOADONTHUOC_VIEW",
-            "HOADONTHUOC_CREATE",
-            "HOADONTHUOC_MANAGE"
+            "HOADONTHUOC_XEM",
+            "HOADONTHUOC_THEM",
+            "HOADONTHUOC_SUA",
+            "HOADONTHUOC_XOA",
+            "HOADONTHUOC_XAC_NHAN_THANH_TOAN",
+            "HOADONTHUOC_XAC_NHAN_GIAO_THUOC",
+            "HOADONTHUOC_XEM_XUAT_THEO_LO"
           )
         ) {
           addMenu("Hóa đơn bán thuốc", AppRoute.HOA_DON_THUOC);
@@ -172,37 +219,81 @@ public class Sidebar extends JPanel {
       }
 
       boolean hasQuanTriSection =
-        hasAnyPermission("DASHBOARD_VIEW") ||
-        hasAnyPermission("USER_VIEW", "USER_MANAGE") ||
-        hasAnyPermission("BACSI_VIEW", "BACSI_MANAGE") ||
-        hasAnyPermission("KHOA_VIEW", "KHOA_MANAGE") ||
-        hasAnyPermission("GOIDICHVU_VIEW", "GOIDICHVU_MANAGE") ||
-        hasAnyPermission("ROLE_PERMISSION_VIEW", "ROLE_PERMISSION_MANAGE");
+        hasAnyPermission("DASHBOARD_XEM") ||
+        hasAnyPermission(
+          "USER_XEM",
+          "USER_THEM",
+          "USER_SUA",
+          "USER_XOA",
+          "USER_RESET_MAT_KHAU",
+          "USER_KICH_HOAT_VO_HIEU_HOA"
+        ) ||
+        hasAnyPermission(
+          "BACSI_XEM",
+          "BACSI_THEM",
+          "BACSI_SUA",
+          "BACSI_XOA",
+          "BACSI_XEM_CHI_TIET"
+        ) ||
+        hasAnyPermission("KHOA_XEM", "KHOA_THEM", "KHOA_SUA", "KHOA_XOA") ||
+        hasAnyPermission(
+          "GOIDICHVU_XEM",
+          "GOIDICHVU_THEM",
+          "GOIDICHVU_SUA",
+          "GOIDICHVU_XOA"
+        ) ||
+        hasAnyPermission("ROLE_XEM", "ROLE_THEM", "ROLE_SUA", "ROLE_XOA") ||
+        hasAnyPermission("PHANQUYEN_XEM", "PHANQUYEN_CAP_NHAT");
       if (hasQuanTriSection) {
         menuContainer.add(Box.createVerticalStrut(20));
         sectionTitle("QUẢN TRỊ");
-        if (hasAnyPermission("DASHBOARD_VIEW")) {
+        if (hasAnyPermission("DASHBOARD_XEM")) {
           addMenu("Dashboard", AppRoute.DASHBOARD);
         }
-        if (hasAnyPermission("USER_VIEW", "USER_MANAGE")) {
+        if (
+          hasAnyPermission(
+            "USER_XEM",
+            "USER_THEM",
+            "USER_SUA",
+            "USER_XOA",
+            "USER_RESET_MAT_KHAU",
+            "USER_KICH_HOAT_VO_HIEU_HOA"
+          )
+        ) {
           addMenu("Quản lý tài khoản", AppRoute.QL_TAI_KHOAN);
         }
-        if (hasAnyPermission("BACSI_VIEW", "BACSI_MANAGE")) {
+        if (
+          hasAnyPermission(
+            "BACSI_XEM",
+            "BACSI_THEM",
+            "BACSI_SUA",
+            "BACSI_XOA",
+            "BACSI_XEM_CHI_TIET"
+          )
+        ) {
           addMenu("Quản lý bác sĩ", AppRoute.QL_BAC_SI);
         }
         if (mode == UserMode.ADMIN) {
           addMenu("Duyệt lịch làm", AppRoute.QL_DUYET_LICH_LAM);
         }
-        if (hasAnyPermission("KHOA_VIEW", "KHOA_MANAGE")) {
+        if (hasAnyPermission("KHOA_XEM", "KHOA_THEM", "KHOA_SUA", "KHOA_XOA")) {
           addMenu("Quản lý khoa", AppRoute.QL_KHOA);
         }
-        if (hasAnyPermission("GOIDICHVU_VIEW", "GOIDICHVU_MANAGE")) {
+        if (
+          hasAnyPermission(
+            "GOIDICHVU_XEM",
+            "GOIDICHVU_THEM",
+            "GOIDICHVU_SUA",
+            "GOIDICHVU_XOA"
+          )
+        ) {
           addMenu("Quản lý gói dịch vụ", AppRoute.QL_GOI_DICH_VU);
         }
-        if (
-          hasAnyPermission("ROLE_PERMISSION_VIEW", "ROLE_PERMISSION_MANAGE")
-        ) {
-          addMenu("Phân quyền", AppRoute.PHAN_QUYEN);
+        if (hasAnyPermission("ROLE_XEM", "ROLE_THEM", "ROLE_SUA", "ROLE_XOA")) {
+          addMenu("Quản lý role", AppRoute.QL_ROLE);
+        }
+        if (hasAnyPermission("PHANQUYEN_XEM", "PHANQUYEN_CAP_NHAT")) {
+          addMenu("Phân quyền chi tiết", AppRoute.PHAN_QUYEN);
         }
       }
     }

@@ -12,6 +12,7 @@ public class MainFrame extends JFrame {
   private final Sidebar sidebar;
   private final ContentPanel contentPanel;
   private final Header header;
+  private String currentRoute = AppRoute.HOME;
 
   public MainFrame() {
     setTitle("Phòng khám đa khoa");
@@ -45,11 +46,13 @@ public class MainFrame extends JFrame {
       DialogHelper.warn(this, "Bạn không có quyền truy cập chức năng này.");
       sidebar.setActiveRoute(AppRoute.HOME);
       contentPanel.showRoute(AppRoute.HOME);
+      currentRoute = AppRoute.HOME;
       return;
     }
     sidebar.setActiveRoute(route);
     contentPanel.showRoute(route);
     header.setPageTitle(route);
+    currentRoute = route;
   }
 
   private boolean canAccess(String route) {
@@ -70,61 +73,104 @@ public class MainFrame extends JFrame {
     }
 
     if (AppRoute.BACSI_LICH_LAM_VIEC.equals(route)) {
-      return hasAnyPermission("LICHLAMVIEC_VIEW", "LICHLAMVIEC_MANAGE");
+      return hasAnyPermission("LICHLAMVIEC_XEM", "LICHLAMVIEC_THEM");
     }
     if (AppRoute.BACSI_LICH_KHAM.equals(route)) {
-      return hasAnyPermission("LICHKHAM_VIEW", "LICHKHAM_MANAGE");
+      return hasAnyPermission("LICHKHAM_XEM", "LICHKHAM_SUA", "LICHKHAM_HUY");
     }
     if (AppRoute.BACSI_HOA_DON_KHAM.equals(route)) {
-      return hasAnyPermission("HOADONKHAM_VIEW", "HOADONKHAM_MANAGE");
+      return hasAnyPermission(
+        "HOADONKHAM_XEM",
+        "HOADONKHAM_THEM",
+        "HOADONKHAM_SUA",
+        "HOADONKHAM_HUY"
+      );
     }
     if (AppRoute.BACSI_BENH_AN.equals(route)) {
-      return hasAnyPermission("HOSO_VIEW", "HOSO_MANAGE");
+      return hasAnyPermission("HOSO_XEM", "HOSO_THEM", "HOSO_SUA");
     }
     if (AppRoute.BACSI_PROFILE.equals(route)) {
       return hasAnyPermission(
-        "BACSI_PROFILE_VIEW",
-        "BACSI_PROFILE_UPDATE_PASSWORD"
+        "BACSI_PROFILE_XEM",
+        "BACSI_PROFILE_DOI_MAT_KHAU"
       );
     }
 
     if (AppRoute.THUOC.equals(route)) {
-      return hasAnyPermission("THUOC_VIEW", "THUOC_MANAGE");
+      return hasAnyPermission(
+        "THUOC_XEM",
+        "THUOC_THEM",
+        "THUOC_SUA",
+        "THUOC_XOA",
+        "THUOC_KICH_HOAT"
+      );
     }
     if (AppRoute.NHA_CUNG_CAP.equals(route)) {
-      return hasAnyPermission("NCC_VIEW", "NCC_MANAGE");
+      return hasAnyPermission("NCC_XEM", "NCC_THEM", "NCC_SUA", "NCC_XOA");
     }
     if (AppRoute.PHIEU_NHAP.equals(route)) {
-      return hasAnyPermission("PHIEUNHAP_VIEW", "PHIEUNHAP_MANAGE");
+      return hasAnyPermission(
+        "PHIEUNHAP_XEM",
+        "PHIEUNHAP_THEM",
+        "PHIEUNHAP_SUA",
+        "PHIEUNHAP_XOA",
+        "PHIEUNHAP_XAC_NHAN_NHAP_KHO",
+        "PHIEUNHAP_XEM_LO_HSD"
+      );
     }
     if (AppRoute.HOA_DON_THUOC.equals(route)) {
       return hasAnyPermission(
-        "HOADONTHUOC_VIEW",
-        "HOADONTHUOC_CREATE",
-        "HOADONTHUOC_MANAGE"
+        "HOADONTHUOC_XEM",
+        "HOADONTHUOC_THEM",
+        "HOADONTHUOC_SUA",
+        "HOADONTHUOC_XOA",
+        "HOADONTHUOC_XAC_NHAN_THANH_TOAN",
+        "HOADONTHUOC_XAC_NHAN_GIAO_THUOC",
+        "HOADONTHUOC_XEM_XUAT_THEO_LO"
       );
     }
 
     if (AppRoute.DASHBOARD.equals(route)) {
-      return hasAnyPermission("DASHBOARD_VIEW");
+      return hasAnyPermission("DASHBOARD_XEM");
     }
     if (AppRoute.QL_TAI_KHOAN.equals(route)) {
-      return hasAnyPermission("USER_VIEW", "USER_MANAGE");
+      return hasAnyPermission(
+        "USER_XEM",
+        "USER_THEM",
+        "USER_SUA",
+        "USER_XOA",
+        "USER_RESET_MAT_KHAU",
+        "USER_KICH_HOAT_VO_HIEU_HOA"
+      );
     }
     if (AppRoute.QL_BAC_SI.equals(route)) {
-      return hasAnyPermission("BACSI_VIEW", "BACSI_MANAGE");
+      return hasAnyPermission(
+        "BACSI_XEM",
+        "BACSI_THEM",
+        "BACSI_SUA",
+        "BACSI_XOA",
+        "BACSI_XEM_CHI_TIET"
+      );
     }
     if (AppRoute.QL_DUYET_LICH_LAM.equals(route)) {
       return mode == UserMode.ADMIN;
     }
     if (AppRoute.QL_KHOA.equals(route)) {
-      return hasAnyPermission("KHOA_VIEW", "KHOA_MANAGE");
+      return hasAnyPermission("KHOA_XEM", "KHOA_THEM", "KHOA_SUA", "KHOA_XOA");
     }
     if (AppRoute.QL_GOI_DICH_VU.equals(route)) {
-      return hasAnyPermission("GOIDICHVU_VIEW", "GOIDICHVU_MANAGE");
+      return hasAnyPermission(
+        "GOIDICHVU_XEM",
+        "GOIDICHVU_THEM",
+        "GOIDICHVU_SUA",
+        "GOIDICHVU_XOA"
+      );
+    }
+    if (AppRoute.QL_ROLE.equals(route)) {
+      return hasAnyPermission("ROLE_XEM", "ROLE_THEM", "ROLE_SUA", "ROLE_XOA");
     }
     if (AppRoute.PHAN_QUYEN.equals(route)) {
-      return hasAnyPermission("ROLE_PERMISSION_VIEW", "ROLE_PERMISSION_MANAGE");
+      return hasAnyPermission("PHANQUYEN_XEM", "PHANQUYEN_CAP_NHAT");
     }
 
     return true;
@@ -155,5 +201,24 @@ public class MainFrame extends JFrame {
     } else {
       onNavigate(AppRoute.DAT_LICH);
     }
+  }
+
+  public void refreshAllPanelsAfterPermissionSave() {
+    sidebar.buildMenu();
+    contentPanel.reloadAllPanels();
+
+    String targetRoute = currentRoute;
+    if (
+      targetRoute == null ||
+      !contentPanel.containsRoute(targetRoute) ||
+      !canAccess(targetRoute)
+    ) {
+      targetRoute = AppRoute.HOME;
+    }
+
+    sidebar.setActiveRoute(targetRoute);
+    contentPanel.showRoute(targetRoute);
+    header.setPageTitle(targetRoute);
+    currentRoute = targetRoute;
   }
 }

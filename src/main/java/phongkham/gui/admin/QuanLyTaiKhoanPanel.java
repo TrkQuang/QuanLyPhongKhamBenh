@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridLayout;
 import java.util.ArrayList;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -13,6 +14,7 @@ import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import phongkham.BUS.UsersBUS;
 import phongkham.DTO.UsersDTO;
+import phongkham.Utils.Session;
 import phongkham.gui.admin.components.AdminDialogs;
 import phongkham.gui.common.BasePanel;
 import phongkham.gui.common.DialogHelper;
@@ -22,6 +24,12 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
 
   private final UsersBUS usersBUS = new UsersBUS();
   private JTable table;
+  private JButton btnThem;
+  private JButton btnSua;
+  private JButton btnKichHoatVoHieuHoa;
+  private JButton btnXoaTaiKhoan;
+  private JButton btnResetMatKhau;
+  private JButton btnTaiLai;
   private final DefaultTableModel model = new DefaultTableModel(
     new Object[] { "UserID", "Username", "Email", "RoleID", "Trạng thái" },
     0
@@ -45,24 +53,26 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
       UIUtils.primaryButton("Thêm"),
       UIUtils.ghostButton("Sửa"),
       UIUtils.ghostButton("Kích hoạt/Vô hiệu hóa"),
+      UIUtils.ghostButton("Xóa tài khoản"),
       UIUtils.ghostButton("Reset mật khẩu 123456"),
       UIUtils.ghostButton("Tải lại")
     );
-    ((javax.swing.JButton) actions.getComponent(0)).addActionListener(e ->
-      openUserDialog(null)
-    );
-    ((javax.swing.JButton) actions.getComponent(1)).addActionListener(e ->
-      editUser()
-    );
-    ((javax.swing.JButton) actions.getComponent(2)).addActionListener(e ->
-      toggleActive()
-    );
-    ((javax.swing.JButton) actions.getComponent(3)).addActionListener(e ->
-      resetPasswordDefault()
-    );
-    ((javax.swing.JButton) actions.getComponent(4)).addActionListener(e ->
-      loadData()
-    );
+
+    btnThem = (JButton) actions.getComponent(0);
+    btnSua = (JButton) actions.getComponent(1);
+    btnKichHoatVoHieuHoa = (JButton) actions.getComponent(2);
+    btnXoaTaiKhoan = (JButton) actions.getComponent(3);
+    btnResetMatKhau = (JButton) actions.getComponent(4);
+    btnTaiLai = (JButton) actions.getComponent(5);
+
+    btnThem.addActionListener(e -> openUserDialog(null));
+    btnSua.addActionListener(e -> editUser());
+    btnKichHoatVoHieuHoa.addActionListener(e -> toggleActive());
+    btnXoaTaiKhoan.addActionListener(e -> deleteUserByBusinessRule());
+    btnResetMatKhau.addActionListener(e -> resetPasswordDefault());
+    btnTaiLai.addActionListener(e -> loadData());
+
+    apDungPhanQuyenHanhDong();
     add(actions, BorderLayout.SOUTH);
 
     loadData();
@@ -284,6 +294,44 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
     DialogHelper.info(this, "Đã reset mật khẩu mặc định: 123456");
   }
 
+  /**
+   * Xóa tài khoản theo nghiệp vụ:
+   * - Không liên quan dữ liệu: xóa cứng.
+   * - Có liên quan dữ liệu: chuyển sang trạng thái xóa ẩn vĩnh viễn.
+   */
+  private void deleteUserByBusinessRule() {
+    UsersDTO selected = getSelectedUser();
+    if (selected == null) {
+      DialogHelper.warn(this, "Vui lòng chọn tài khoản để xóa.");
+      return;
+    }
+
+    if (
+      !DialogHelper.confirm(
+        this,
+        "Xóa tài khoản " + selected.getUsername() + " theo nghiệp vụ?"
+      )
+    ) {
+      return;
+    }
+
+    String message = usersBUS.xoaTaiKhoanTheoNghiepVu(selected.getUserID());
+    String normalized = message == null ? "" : message.toLowerCase();
+    boolean success =
+      normalized.contains("thành công") ||
+      normalized.contains("thanh cong") ||
+      normalized.contains("xóa ẩn vĩnh viễn") ||
+      normalized.contains("xoa an vinh vien");
+
+    if (!success) {
+      DialogHelper.warn(this, message);
+      return;
+    }
+
+    DialogHelper.info(this, message);
+    loadData();
+  }
+
   private UsersDTO getSelectedUser() {
     int row = table.getSelectedRow();
     if (row < 0) {
@@ -310,6 +358,45 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
       return Integer.parseInt(roleText.split(" - ")[0].trim());
     } catch (Exception ex) {
       return 3;
+    }
+  }
+
+  /**
+   * Ap dung phan quyen hanh dong cho module USER.
+   */
+  private void apDungPhanQuyenHanhDong() {
+    boolean coQuyenXem = Session.coMotTrongCacQuyen("USER_XEM");
+    boolean coQuyenThem = Session.coMotTrongCacQuyen("USER_THEM");
+    boolean coQuyenSua = Session.coMotTrongCacQuyen("USER_SUA");
+    boolean coQuyenXoa = Session.coMotTrongCacQuyen("USER_XOA");
+    boolean coQuyenKichHoatVoHieuHoa = Session.coMotTrongCacQuyen(
+      "USER_KICH_HOAT_VO_HIEU_HOA"
+    );
+    boolean coQuyenResetMatKhau = Session.coMotTrongCacQuyen(
+      "USER_RESET_MAT_KHAU"
+    );
+
+    if (btnThem != null) {
+      btnThem.setVisible(coQuyenThem);
+    }
+    if (btnSua != null) {
+      btnSua.setVisible(coQuyenSua);
+    }
+    if (btnKichHoatVoHieuHoa != null) {
+      btnKichHoatVoHieuHoa.setVisible(coQuyenKichHoatVoHieuHoa);
+    }
+    if (btnXoaTaiKhoan != null) {
+      btnXoaTaiKhoan.setVisible(coQuyenXoa);
+    }
+    if (btnResetMatKhau != null) {
+      btnResetMatKhau.setVisible(coQuyenResetMatKhau);
+    }
+    if (btnTaiLai != null) {
+      btnTaiLai.setVisible(coQuyenXem);
+    }
+
+    if (table != null) {
+      table.setEnabled(coQuyenXem);
     }
   }
 }

@@ -29,6 +29,7 @@ import phongkham.BUS.ThuocBUS;
 import phongkham.DTO.CTHDThuocDTO;
 import phongkham.DTO.HoaDonThuocDTO;
 import phongkham.DTO.ThuocDTO;
+import phongkham.Utils.Session;
 import phongkham.Utils.StatusNormalizer;
 import phongkham.gui.common.BasePanel;
 import phongkham.gui.common.DialogHelper;
@@ -56,7 +57,13 @@ public class MuaThuocPanel extends BasePanel {
   private CustomTextField txtSdt;
   private JComboBox<String> cbThanhToan;
   private JLabel lblCartNotice;
+  private javax.swing.JButton btnLoc;
+  private javax.swing.JButton btnThemNoiBat;
+  private javax.swing.JButton btnXoaDong;
+  private javax.swing.JButton btnXoaGio;
+  private javax.swing.JButton btnThanhToan;
   private boolean isUpdatingCartModel = false;
+  private boolean coQuyenMuaThuoc = true;
 
   private static final DecimalFormat MONEY = new DecimalFormat("#,##0");
 
@@ -72,6 +79,8 @@ public class MuaThuocPanel extends BasePanel {
     split.setBorder(null);
 
     add(split, BorderLayout.CENTER);
+
+    apDungPhanQuyenHanhDong();
 
     loadDataFromBus();
     refreshMedicineTable();
@@ -98,7 +107,7 @@ public class MuaThuocPanel extends BasePanel {
       new String[] { "Mặc định", "Giá tăng", "Giá giảm", "Tên A-Z" }
     );
 
-    javax.swing.JButton btnLoc = UIUtils.primaryButton("Lọc");
+    btnLoc = UIUtils.primaryButton("Lọc");
     btnLoc.addActionListener(e -> refreshMedicineTable());
     txtSearch.addActionListener(e -> refreshMedicineTable());
 
@@ -129,9 +138,7 @@ public class MuaThuocPanel extends BasePanel {
 
     JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
     footer.setOpaque(false);
-    javax.swing.JButton btnThemNoiBat = UIUtils.primaryButton(
-      "Thêm vào giỏ hàng đã chọn"
-    );
+    btnThemNoiBat = UIUtils.primaryButton("Thêm vào giỏ hàng đã chọn");
     btnThemNoiBat.addActionListener(e -> addSelectedMedicineToCart());
     footer.add(btnThemNoiBat);
 
@@ -188,11 +195,9 @@ public class MuaThuocPanel extends BasePanel {
       new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 12)
     );
     JButtonWithText lblTong = new JButtonWithText();
-    javax.swing.JButton btnXoaDong = UIUtils.ghostButton("Xóa dòng");
-    javax.swing.JButton btnXoaGio = UIUtils.ghostButton("Xóa giỏ");
-    javax.swing.JButton btnThanhToan = UIUtils.primaryButton(
-      "Thanh toán + In PDF"
-    );
+    btnXoaDong = UIUtils.ghostButton("Xóa dòng");
+    btnXoaGio = UIUtils.ghostButton("Xóa giỏ");
+    btnThanhToan = UIUtils.primaryButton("Tạo hóa đơn mua thuốc");
 
     btnXoaDong.addActionListener(e -> removeSelectedCartItem());
     btnXoaGio.addActionListener(e -> clearCart());
@@ -268,6 +273,11 @@ public class MuaThuocPanel extends BasePanel {
   }
 
   private void addSelectedMedicineToCart() {
+    if (!coQuyenMuaThuoc) {
+      DialogHelper.warn(this, "Bạn không có quyền mua thuốc.");
+      return;
+    }
+
     int row = tblThuoc.getSelectedRow();
     if (row < 0) {
       DialogHelper.warn(this, "Vui lòng chọn thuốc để thêm vào giỏ.");
@@ -407,6 +417,11 @@ public class MuaThuocPanel extends BasePanel {
   }
 
   private void checkoutAndExport(JButtonWithText lblTong) {
+    if (!coQuyenMuaThuoc) {
+      DialogHelper.warn(this, "Bạn không có quyền mua thuốc.");
+      return;
+    }
+
     if (cartItems.isEmpty()) {
       DialogHelper.warn(this, "Giỏ hàng đang trống.");
       return;
@@ -426,7 +441,7 @@ public class MuaThuocPanel extends BasePanel {
       .sum();
     String hinhThuc = String.valueOf(cbThanhToan.getSelectedItem());
 
-    // Validate tồn kho trước khi tạo hóa đơn
+    // Validate tồn kho tại thời điểm tạo đơn để tránh đặt vượt tồn hiện tại.
     for (CartItem item : cartItems.values()) {
       ThuocDTO thuoc = thuocBUS.getByMa(item.maThuoc);
       if (thuoc == null || thuoc.getSoLuongTon() < item.soLuong) {
@@ -443,14 +458,14 @@ public class MuaThuocPanel extends BasePanel {
     hoaDon.setNgayLap(LocalDateTime.now());
     hoaDon.setTongTien(tongTien);
     hoaDon.setGhiChu("Guest checkout - HinhThucThanhToan=" + hinhThuc);
-    hoaDon.setTrangThaiThanhToan(StatusNormalizer.DA_THANH_TOAN);
-    hoaDon.setNgayThanhToan(LocalDateTime.now());
+    hoaDon.setTrangThaiThanhToan(StatusNormalizer.CHUA_THANH_TOAN);
+    hoaDon.setNgayThanhToan(null);
     hoaDon.setTrangThaiLayThuoc(StatusNormalizer.CHO_LAY);
     hoaDon.setTenBenhNhan(tenKhach);
     hoaDon.setSdtBenhNhan(sdt);
     hoaDon.setActive(true);
 
-    if (!hoaDonThuocBUS.addHoaDonThuoc(hoaDon)) {
+    if (!hoaDonThuocBUS.themHoaDonThuoc(hoaDon)) {
       DialogHelper.error(this, "Không thể tạo hóa đơn thuốc.");
       return;
     }
@@ -471,24 +486,13 @@ public class MuaThuocPanel extends BasePanel {
         );
         return;
       }
-
-      if (!thuocBUS.truSoLuongTon(item.maThuoc, item.soLuong)) {
-        DialogHelper.error(
-          this,
-          "Không thể cập nhật tồn kho cho thuốc: " + item.tenThuoc
-        );
-        return;
-      }
-    }
-
-    File pdf = choosePdfFile(hoaDon.getMaHoaDon());
-    if (pdf != null) {
-      exportInvoicePdf(pdf, hoaDon, hinhThuc);
     }
 
     DialogHelper.info(
       this,
-      "Thanh toán thành công. Mã hóa đơn: " + hoaDon.getMaHoaDon()
+      "Tạo hóa đơn thành công. Mã hóa đơn: " +
+        hoaDon.getMaHoaDon() +
+        "\nNhà thuốc sẽ xác nhận thanh toán và giao thuốc sau khi kiểm tra tồn kho."
     );
     lblTong.setText("Tổng: 0 VND");
     clearCart();
@@ -553,6 +557,24 @@ public class MuaThuocPanel extends BasePanel {
     } catch (Exception ex) {
       DialogHelper.error(this, "Xuất hóa đơn PDF thất bại: " + ex.getMessage());
     }
+  }
+
+  private void apDungPhanQuyenHanhDong() {
+    coQuyenMuaThuoc = Session.coMotTrongCacQuyen("GUEST_MUA_THUOC");
+
+    if (btnLoc != null) btnLoc.setVisible(coQuyenMuaThuoc);
+    if (btnThemNoiBat != null) btnThemNoiBat.setVisible(coQuyenMuaThuoc);
+    if (btnXoaDong != null) btnXoaDong.setVisible(coQuyenMuaThuoc);
+    if (btnXoaGio != null) btnXoaGio.setVisible(coQuyenMuaThuoc);
+    if (btnThanhToan != null) btnThanhToan.setVisible(coQuyenMuaThuoc);
+
+    if (txtSearch != null) txtSearch.setEnabled(coQuyenMuaThuoc);
+    if (cbSort != null) cbSort.setEnabled(coQuyenMuaThuoc);
+    if (txtTenKhach != null) txtTenKhach.setEnabled(coQuyenMuaThuoc);
+    if (txtSdt != null) txtSdt.setEnabled(coQuyenMuaThuoc);
+    if (cbThanhToan != null) cbThanhToan.setEnabled(coQuyenMuaThuoc);
+    if (tblThuoc != null) tblThuoc.setEnabled(coQuyenMuaThuoc);
+    if (tblCart != null) tblCart.setEnabled(coQuyenMuaThuoc);
   }
 
   private static class CartItem {

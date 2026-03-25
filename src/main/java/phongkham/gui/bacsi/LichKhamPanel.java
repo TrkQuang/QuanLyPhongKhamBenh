@@ -2,6 +2,7 @@ package phongkham.gui.bacsi;
 
 import java.awt.BorderLayout;
 import java.util.ArrayList;
+import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -29,6 +30,9 @@ public class LichKhamPanel extends BasePanel {
   );
 
   private JTable table;
+  private JButton btnTaiLai;
+  private JButton btnXacNhan;
+  private JButton btnHuy;
 
   @Override
   protected void init() {
@@ -49,15 +53,19 @@ public class LichKhamPanel extends BasePanel {
       UIUtils.ghostButton("Hủy")
     );
     add(actions, BorderLayout.SOUTH);
-    ((javax.swing.JButton) actions.getComponent(0)).addActionListener(e ->
-      loadData()
-    );
-    ((javax.swing.JButton) actions.getComponent(1)).addActionListener(e ->
+    btnTaiLai = (JButton) actions.getComponent(0);
+    btnXacNhan = (JButton) actions.getComponent(1);
+    btnHuy = (JButton) actions.getComponent(2);
+
+    btnTaiLai.addActionListener(e -> loadData());
+    btnXacNhan.addActionListener(e ->
       updateSelectedStatus(StatusNormalizer.DA_XAC_NHAN)
     );
-    ((javax.swing.JButton) actions.getComponent(2)).addActionListener(e ->
+    btnHuy.addActionListener(e ->
       updateSelectedStatus(StatusNormalizer.DA_HUY)
     );
+
+    apDungPhanQuyenHanhDong();
 
     loadData();
   }
@@ -112,5 +120,16 @@ public class LichKhamPanel extends BasePanel {
         }
       );
     }
+  }
+
+  private void apDungPhanQuyenHanhDong() {
+    boolean coQuyenXem = Session.coMotTrongCacQuyen("LICHKHAM_XEM");
+    boolean coQuyenCapNhat = Session.coMotTrongCacQuyen("LICHKHAM_SUA");
+    boolean coQuyenHuy = Session.coMotTrongCacQuyen("LICHKHAM_HUY");
+
+    if (btnTaiLai != null) btnTaiLai.setVisible(coQuyenXem);
+    if (btnXacNhan != null) btnXacNhan.setVisible(coQuyenCapNhat);
+    if (btnHuy != null) btnHuy.setVisible(coQuyenHuy);
+    if (table != null) table.setEnabled(coQuyenXem);
   }
 }

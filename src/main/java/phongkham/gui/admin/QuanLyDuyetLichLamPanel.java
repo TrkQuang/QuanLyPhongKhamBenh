@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
+import java.awt.Frame;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -17,20 +18,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import phongkham.BUS.BacSiBUS;
+import phongkham.BUS.KhungGioLamViecBUS;
 import phongkham.BUS.LichLamViecBUS;
 import phongkham.DTO.BacSiDTO;
+import phongkham.DTO.KhungGioLamViecDTO;
 import phongkham.DTO.LichLamViecDTO;
+import phongkham.Utils.Session;
 import phongkham.Utils.StatusNormalizer;
 import phongkham.gui.common.BasePanel;
 import phongkham.gui.common.DialogHelper;
@@ -42,6 +49,8 @@ public class QuanLyDuyetLichLamPanel extends BasePanel {
 
   private final LichLamViecBUS lichLamViecBUS = new LichLamViecBUS();
   private final BacSiBUS bacSiBUS = new BacSiBUS();
+  private final KhungGioLamViecBUS khungGioLamViecBUS =
+    new KhungGioLamViecBUS();
 
   private final DefaultTableModel model = new DefaultTableModel(
     new Object[] {
@@ -67,6 +76,15 @@ public class QuanLyDuyetLichLamPanel extends BasePanel {
   private JComboBox<DoctorOption> cbDoctor;
   private JComboBox<String> cbStatus;
   private JLabel lblPage;
+  private JButton btnFilter;
+  private JButton btnClear;
+  private JButton btnApprove;
+  private JButton btnReject;
+  private JButton btnManageRanges;
+  private JButton btnExport;
+  private JButton btnReload;
+  private JButton btnPrev;
+  private JButton btnNext;
 
   private List<LichLamViecDTO> filteredRows = new ArrayList<>();
   private Map<String, String> doctorNameMap = new HashMap<>();
@@ -89,6 +107,8 @@ public class QuanLyDuyetLichLamPanel extends BasePanel {
     );
 
     add(buildBottomArea(), BorderLayout.SOUTH);
+
+    apDungPhanQuyenHanhDong();
 
     loadDoctors();
     refreshData();
@@ -124,8 +144,8 @@ public class QuanLyDuyetLichLamPanel extends BasePanel {
     );
     UIUtils.fixedSize(cbStatus, 130, 36);
 
-    javax.swing.JButton btnFilter = UIUtils.primaryButton("Lọc");
-    javax.swing.JButton btnClear = UIUtils.ghostButton("Xóa lọc");
+    btnFilter = UIUtils.primaryButton("Lọc");
+    btnClear = UIUtils.ghostButton("Xóa lọc");
 
     btnFilter.addActionListener(e -> applyFilterAndRender(1));
     btnClear.addActionListener(e -> clearFilter());
@@ -144,25 +164,25 @@ public class QuanLyDuyetLichLamPanel extends BasePanel {
 
     top.add(UIUtils.createSection("Bộ lọc", filterContent), BorderLayout.NORTH);
 
+    btnApprove = UIUtils.primaryButton("Duyệt lịch đã chọn");
+    btnReject = UIUtils.ghostButton("Từ chối lịch đã chọn");
+    btnManageRanges = UIUtils.ghostButton("Khung giờ đăng ký");
+    btnExport = UIUtils.ghostButton("Xuất CSV");
+    btnReload = UIUtils.ghostButton("Tải lại");
+
     JPanel actions = UIUtils.row(
-      UIUtils.primaryButton("Duyệt lịch đã chọn"),
-      UIUtils.ghostButton("Từ chối lịch đã chọn"),
-      UIUtils.ghostButton("Xuất CSV"),
-      UIUtils.ghostButton("Tải lại")
+      btnApprove,
+      btnReject,
+      btnManageRanges,
+      btnExport,
+      btnReload
     );
 
-    ((javax.swing.JButton) actions.getComponent(0)).addActionListener(e ->
-      approveSelected()
-    );
-    ((javax.swing.JButton) actions.getComponent(1)).addActionListener(e ->
-      rejectSelected()
-    );
-    ((javax.swing.JButton) actions.getComponent(2)).addActionListener(e ->
-      exportFilteredCsv()
-    );
-    ((javax.swing.JButton) actions.getComponent(3)).addActionListener(e ->
-      refreshData()
-    );
+    btnApprove.addActionListener(e -> approveSelected());
+    btnReject.addActionListener(e -> rejectSelected());
+    btnManageRanges.addActionListener(e -> openShiftTemplateDialog());
+    btnExport.addActionListener(e -> exportFilteredCsv());
+    btnReload.addActionListener(e -> refreshData());
 
     top.add(actions, BorderLayout.SOUTH);
     return top;
@@ -175,8 +195,8 @@ public class QuanLyDuyetLichLamPanel extends BasePanel {
     JPanel paging = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
     paging.setOpaque(false);
 
-    javax.swing.JButton btnPrev = UIUtils.ghostButton("Trang trước");
-    javax.swing.JButton btnNext = UIUtils.ghostButton("Trang sau");
+    btnPrev = UIUtils.ghostButton("Trang trước");
+    btnNext = UIUtils.ghostButton("Trang sau");
     lblPage = new JLabel("Trang 1/1");
 
     JComboBox<Integer> cbPageSize = new JComboBox<>(
@@ -612,6 +632,118 @@ public class QuanLyDuyetLichLamPanel extends BasePanel {
     return text == null ? "" : text;
   }
 
+  private void openShiftTemplateDialog() {
+    JDialog dialog = new JDialog(
+      (Frame) SwingUtilities.getWindowAncestor(this),
+      "Quản lý khung giờ đăng ký lịch",
+      true
+    );
+    dialog.setLayout(new BorderLayout(8, 8));
+
+    DefaultTableModel rangeModel = new DefaultTableModel(
+      new Object[] { "Mã", "Khung giờ", "Mô tả", "Trạng thái" },
+      0
+    ) {
+      @Override
+      public boolean isCellEditable(int row, int column) {
+        return false;
+      }
+    };
+
+    JTable rangeTable = new JTable(rangeModel);
+    UIUtils.styleTable(rangeTable);
+    reloadShiftTemplateTable(rangeModel);
+
+    JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+    top.setOpaque(false);
+    JTextField txtRange = UIUtils.roundedTextField("VD: 07:30-09:30", 14);
+    JTextField txtDesc = UIUtils.roundedTextField("Mô tả (tuỳ chọn)", 18);
+    UIUtils.fixedSize(txtRange, 150, 34);
+    UIUtils.fixedSize(txtDesc, 220, 34);
+    javax.swing.JButton btnAdd = UIUtils.primaryButton("Thêm khung giờ");
+    javax.swing.JButton btnToggle = UIUtils.ghostButton(
+      "Bật/Tắt khung đã chọn"
+    );
+    javax.swing.JButton btnRefresh = UIUtils.ghostButton("Làm mới");
+
+    btnAdd.addActionListener(e -> {
+      String range = safe(txtRange.getText()).trim();
+      String desc = safe(txtDesc.getText()).trim();
+      if (range.isEmpty()) {
+        DialogHelper.warn(dialog, "Vui lòng nhập khung giờ (HH:mm-HH:mm).");
+        return;
+      }
+      if (!khungGioLamViecBUS.addRange(range, desc)) {
+        DialogHelper.warn(
+          dialog,
+          "Không thể thêm khung giờ. Kiểm tra định dạng hoặc trùng dữ liệu."
+        );
+        return;
+      }
+      txtRange.setText("");
+      txtDesc.setText("");
+      reloadShiftTemplateTable(rangeModel);
+      DialogHelper.info(dialog, "Đã thêm khung giờ đăng ký.");
+    });
+
+    btnToggle.addActionListener(e -> {
+      int row = rangeTable.getSelectedRow();
+      if (row < 0) {
+        DialogHelper.warn(dialog, "Vui lòng chọn khung giờ cần bật/tắt.");
+        return;
+      }
+      int modelRow = rangeTable.convertRowIndexToModel(row);
+      int maKhung = Integer.parseInt(
+        String.valueOf(rangeModel.getValueAt(modelRow, 0))
+      );
+      String status = String.valueOf(rangeModel.getValueAt(modelRow, 3));
+      boolean nextActive = !"Hoạt động".equalsIgnoreCase(status);
+      if (!khungGioLamViecBUS.toggleActive(maKhung, nextActive)) {
+        DialogHelper.error(dialog, "Cập nhật trạng thái khung giờ thất bại.");
+        return;
+      }
+      reloadShiftTemplateTable(rangeModel);
+    });
+
+    btnRefresh.addActionListener(e -> reloadShiftTemplateTable(rangeModel));
+
+    top.add(txtRange);
+    top.add(txtDesc);
+    top.add(btnAdd);
+    top.add(btnToggle);
+    top.add(btnRefresh);
+
+    JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+    bottom.setOpaque(false);
+    javax.swing.JButton btnClose = UIUtils.ghostButton("Đóng");
+    btnClose.addActionListener(e -> dialog.dispose());
+    bottom.add(btnClose);
+
+    dialog.add(
+      UIUtils.createSection("Danh mục khung giờ", top),
+      BorderLayout.NORTH
+    );
+    dialog.add(new JScrollPane(rangeTable), BorderLayout.CENTER);
+    dialog.add(bottom, BorderLayout.SOUTH);
+    dialog.setSize(900, 460);
+    dialog.setLocationRelativeTo(this);
+    dialog.setVisible(true);
+  }
+
+  private void reloadShiftTemplateTable(DefaultTableModel model) {
+    model.setRowCount(0);
+    for (KhungGioLamViecDTO item : khungGioLamViecBUS.getAll()) {
+      model.addRow(
+        new Object[] {
+          item.getMaKhungGio(),
+          item.getKhungGio(),
+          safe(item.getMoTa()),
+          item.getActive() == 1 ? "Hoạt động" : "Tạm tắt",
+        }
+      );
+    }
+  }
+
   private static class DoctorOption {
 
     private final String id;
@@ -626,5 +758,29 @@ public class QuanLyDuyetLichLamPanel extends BasePanel {
     public String toString() {
       return label;
     }
+  }
+
+  private void apDungPhanQuyenHanhDong() {
+    boolean coQuyenXem = Session.coMotTrongCacQuyen("LICHLAMVIEC_XEM");
+    boolean coQuyenDuyet = Session.coMotTrongCacQuyen("LICHLAMVIEC_DUYET");
+    boolean coQuyenTuChoi = Session.coMotTrongCacQuyen("LICHLAMVIEC_TU_CHOI");
+    boolean coQuyenQuanLyKhung = Session.coMotTrongCacQuyen("LICHLAMVIEC_THEM");
+
+    if (btnFilter != null) btnFilter.setVisible(coQuyenXem);
+    if (btnClear != null) btnClear.setVisible(coQuyenXem);
+    if (btnApprove != null) btnApprove.setVisible(coQuyenDuyet);
+    if (btnReject != null) btnReject.setVisible(coQuyenTuChoi);
+    if (btnManageRanges != null) btnManageRanges.setVisible(coQuyenQuanLyKhung);
+    if (btnExport != null) btnExport.setVisible(coQuyenXem);
+    if (btnReload != null) btnReload.setVisible(coQuyenXem);
+    if (btnPrev != null) btnPrev.setVisible(coQuyenXem);
+    if (btnNext != null) btnNext.setVisible(coQuyenXem);
+
+    if (txtSearch != null) txtSearch.setEnabled(coQuyenXem);
+    if (txtFromDate != null) txtFromDate.setEnabled(coQuyenXem);
+    if (txtToDate != null) txtToDate.setEnabled(coQuyenXem);
+    if (cbDoctor != null) cbDoctor.setEnabled(coQuyenXem);
+    if (cbStatus != null) cbStatus.setEnabled(coQuyenXem);
+    if (table != null) table.setEnabled(coQuyenXem);
   }
 }

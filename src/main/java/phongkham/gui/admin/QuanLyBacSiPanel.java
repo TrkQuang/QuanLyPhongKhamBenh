@@ -3,6 +3,7 @@ package phongkham.gui.admin;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.util.ArrayList;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
@@ -15,6 +16,7 @@ import phongkham.BUS.KhoaBUS;
 import phongkham.BUS.UsersBUS;
 import phongkham.DTO.BacSiDTO;
 import phongkham.DTO.KhoaDTO;
+import phongkham.Utils.Session;
 import phongkham.gui.admin.components.AdminDialogs;
 import phongkham.gui.common.BasePanel;
 import phongkham.gui.common.DialogHelper;
@@ -26,6 +28,11 @@ public class QuanLyBacSiPanel extends BasePanel {
   private final KhoaBUS khoaBUS = new KhoaBUS();
   private final UsersBUS usersBUS = new UsersBUS();
   private JTable table;
+  private JButton btnThem;
+  private JButton btnSua;
+  private JButton btnXemChiTiet;
+  private JButton btnXoa;
+  private JButton btnTaiLai;
   private final DefaultTableModel model = new DefaultTableModel(
     new Object[] {
       "Mã bác sĩ",
@@ -59,21 +66,19 @@ public class QuanLyBacSiPanel extends BasePanel {
       UIUtils.ghostButton("Xóa"),
       UIUtils.ghostButton("Tải lại")
     );
-    ((javax.swing.JButton) actions.getComponent(0)).addActionListener(e ->
-      openDoctorDialog(null)
-    );
-    ((javax.swing.JButton) actions.getComponent(1)).addActionListener(e ->
-      editDoctor()
-    );
-    ((javax.swing.JButton) actions.getComponent(2)).addActionListener(e ->
-      showDoctorDetail()
-    );
-    ((javax.swing.JButton) actions.getComponent(3)).addActionListener(e ->
-      deleteDoctor()
-    );
-    ((javax.swing.JButton) actions.getComponent(4)).addActionListener(e ->
-      loadData()
-    );
+    btnThem = (JButton) actions.getComponent(0);
+    btnSua = (JButton) actions.getComponent(1);
+    btnXemChiTiet = (JButton) actions.getComponent(2);
+    btnXoa = (JButton) actions.getComponent(3);
+    btnTaiLai = (JButton) actions.getComponent(4);
+
+    btnThem.addActionListener(e -> openDoctorDialog(null));
+    btnSua.addActionListener(e -> editDoctor());
+    btnXemChiTiet.addActionListener(e -> showDoctorDetail());
+    btnXoa.addActionListener(e -> deleteDoctor());
+    btnTaiLai.addActionListener(e -> loadData());
+
+    apDungPhanQuyenHanhDong();
     add(actions, BorderLayout.SOUTH);
 
     loadData();
@@ -231,11 +236,16 @@ public class QuanLyBacSiPanel extends BasePanel {
     ) {
       return;
     }
-    if (!bacSiBUS.delete(doctor.getMaBacSi())) {
-      DialogHelper.error(this, "Xóa bác sĩ thất bại.");
+
+    String ketQua = bacSiBUS.xoaBacSiTheoNghiepVu(doctor.getMaBacSi());
+    if (ketQua.startsWith("Đã xóa")) {
+      DialogHelper.info(this, ketQua);
+    } else if (ketQua.startsWith("Không thể xóa")) {
+      DialogHelper.warn(this, ketQua);
+    } else {
+      DialogHelper.error(this, ketQua);
       return;
     }
-    DialogHelper.info(this, "Đã xóa bác sĩ thành công.");
     loadData();
   }
 
@@ -248,5 +258,39 @@ public class QuanLyBacSiPanel extends BasePanel {
       model.getValueAt(table.convertRowIndexToModel(row), 0)
     );
     return bacSiBUS.getById(maBs);
+  }
+
+  /**
+   * Ap dung phan quyen chi tiet theo hanh dong cua module BACSI.
+   */
+  private void apDungPhanQuyenHanhDong() {
+    boolean coQuyenXem = Session.coMotTrongCacQuyen("BACSI_XEM");
+    boolean coQuyenThem = Session.coMotTrongCacQuyen("BACSI_THEM");
+    boolean coQuyenSua = Session.coMotTrongCacQuyen("BACSI_SUA");
+    boolean coQuyenXoa = Session.coMotTrongCacQuyen("BACSI_XOA");
+    boolean coQuyenXemChiTiet = Session.coMotTrongCacQuyen(
+      "BACSI_XEM_CHI_TIET",
+      "BACSI_XEM"
+    );
+
+    if (btnThem != null) {
+      btnThem.setVisible(coQuyenThem);
+    }
+    if (btnSua != null) {
+      btnSua.setVisible(coQuyenSua);
+    }
+    if (btnXemChiTiet != null) {
+      btnXemChiTiet.setVisible(coQuyenXemChiTiet);
+    }
+    if (btnXoa != null) {
+      btnXoa.setVisible(coQuyenXoa);
+    }
+    if (btnTaiLai != null) {
+      btnTaiLai.setVisible(coQuyenXem);
+    }
+
+    if (table != null) {
+      table.setEnabled(coQuyenXem);
+    }
   }
 }

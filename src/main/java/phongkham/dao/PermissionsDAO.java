@@ -2,97 +2,42 @@ package phongkham.dao;
 
 import java.sql.*;
 import java.util.ArrayList;
-import phongkham.DTO.PermissionsDTO;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import phongkham.db.DBConnection;
 
 public class PermissionsDAO {
 
-  public ArrayList<PermissionsDTO> getAllPermisson() {
-    ArrayList<PermissionsDTO> ds = new ArrayList<>();
-    String sql = "SELECT * FROM Permissions";
-    try (
-      Connection c = DBConnection.getConnection();
-      Statement stm = c.createStatement();
-      ResultSet rs = stm.executeQuery(sql);
-    ) {
-      while (rs.next()) {
-        PermissionsDTO perm = new PermissionsDTO();
-        perm.setMaPermission(rs.getInt("MaPermission"));
-        perm.setTenPermission(rs.getString("TenPermission"));
-        perm.setMoTa(rs.getString("MoTa"));
-        perm.setActive(rs.getBoolean("Active"));
-        ds.add(perm);
-      }
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-    return ds;
+  public ArrayList<String> getPermissionByUser(String userID) {
+    Set<String> unique = new LinkedHashSet<>();
+    napQuyenTuMoHinhChiTiet(userID, unique);
+    return new ArrayList<>(unique);
   }
 
-  public ArrayList<String> getPermissionByUser(String userID) {
-    ArrayList<String> list = new ArrayList<>();
-
+  private void napQuyenTuMoHinhChiTiet(String userID, Set<String> unique) {
     String sql =
-      "SELECT p.TenPermission " +
+      "SELECT cp.MaQuyen " +
       "FROM Users u " +
-      "JOIN Roles r ON u.RoleID = r.STT " +
-      "JOIN RolePermissions rp ON r.STT = rp.maRole " +
-      "JOIN Permissions p ON rp.maPermission = p.MaPermission " +
-      "WHERE u.UserID = ? AND p.Active = 1";
+      "JOIN Role_Permission rp ON rp.RoleID = u.RoleID " +
+      "JOIN ChiTiet_Permission cp ON cp.id = rp.ChiTietPermissionID " +
+      "JOIN Permission pm ON pm.id = cp.PermissionID " +
+      "WHERE u.UserID = ?";
 
     try (
       Connection c = DBConnection.getConnection();
       PreparedStatement ps = c.prepareStatement(sql)
     ) {
       ps.setString(1, userID);
-
-      ResultSet rs = ps.executeQuery();
-
-      while (rs.next()) {
-        list.add(rs.getString("TenPermission"));
+      try (ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) {
+          String maQuyen = rs.getString("MaQuyen");
+          if (maQuyen != null && !maQuyen.trim().isEmpty()) {
+            unique.add(maQuyen.trim().toUpperCase());
+          }
+        }
       }
-    } catch (Exception e) {
-      e.printStackTrace();
+    } catch (SQLException ex) {
+      ex.printStackTrace();
     }
-
-    return list;
-  }
-
-  // ========== METHODS CHO QuanLyPhanQuyenPanel ==========
-
-  /**
-   * Wrapper cho getAllPermisson (fix typo)
-   * @return ArrayList<PermissionsDTO>
-   */
-  public ArrayList<PermissionsDTO> getAllPermissions() {
-    return getAllPermisson();
-  }
-
-  /**
-   * Lấy Permission theo ID
-   * @param permissionId - Mã Permission
-   * @return PermissionsDTO hoặc null
-   */
-  public PermissionsDTO getPermissionById(String permissionId) {
-    String sql = "SELECT * FROM Permissions WHERE MaPermission = ?";
-    try (
-      Connection c = DBConnection.getConnection();
-      PreparedStatement ps = c.prepareStatement(sql)
-    ) {
-      ps.setString(1, permissionId);
-      ResultSet rs = ps.executeQuery();
-
-      if (rs.next()) {
-        PermissionsDTO perm = new PermissionsDTO();
-        perm.setMaPermission(rs.getInt("MaPermission"));
-        perm.setTenPermission(rs.getString("TenPermission"));
-        perm.setMoTa(rs.getString("MoTa"));
-        perm.setActive(rs.getBoolean("Active"));
-        return perm;
-      }
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-    return null;
   }
 }

@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -23,6 +24,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import phongkham.BUS.ThuocBUS;
 import phongkham.DTO.ThuocDTO;
+import phongkham.Utils.Session;
 import phongkham.gui.common.BasePanel;
 import phongkham.gui.common.DialogHelper;
 import phongkham.gui.common.UIUtils;
@@ -55,6 +57,11 @@ public class ThuocPanel extends BasePanel {
   private JTable table;
   private CustomTextField txtSearch;
   private JComboBox<String> cbSort;
+  private JButton btnThem;
+  private JButton btnSua;
+  private JButton btnVoHieuHoa;
+  private JButton btnKichHoat;
+  private JButton btnTaiLai;
 
   @Override
   protected void init() {
@@ -108,21 +115,19 @@ public class ThuocPanel extends BasePanel {
       UIUtils.ghostButton("Tải lại")
     );
 
-    ((javax.swing.JButton) actions.getComponent(0)).addActionListener(e ->
-      addMedicine()
-    );
-    ((javax.swing.JButton) actions.getComponent(1)).addActionListener(e ->
-      editMedicine()
-    );
-    ((javax.swing.JButton) actions.getComponent(2)).addActionListener(e ->
-      disableMedicine()
-    );
-    ((javax.swing.JButton) actions.getComponent(3)).addActionListener(e ->
-      reactivateMedicine()
-    );
-    ((javax.swing.JButton) actions.getComponent(4)).addActionListener(e ->
-      reloadData()
-    );
+    btnThem = (JButton) actions.getComponent(0);
+    btnSua = (JButton) actions.getComponent(1);
+    btnVoHieuHoa = (JButton) actions.getComponent(2);
+    btnKichHoat = (JButton) actions.getComponent(3);
+    btnTaiLai = (JButton) actions.getComponent(4);
+
+    btnThem.addActionListener(e -> addMedicine());
+    btnSua.addActionListener(e -> editMedicine());
+    btnVoHieuHoa.addActionListener(e -> disableMedicine());
+    btnKichHoat.addActionListener(e -> reactivateMedicine());
+    btnTaiLai.addActionListener(e -> reloadData());
+
+    apDungPhanQuyenHanhDong();
     return actions;
   }
 
@@ -455,7 +460,6 @@ public class ThuocPanel extends BasePanel {
             row,
             column
           );
-
           int modelRow = tbl.convertRowIndexToModel(row);
           String medicineId = String.valueOf(model.getValueAt(modelRow, 0));
           boolean isActive = Boolean.TRUE.equals(
@@ -484,6 +488,37 @@ public class ThuocPanel extends BasePanel {
         .getColumnModel()
         .getColumn(i)
         .setCellRenderer(inactiveAwareRenderer);
+    }
+  }
+
+  /**
+   * Ap dung phan quyen hanh dong cho module THUOC.
+   */
+  private void apDungPhanQuyenHanhDong() {
+    boolean coQuyenXem = Session.coMotTrongCacQuyen("THUOC_XEM");
+    boolean coQuyenThem = Session.coMotTrongCacQuyen("THUOC_THEM");
+    boolean coQuyenSua = Session.coMotTrongCacQuyen("THUOC_SUA");
+    boolean coQuyenXoa = Session.coMotTrongCacQuyen("THUOC_XOA");
+    boolean coQuyenKichHoat = Session.coMotTrongCacQuyen("THUOC_KICH_HOAT");
+
+    if (btnThem != null) {
+      btnThem.setVisible(coQuyenThem);
+    }
+    if (btnSua != null) {
+      btnSua.setVisible(coQuyenSua);
+    }
+    if (btnVoHieuHoa != null) {
+      btnVoHieuHoa.setVisible(coQuyenXoa);
+    }
+    if (btnKichHoat != null) {
+      btnKichHoat.setVisible(coQuyenKichHoat);
+    }
+    if (btnTaiLai != null) {
+      btnTaiLai.setVisible(coQuyenXem);
+    }
+
+    if (table != null) {
+      table.setEnabled(coQuyenXem);
     }
   }
 }

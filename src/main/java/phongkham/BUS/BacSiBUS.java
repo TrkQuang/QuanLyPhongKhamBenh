@@ -53,6 +53,38 @@ public class BacSiBUS {
     return result;
   }
 
+  // Xoa bac si theo nghiep vu: chi cho xoa cung khi khong co du lieu lien quan
+  public String xoaBacSiTheoNghiepVu(String maBacSi) {
+    if (maBacSi == null || maBacSi.trim().isEmpty()) {
+      return "Mã bác sĩ không hợp lệ.";
+    }
+
+    BacSiDTO current = getById(maBacSi);
+    if (current == null) {
+      return "Không tìm thấy bác sĩ cần xóa.";
+    }
+
+    int soLichLamViec = dao.countLichLamViecByMaBacSi(maBacSi);
+    int soLichKham = dao.countLichKhamByMaBacSi(maBacSi);
+    int soHoSo = dao.countHoSoBenhAnByMaBacSi(maBacSi);
+    int tongLienQuan = soLichLamViec + soLichKham + soHoSo;
+
+    if (tongLienQuan > 0) {
+      return String.format(
+        "Không thể xóa bác sĩ vì đã phát sinh dữ liệu liên quan: %d lịch làm việc, %d lịch khám, %d hồ sơ bệnh án.",
+        soLichLamViec,
+        soLichKham,
+        soHoSo
+      );
+    }
+
+    boolean ok = dao.deleteMaBacSi(maBacSi);
+    if (!ok) {
+      return "Xóa bác sĩ thất bại. Vui lòng thử lại.";
+    }
+    return "Đã xóa bác sĩ thành công.";
+  }
+
   // Tim bac si theo ID
   public BacSiDTO getById(String maBacSi) {
     return findFirstByMaBacSi(maBacSi);

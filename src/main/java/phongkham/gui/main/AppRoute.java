@@ -23,6 +23,7 @@ public final class AppRoute {
   public static final String QL_DUYET_LICH_LAM = "QL_DUYET_LICH_LAM";
   public static final String QL_KHOA = "QL_KHOA";
   public static final String QL_GOI_DICH_VU = "QL_GOI_DICH_VU";
+  public static final String QL_ROLE = "QL_ROLE";
   public static final String PHAN_QUYEN = "PHAN_QUYEN";
 
   private AppRoute() {}

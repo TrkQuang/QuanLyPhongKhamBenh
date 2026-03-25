@@ -1,7 +1,6 @@
 package phongkham.BUS;
 
 import java.util.ArrayList;
-import phongkham.DTO.PermissionsDTO;
 import phongkham.dao.PermissionsDAO;
 
 public class PermissionBUS {
@@ -31,25 +30,5 @@ public class PermissionBUS {
 
   public ArrayList<String> getListPermission() {
     return listPerm;
-  }
-
-  // ========== METHODS CHO QuanLyPhanQuyenPanel ==========
-
-  /**
-   * Lấy tất cả Permission trong hệ thống
-   * @return ArrayList<PermissionsDTO>
-   */
-  public ArrayList<PermissionsDTO> getAllPermissions() {
-    ArrayList<PermissionsDTO> list = permissionDAO.getAllPermissions();
-    return (list != null) ? list : new ArrayList<>();
-  }
-
-  /**
-   * Lấy Permission theo ID
-   * @param permissionId - Mã Permission
-   * @return PermissionsDTO hoặc null
-   */
-  public PermissionsDTO getPermissionById(String permissionId) {
-    return permissionDAO.getPermissionById(permissionId);
   }
 }

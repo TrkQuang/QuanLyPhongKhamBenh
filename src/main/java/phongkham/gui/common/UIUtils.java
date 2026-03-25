@@ -42,16 +42,32 @@ public final class UIUtils {
   }
 
   public static JPanel createSection(String title, Component content) {
+    return createSection(title, content, null);
+  }
+
+  public static JPanel createSection(
+    String title,
+    Component content,
+    Component headerAction
+  ) {
     JPanel panel = new RoundedPanel(18);
     panel.setLayout(new BorderLayout(0, 12));
     panel.setBackground(UIConstants.BG_SURFACE);
     panel.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
 
+    JPanel header = new JPanel(new BorderLayout(8, 0));
+    header.setOpaque(false);
+
     JLabel lblTitle = new JLabel(title);
     lblTitle.setFont(UIConstants.FONT_HEADER);
     lblTitle.setForeground(UIConstants.TEXT_MAIN);
+    header.add(lblTitle, BorderLayout.WEST);
 
-    panel.add(lblTitle, BorderLayout.NORTH);
+    if (headerAction != null) {
+      header.add(headerAction, BorderLayout.EAST);
+    }
+
+    panel.add(header, BorderLayout.NORTH);
     panel.add(content, BorderLayout.CENTER);
     return panel;
   }

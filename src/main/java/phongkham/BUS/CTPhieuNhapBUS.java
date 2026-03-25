@@ -80,6 +80,11 @@ public class CTPhieuNhapBUS {
     return ctDAO.getLotOverview("", "");
   }
 
+  // API tiếng Việt không dấu để dễ đọc theo nghiệp vụ.
+  public int taoPhieuTieuHuyChoLoHetHan(String lyDo, String nguoiThucHien) {
+    return createDisposalForExpiredLots(lyDo, nguoiThucHien);
+  }
+
   public int createDisposalForExpiredLots(String lyDo, String nguoiThucHien) {
     String reason =
       lyDo == null || lyDo.trim().isEmpty() ? "HET_HAN" : lyDo.trim();
@@ -90,56 +95,66 @@ public class CTPhieuNhapBUS {
 
     int disposedRows = 0;
     String sqlSelect =
-      "SELECT ctpn.MaCTPN, ctpn.MaPhieuNhap, ctpn.MaThuoc, ctpn.SoLo, ctpn.HanSuDung, ctpn.SoLuongConLai " +
-      "FROM ChiTietPhieuNhap ctpn " +
-      "JOIN PhieuNhap pn ON pn.MaPhieuNhap = ctpn.MaPhieuNhap " +
-      "WHERE ctpn.SoLuongConLai > 0 " +
-      "  AND ctpn.HanSuDung IS NOT NULL " +
-      "  AND DATE(ctpn.HanSuDung) <= CURDATE() " +
-      "  AND UPPER(TRIM(COALESCE(pn.TrangThai, ''))) IN ('DA_NHAP', 'DA_NHAP_KHO') " +
+      "SELECT lt.MaLo, lt.MaCTPN, lt.MaPhieuNhap, lt.MaThuoc, lt.SoLo, lt.HanSuDung, lt.SoLuongConLai " +
+      "FROM LoThuoc lt " +
+      "WHERE lt.Active = 1 " +
+      "  AND lt.SoLuongConLai > 0 " +
+      "  AND lt.HanSuDung IS NOT NULL " +
+      "  AND DATE(lt.HanSuDung) <= CURDATE() " +
       "FOR UPDATE";
     String sqlUpdate =
-      "UPDATE ChiTietPhieuNhap SET SoLuongConLai = 0 WHERE MaCTPN = ? AND SoLuongConLai > 0";
-    String sqlInsertHistory =
-      "INSERT INTO TieuHuyLoThuoc (MaCTPN, MaPhieuNhap, MaThuoc, SoLo, SoLuongTieuHuy, HanSuDung, NgayTieuHuy, LyDo, NguoiThucHien) " +
-      "VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?)";
+      "UPDATE LoThuoc SET SoLuongConLai = 0, TrangThai = 'DISPOSED' WHERE MaLo = ? AND SoLuongConLai > 0";
+    String sqlInsertMovement =
+      "INSERT INTO LoThuocBienDong (MaLo, LoaiBienDong, SoLuong, ThoiDiem, NguonChungTuLoai, NguonChungTuMa, MaCTPN, GhiChu, NguoiThucHien) " +
+      "VALUES (?, 'DISPOSE', ?, NOW(), 'AUTO_EXPIRED', ?, ?, ?, ?)";
+    String sqlSyncTonKho =
+      "UPDATE Thuoc t " +
+      "LEFT JOIN ( " +
+      "  SELECT MaThuoc, COALESCE(SUM(SoLuongConLai), 0) AS TongConLai " +
+      "  FROM LoThuoc " +
+      "  WHERE Active = 1 AND (HanSuDung IS NULL OR DATE(HanSuDung) > CURDATE()) " +
+      "  GROUP BY MaThuoc " +
+      ") lot ON lot.MaThuoc = t.MaThuoc " +
+      "SET t.SoLuongTon = COALESCE(lot.TongConLai, 0) " +
+      "WHERE t.Active = 1";
 
     try (Connection conn = DBConnection.getConnection()) {
       conn.setAutoCommit(false);
       try (
         PreparedStatement psSelect = conn.prepareStatement(sqlSelect);
         PreparedStatement psUpdate = conn.prepareStatement(sqlUpdate);
-        PreparedStatement psInsert = conn.prepareStatement(sqlInsertHistory)
+        PreparedStatement psInsert = conn.prepareStatement(sqlInsertMovement);
+        PreparedStatement psSyncTonKho = conn.prepareStatement(sqlSyncTonKho)
       ) {
         java.sql.ResultSet rs = psSelect.executeQuery();
         while (rs.next()) {
+          long maLo = rs.getLong("MaLo");
           String maCTPN = rs.getString("MaCTPN");
           String maPN = rs.getString("MaPhieuNhap");
           String maThuoc = rs.getString("MaThuoc");
           String soLo = rs.getString("SoLo");
-          LocalDateTime hanSuDung = rs.getObject(
-            "HanSuDung",
-            LocalDateTime.class
-          );
           int soLuongTieuHuy = rs.getInt("SoLuongConLai");
 
-          psUpdate.setString(1, maCTPN);
+          psUpdate.setLong(1, maLo);
           int updated = psUpdate.executeUpdate();
           if (updated <= 0) {
             continue;
           }
 
-          psInsert.setString(1, maCTPN);
-          psInsert.setString(2, maPN);
-          psInsert.setString(3, maThuoc);
-          psInsert.setString(4, soLo);
-          psInsert.setInt(5, soLuongTieuHuy);
-          psInsert.setObject(6, hanSuDung);
-          psInsert.setString(7, reason);
-          psInsert.setString(8, actor);
+          psInsert.setLong(1, maLo);
+          psInsert.setInt(2, soLuongTieuHuy);
+          psInsert.setString(3, "PN=" + maPN + ",THUOC=" + maThuoc);
+          psInsert.setString(4, maCTPN);
+          psInsert.setString(5, "Tieu huy lo " + soLo + ": " + reason);
+          psInsert.setString(6, actor);
           psInsert.executeUpdate();
 
           disposedRows++;
+        }
+
+        if (disposedRows > 0) {
+          // Đồng bộ tồn kho tổng của thuốc từ LoThuoc để tránh lệch số.
+          psSyncTonKho.executeUpdate();
         }
 
         conn.commit();
@@ -154,9 +169,6 @@ public class CTPhieuNhapBUS {
       return -1;
     }
 
-    if (disposedRows > 0) {
-      thuocBUS.dongBoTonKhoTheoHanSuDungToanBo();
-    }
     return disposedRows;
   }
 

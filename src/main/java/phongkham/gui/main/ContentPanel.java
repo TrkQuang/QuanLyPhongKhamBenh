@@ -5,11 +5,12 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JPanel;
 import phongkham.gui.admin.DashboardPanel;
-import phongkham.gui.admin.PhanQuyenPanel;
 import phongkham.gui.admin.QuanLyBacSiPanel;
 import phongkham.gui.admin.QuanLyDuyetLichLamPanel;
 import phongkham.gui.admin.QuanLyGoiDichVuPanel;
 import phongkham.gui.admin.QuanLyKhoaPanel;
+import phongkham.gui.admin.QuanLyPhanQuyenPanel;
+import phongkham.gui.admin.QuanLyRolePanel;
 import phongkham.gui.admin.QuanLyTaiKhoanPanel;
 import phongkham.gui.bacsi.BacSiProfilePanel;
 import phongkham.gui.bacsi.BenhAnPanel;
@@ -55,7 +56,8 @@ public class ContentPanel extends JPanel {
     register(AppRoute.QL_DUYET_LICH_LAM, new QuanLyDuyetLichLamPanel());
     register(AppRoute.QL_KHOA, new QuanLyKhoaPanel());
     register(AppRoute.QL_GOI_DICH_VU, new QuanLyGoiDichVuPanel());
-    register(AppRoute.PHAN_QUYEN, new PhanQuyenPanel());
+    register(AppRoute.QL_ROLE, new QuanLyRolePanel());
+    register(AppRoute.PHAN_QUYEN, new QuanLyPhanQuyenPanel());
   }
 
   private void register(String route, JPanel panel) {
@@ -69,5 +71,13 @@ public class ContentPanel extends JPanel {
 
   public void showRoute(String route) {
     cardLayout.show(this, route);
+  }
+
+  public void reloadAllPanels() {
+    removeAll();
+    routeMap.clear();
+    registerRoutes();
+    revalidate();
+    repaint();
   }
 }

@@ -16,6 +16,7 @@ import javax.swing.SpinnerDateModel;
 import javax.swing.table.DefaultTableModel;
 import phongkham.BUS.HoaDonKhamBUS;
 import phongkham.DTO.HoaDonKhamDTO;
+import phongkham.Utils.Session;
 import phongkham.Utils.StatusNormalizer;
 import phongkham.gui.common.BasePanel;
 import phongkham.gui.common.DialogHelper;
@@ -49,8 +50,14 @@ public class HoaDonKhamPanel extends BasePanel {
   private JButton btnNext;
   private JButton btnXacNhan;
   private JButton btnHuy;
+  private JButton btnLoc;
+  private JButton btnXoaLoc;
+  private JButton btnTaiLai;
   private javax.swing.JLabel lblPageInfo;
   private int currentPage = 1;
+  private boolean coQuyenXem = true;
+  private boolean coQuyenSua = true;
+  private boolean coQuyenHuy = true;
 
   @Override
   protected void init() {
@@ -99,8 +106,8 @@ public class HoaDonKhamPanel extends BasePanel {
     );
     spTo.setValue(new Date());
     cbPageSize = new JComboBox<>(new Integer[] { 10, 20, 30, 50 });
-    JButton btnLoc = UIUtils.primaryButton("Lọc");
-    JButton btnXoaLoc = UIUtils.ghostButton("Xóa lọc");
+    btnLoc = UIUtils.primaryButton("Lọc");
+    btnXoaLoc = UIUtils.ghostButton("Xóa lọc");
 
     btnLoc.addActionListener(e -> {
       currentPage = 1;
@@ -135,7 +142,7 @@ public class HoaDonKhamPanel extends BasePanel {
     actionRow.setOpaque(false);
     btnXacNhan = UIUtils.primaryButton("Xác nhận thanh toán");
     btnHuy = UIUtils.ghostButton("Hủy hóa đơn");
-    JButton btnTaiLai = UIUtils.ghostButton("Tải lại");
+    btnTaiLai = UIUtils.ghostButton("Tải lại");
     btnPrev = UIUtils.ghostButton("< Trước");
     btnNext = UIUtils.ghostButton("Sau >");
     lblPageInfo = new javax.swing.JLabel("Trang 1/1");
@@ -164,6 +171,8 @@ public class HoaDonKhamPanel extends BasePanel {
 
     wrapper.add(filterRow, BorderLayout.NORTH);
     wrapper.add(actionRow, BorderLayout.SOUTH);
+
+    apDungPhanQuyenHanhDong();
     return wrapper;
   }
 
@@ -376,8 +385,12 @@ public class HoaDonKhamPanel extends BasePanel {
     String trangThai = StatusNormalizer.normalizePaymentStatus(
       selected.getTrangThai()
     );
-    btnXacNhan.setEnabled(!StatusNormalizer.HOAN_HOA_DON.equals(trangThai));
-    btnHuy.setEnabled(!StatusNormalizer.DA_THANH_TOAN.equals(trangThai));
+    btnXacNhan.setEnabled(
+      coQuyenSua && !StatusNormalizer.HOAN_HOA_DON.equals(trangThai)
+    );
+    btnHuy.setEnabled(
+      coQuyenHuy && !StatusNormalizer.DA_THANH_TOAN.equals(trangThai)
+    );
   }
 
   private void resetFilters() {
@@ -390,5 +403,28 @@ public class HoaDonKhamPanel extends BasePanel {
     }
     currentPage = 1;
     applyFilterAndRender();
+  }
+
+  private void apDungPhanQuyenHanhDong() {
+    coQuyenXem = Session.coMotTrongCacQuyen("HOADONKHAM_XEM");
+    coQuyenSua = Session.coMotTrongCacQuyen(
+      "HOADONKHAM_SUA",
+      "HOADONKHAM_THEM"
+    );
+    coQuyenHuy = Session.coMotTrongCacQuyen("HOADONKHAM_HUY");
+
+    if (btnLoc != null) btnLoc.setVisible(coQuyenXem);
+    if (btnXoaLoc != null) btnXoaLoc.setVisible(coQuyenXem);
+    if (btnTaiLai != null) btnTaiLai.setVisible(coQuyenXem);
+    if (btnPrev != null) btnPrev.setVisible(coQuyenXem);
+    if (btnNext != null) btnNext.setVisible(coQuyenXem);
+    if (btnXacNhan != null) btnXacNhan.setVisible(coQuyenSua);
+    if (btnHuy != null) btnHuy.setVisible(coQuyenHuy);
+    if (table != null) table.setEnabled(coQuyenXem);
+    if (txtMaTim != null) txtMaTim.setEnabled(coQuyenXem);
+    if (txtGoiTim != null) txtGoiTim.setEnabled(coQuyenXem);
+    if (spFrom != null) spFrom.setEnabled(coQuyenXem);
+    if (spTo != null) spTo.setEnabled(coQuyenXem);
+    if (cbPageSize != null) cbPageSize.setEnabled(coQuyenXem);
   }
 }

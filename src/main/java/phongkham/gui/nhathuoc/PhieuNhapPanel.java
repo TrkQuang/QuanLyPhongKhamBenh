@@ -42,6 +42,7 @@ import phongkham.DTO.LoThuocNhapDTO;
 import phongkham.DTO.NhaCungCapDTO;
 import phongkham.DTO.PhieuNhapDTO;
 import phongkham.DTO.ThuocDTO;
+import phongkham.Utils.Session;
 import phongkham.Utils.StatusNormalizer;
 import phongkham.gui.common.BasePanel;
 import phongkham.gui.common.DialogHelper;
@@ -55,11 +56,19 @@ public class PhieuNhapPanel extends BasePanel {
   private final ThuocBUS thuocBUS = new ThuocBUS();
 
   private JTable table;
+  private JButton btnAdd;
   private JButton btnEdit;
   private JButton btnCancel;
   private JButton btnConfirmImport;
   private JButton btnViewDetail;
   private JButton btnLotOverview;
+  private JButton btnReload;
+  private boolean coQuyenXem;
+  private boolean coQuyenThem;
+  private boolean coQuyenSua;
+  private boolean coQuyenXoa;
+  private boolean coQuyenXacNhanNhapKho;
+  private boolean coQuyenXemLoHsd;
   private final DefaultTableModel model = new DefaultTableModel(
     new Object[] {
       "Mã phiếu",
@@ -93,13 +102,13 @@ public class PhieuNhapPanel extends BasePanel {
       BorderLayout.CENTER
     );
 
-    JButton btnAdd = UIUtils.primaryButton("Tạo phiếu nhập");
+    btnAdd = UIUtils.primaryButton("Tạo phiếu nhập");
     btnEdit = UIUtils.ghostButton("Sửa chi tiết");
     btnConfirmImport = UIUtils.ghostButton("Xác nhận nhập kho");
     btnCancel = UIUtils.ghostButton("Hủy phiếu");
     btnViewDetail = UIUtils.ghostButton("Xem chi tiết");
     btnLotOverview = UIUtils.ghostButton("Theo dõi lô/HSD");
-    JButton btnReload = UIUtils.ghostButton("Tải lại");
+    btnReload = UIUtils.ghostButton("Tải lại");
 
     JPanel actions = UIUtils.row(
       btnAdd,
@@ -122,6 +131,8 @@ public class PhieuNhapPanel extends BasePanel {
     btnReload.addActionListener(e -> loadData());
 
     add(actions, BorderLayout.SOUTH);
+
+    apDungPhanQuyenHanhDong();
 
     loadData();
   }
@@ -896,6 +907,22 @@ public class PhieuNhapPanel extends BasePanel {
       btnConfirmImport.setEnabled(false);
       btnCancel.setEnabled(false);
     }
+
+    if (!coQuyenSua) {
+      btnEdit.setEnabled(false);
+    }
+    if (!coQuyenXacNhanNhapKho) {
+      btnConfirmImport.setEnabled(false);
+    }
+    if (!coQuyenXoa) {
+      btnCancel.setEnabled(false);
+    }
+    if (!coQuyenXem) {
+      btnViewDetail.setEnabled(false);
+    }
+    if (!coQuyenXemLoHsd) {
+      btnLotOverview.setEnabled(false);
+    }
   }
 
   private PhieuNhapDTO getSelectedReceipt() {
@@ -923,6 +950,42 @@ public class PhieuNhapPanel extends BasePanel {
       return "DA_HUY";
     }
     return status;
+  }
+
+  private void apDungPhanQuyenHanhDong() {
+    coQuyenXem = Session.coMotTrongCacQuyen("PHIEUNHAP_XEM");
+    coQuyenThem = Session.coMotTrongCacQuyen("PHIEUNHAP_THEM");
+    coQuyenSua = Session.coMotTrongCacQuyen("PHIEUNHAP_SUA");
+    coQuyenXoa = Session.coMotTrongCacQuyen("PHIEUNHAP_XOA");
+    coQuyenXacNhanNhapKho = Session.coMotTrongCacQuyen(
+      "PHIEUNHAP_XAC_NHAN_NHAP_KHO"
+    );
+    coQuyenXemLoHsd = Session.coMotTrongCacQuyen("PHIEUNHAP_XEM_LO_HSD");
+
+    if (btnAdd != null) {
+      btnAdd.setVisible(coQuyenThem);
+    }
+    if (btnEdit != null) {
+      btnEdit.setVisible(coQuyenSua);
+    }
+    if (btnConfirmImport != null) {
+      btnConfirmImport.setVisible(coQuyenXacNhanNhapKho);
+    }
+    if (btnCancel != null) {
+      btnCancel.setVisible(coQuyenXoa);
+    }
+    if (btnViewDetail != null) {
+      btnViewDetail.setVisible(coQuyenXem);
+    }
+    if (btnLotOverview != null) {
+      btnLotOverview.setVisible(coQuyenXemLoHsd);
+    }
+    if (btnReload != null) {
+      btnReload.setVisible(coQuyenXem);
+    }
+    if (table != null) {
+      table.setEnabled(coQuyenXem);
+    }
   }
 
   private String generateNextMaPhieuNhap() {
@@ -1060,11 +1123,15 @@ public class PhieuNhapPanel extends BasePanel {
       int near60 = 0;
       int near90 = 0;
       for (LoThuocNhapDTO lot : lots) {
-        if (onlyRemain && lot.getSoLuongConLai() <= 0) {
+        int remain = Math.max(0, lot.getSoLuongConLai());
+        boolean hasRemain = remain > 0;
+        if (onlyRemain && !hasRemain) {
+          continue;
+        }
+        if (!onlyRemain && hasRemain) {
           continue;
         }
         long daysRemaining = getRemainingDays(lot.getHanSuDung());
-        int remain = Math.max(0, lot.getSoLuongConLai());
         totalRemain += remain;
         if (daysRemaining <= 0) {
           expiredRemain += remain;
@@ -1227,12 +1294,10 @@ public class PhieuNhapPanel extends BasePanel {
     ArrayList<LoThuocNhapDTO> activeLots = new ArrayList<>();
     LocalDate today = LocalDate.now();
     for (LoThuocNhapDTO lot : allLots) {
-      String statusPn = safe(lot.getTrangThaiPhieuNhap())
-        .trim()
-        .toUpperCase(Locale.ROOT);
-      boolean daNhap =
-        "DA_NHAP".equals(statusPn) || "DA_NHAP_KHO".equals(statusPn);
-      if (!daNhap) {
+      String statusPn = StatusNormalizer.normalizePhieuNhapStatus(
+        lot.getTrangThaiPhieuNhap()
+      );
+      if (StatusNormalizer.DA_HUY.equals(statusPn)) {
         continue;
       }
       if (lot.getSoLuongConLai() <= 0) {

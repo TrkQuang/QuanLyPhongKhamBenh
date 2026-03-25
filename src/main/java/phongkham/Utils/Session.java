@@ -48,6 +48,13 @@ public class Session {
     currentPermissions = null;
   }
 
+  public static void refreshPermissions() {
+    if (currentUser == null) {
+      return;
+    }
+    login(currentUser);
+  }
+
   public static boolean isLoggedIn() {
     return currentUser != null;
   }
@@ -76,10 +83,52 @@ public class Session {
    * Kiểm tra quyền
    */
   public static boolean hasPermission(String permissionName) {
-    if (currentPermissions == null || permissionName == null) {
+    if (permissionName == null) {
       return false;
     }
-    return currentPermissions.contains(permissionName.trim().toUpperCase());
+
+    String normalized = permissionName.trim().toUpperCase();
+
+    // Guest khong can login van duoc dung cac tinh nang co ban.
+    if (!isLoggedIn() && isDefaultGuestPermission(normalized)) {
+      return true;
+    }
+
+    if (currentPermissions == null) {
+      return false;
+    }
+
+    return currentPermissions.contains(normalized);
+  }
+
+  /**
+   * Ham kiem tra quyen theo ten ma quyen chi tiet (khuyen nghi su dung cho code moi).
+   */
+  public static boolean kiemTraQuyen(String maQuyen) {
+    return hasPermission(maQuyen);
+  }
+
+  /**
+   * Kiem tra user hien tai co it nhat mot quyen trong danh sach hay khong.
+   */
+  public static boolean coMotTrongCacQuyen(String... dsMaQuyen) {
+    if (dsMaQuyen == null) {
+      return false;
+    }
+    for (String maQuyen : dsMaQuyen) {
+      if (kiemTraQuyen(maQuyen)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean isDefaultGuestPermission(String permissionName) {
+    return (
+      "GUEST_DAT_LICH".equals(permissionName) ||
+      "GUEST_MUA_THUOC".equals(permissionName) ||
+      "GUEST_TRA_CUU_HO_SO".equals(permissionName)
+    );
   }
 
   /**

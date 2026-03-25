@@ -1,5 +1,8 @@
 package phongkham.gui.nhathuoc;
 
+import com.itextpdf.text.Document;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.PdfWriter;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -29,6 +32,7 @@ import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
@@ -41,6 +45,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import phongkham.BUS.CTDonThuocBUS;
+import phongkham.BUS.CTHDThuocBUS;
 import phongkham.BUS.DonThuocBUS;
 import phongkham.BUS.HoSoBenhAnBUS;
 import phongkham.BUS.HoaDonThuocBUS;
@@ -52,6 +57,7 @@ import phongkham.DTO.HoSoBenhAnDTO;
 import phongkham.DTO.HoaDonThuocDTO;
 import phongkham.DTO.ThuocDTO;
 import phongkham.DTO.XuatThuocTheoLoDTO;
+import phongkham.Utils.Session;
 import phongkham.Utils.StatusNormalizer;
 import phongkham.gui.common.BasePanel;
 import phongkham.gui.common.DialogHelper;
@@ -65,6 +71,7 @@ public class HoaDonThuocPanel extends BasePanel {
     DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
   private final HoaDonThuocBUS hoaDonThuocBUS = new HoaDonThuocBUS();
+  private final CTHDThuocBUS cthdThuocBUS = new CTHDThuocBUS();
   private final DonThuocBUS donThuocBUS = new DonThuocBUS();
   private final CTDonThuocBUS ctDonThuocBUS = new CTDonThuocBUS();
   private final ThuocBUS thuocBUS = new ThuocBUS();
@@ -101,11 +108,20 @@ public class HoaDonThuocPanel extends BasePanel {
   private JButton btnNext;
   private JButton btnCreateFromPrescription;
   private JButton btnConfirmPayment;
+  private JButton btnEditInvoice;
   private JButton btnConfirmPickup;
   private JButton btnCancelInvoice;
   private JButton btnViewLotIssueTrace;
+  private JButton btnReload;
   private javax.swing.JLabel lblPageInfo;
   private int currentPage = 1;
+  private boolean coQuyenXem;
+  private boolean coQuyenThem;
+  private boolean coQuyenSua;
+  private boolean coQuyenXoa;
+  private boolean coQuyenXacNhanThanhToan;
+  private boolean coQuyenXacNhanGiaoThuoc;
+  private boolean coQuyenXemXuatTheoLo;
 
   @Override
   protected void init() {
@@ -151,26 +167,17 @@ public class HoaDonThuocPanel extends BasePanel {
     cbStatusFilter = new JComboBox<>(
       new String[] {
         "Tất cả trạng thái",
-        "CHUA_THANH_TOAN",
-        "DA_THANH_TOAN",
-        "HOAN_HOA_DON",
-        "CHO_LAY",
-        "DA_HOAN_THANH",
-        "DA_HUY",
+        "CHO_XAC_NHAN_THANH_TOAN",
+        "DA_THANH_TOAN_CHO_LAY",
+        "DA_GIAO_THUOC",
+        "DA_HUY_CHUA_THANH_TOAN",
+        "DA_HOAN_TIEN",
       }
     );
 
     spFromDate = createDateSpinner();
     spToDate = createDateSpinner();
-    spFromDate.setValue(
-      Date.from(
-        LocalDate.now()
-          .minusMonths(6)
-          .atStartOfDay(ZoneId.systemDefault())
-          .toInstant()
-      )
-    );
-    spToDate.setValue(new Date());
+    applyDefaultDateRange();
 
     JButton btnFilter = UIUtils.primaryButton("Lọc");
     JButton btnReset = UIUtils.ghostButton("Xóa lọc");
@@ -216,13 +223,15 @@ public class HoaDonThuocPanel extends BasePanel {
     JPanel actionRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
     actionRow.setOpaque(false);
     btnCreateFromPrescription = UIUtils.primaryButton("Tạo từ đơn thuốc");
+    btnEditInvoice = UIUtils.ghostButton("Sửa chi tiết hóa đơn");
     btnConfirmPayment = UIUtils.primaryButton("Xác nhận thanh toán");
     btnConfirmPickup = UIUtils.ghostButton("Xác nhận giao thuốc");
     btnCancelInvoice = UIUtils.ghostButton("Hủy hóa đơn");
     btnViewLotIssueTrace = UIUtils.ghostButton("Xem xuất theo lô");
-    JButton btnReload = UIUtils.ghostButton("Tải lại");
+    btnReload = UIUtils.ghostButton("Tải lại");
 
     btnCreateFromPrescription.addActionListener(e -> openCreateInvoiceDialog());
+    btnEditInvoice.addActionListener(e -> openEditInvoiceDialog());
     btnConfirmPayment.addActionListener(e -> confirmPayment());
     btnConfirmPickup.addActionListener(e -> confirmPickup());
     btnCancelInvoice.addActionListener(e -> cancelInvoice());
@@ -230,11 +239,14 @@ public class HoaDonThuocPanel extends BasePanel {
     btnReload.addActionListener(e -> reloadData());
 
     actionRow.add(btnCreateFromPrescription);
+    actionRow.add(btnEditInvoice);
     actionRow.add(btnConfirmPayment);
     actionRow.add(btnConfirmPickup);
     actionRow.add(btnCancelInvoice);
     actionRow.add(btnViewLotIssueTrace);
     actionRow.add(btnReload);
+
+    apDungPhanQuyenHanhDong();
 
     JPanel pagingRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
     pagingRow.setOpaque(false);
@@ -284,6 +296,12 @@ public class HoaDonThuocPanel extends BasePanel {
     txtSearch.setText("");
     cbSort.setSelectedItem("Mặc định");
     cbStatusFilter.setSelectedItem("Tất cả trạng thái");
+    applyDefaultDateRange();
+    currentPage = 1;
+    applyFiltersAndRender();
+  }
+
+  private void applyDefaultDateRange() {
     spFromDate.setValue(
       Date.from(
         LocalDate.now()
@@ -292,9 +310,14 @@ public class HoaDonThuocPanel extends BasePanel {
           .toInstant()
       )
     );
-    spToDate.setValue(new Date());
-    currentPage = 1;
-    applyFiltersAndRender();
+    spToDate.setValue(
+      Date.from(
+        LocalDate.now()
+          .plusMonths(6)
+          .atStartOfDay(ZoneId.systemDefault())
+          .toInstant()
+      )
+    );
   }
 
   private void applyFiltersAndRender() {
@@ -473,13 +496,322 @@ public class HoaDonThuocPanel extends BasePanel {
       return;
     }
 
-    if (!hoaDonThuocBUS.payInvoice(selected.getMaHoaDon())) {
+    String stockMessage = hoaDonThuocBUS.layThongBaoKiemTraTonKhoHoaDon(
+      selected.getMaHoaDon()
+    );
+    if (stockMessage != null && !stockMessage.isBlank()) {
+      DialogHelper.warn(
+        this,
+        stockMessage +
+          "\nVui lòng sửa chi tiết hóa đơn trước khi xác nhận thanh toán."
+      );
+      return;
+    }
+
+    if (!hoaDonThuocBUS.xacNhanThanhToanHoaDon(selected.getMaHoaDon())) {
       DialogHelper.error(this, "Xác nhận thanh toán thất bại.");
       return;
     }
 
+    exportInvoicePdfAfterPayment(selected.getMaHoaDon());
     DialogHelper.info(this, "Xác nhận thanh toán thành công.");
     reloadData();
+  }
+
+  private void openEditInvoiceDialog() {
+    HoaDonThuocDTO selected = getSelectedInvoice();
+    if (selected == null) {
+      DialogHelper.warn(this, "Vui lòng chọn hóa đơn để chỉnh sửa chi tiết.");
+      return;
+    }
+
+    if (!hoaDonThuocBUS.coTheSuaHoaDon(selected.getMaHoaDon())) {
+      DialogHelper.warn(
+        this,
+        "Chỉ được sửa chi tiết khi hóa đơn chưa thanh toán và đang chờ lấy thuốc."
+      );
+      return;
+    }
+
+    java.util.List<CTHDThuocDTO> details = cthdThuocBUS.getDetailsByInvoice(
+      selected.getMaHoaDon()
+    );
+    if (details == null || details.isEmpty()) {
+      DialogHelper.warn(this, "Hóa đơn chưa có chi tiết thuốc để chỉnh sửa.");
+      return;
+    }
+
+    JDialog dialog = new JDialog(
+      (Frame) SwingUtilities.getWindowAncestor(this),
+      "Sửa chi tiết hóa đơn " + selected.getMaHoaDon(),
+      true
+    );
+    dialog.setLayout(new BorderLayout(8, 8));
+
+    JLabel lblHint = new JLabel(
+      "Có thể thêm thuốc mới, sửa SL dòng cũ, hoặc xóa dòng bất kỳ trước khi xác nhận thanh toán."
+    );
+    javax.swing.JTextArea txtNote = new javax.swing.JTextArea(3, 28);
+    txtNote.setLineWrap(true);
+    txtNote.setWrapStyleWord(true);
+    txtNote.setText(safe(selected.getGhiChu()));
+
+    DefaultTableModel editModel = new DefaultTableModel(
+      new Object[] {
+        "Mã CTHD",
+        "Mã thuốc",
+        "Tên thuốc",
+        "Đơn giá",
+        "SL",
+        "Tồn hiện tại",
+        "Thành tiền",
+      },
+      0
+    ) {
+      @Override
+      public boolean isCellEditable(int row, int column) {
+        return column == 4;
+      }
+    };
+
+    for (CTHDThuocDTO detail : details) {
+      ThuocDTO thuoc = thuocBUS.getByMa(detail.getMaThuoc());
+      int tonHienTai = thuoc == null ? 0 : Math.max(0, thuoc.getSoLuongTon());
+      editModel.addRow(
+        new Object[] {
+          detail.getMaCTHDThuoc(),
+          detail.getMaThuoc(),
+          safe(detail.getTenThuoc()),
+          detail.getDonGia(),
+          detail.getSoLuong(),
+          tonHienTai,
+          detail.getThanhTien(),
+        }
+      );
+    }
+
+    JTable editTable = new JTable(editModel);
+    UIUtils.styleTable(editTable);
+    editModel.addTableModelListener(e -> {
+      if (e.getFirstRow() < 0 || e.getColumn() != 4) {
+        return;
+      }
+      int row = e.getFirstRow();
+      Object rawQty = editModel.getValueAt(row, 4);
+      int qty;
+      try {
+        qty = Integer.parseInt(String.valueOf(rawQty).trim());
+      } catch (Exception ex) {
+        qty = 0;
+      }
+      if (qty < 0) {
+        qty = 0;
+      }
+      double donGia = toDouble(editModel.getValueAt(row, 3));
+      editModel.setValueAt(qty * donGia, row, 6);
+    });
+
+    JPanel top = new JPanel(new BorderLayout(0, 6));
+    top.setOpaque(false);
+    top.add(lblHint, BorderLayout.NORTH);
+    top.add(new JScrollPane(txtNote), BorderLayout.SOUTH);
+
+    JPanel midActions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+    midActions.setOpaque(false);
+    JButton btnAddMedicine = UIUtils.ghostButton("Thêm thuốc mới");
+    JButton btnRemoveRow = UIUtils.ghostButton("Xóa dòng đã chọn");
+    midActions.add(btnAddMedicine);
+    midActions.add(btnRemoveRow);
+
+    JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+    bottom.setOpaque(false);
+    JButton btnSave = UIUtils.primaryButton("Lưu chi tiết");
+    JButton btnClose = UIUtils.ghostButton("Đóng");
+    bottom.add(btnClose);
+    bottom.add(btnSave);
+
+    btnClose.addActionListener(e -> dialog.dispose());
+    btnRemoveRow.addActionListener(e -> {
+      int row = editTable.getSelectedRow();
+      if (row < 0) {
+        DialogHelper.warn(dialog, "Vui lòng chọn dòng cần xóa.");
+        return;
+      }
+      int modelRow = editTable.convertRowIndexToModel(row);
+      editModel.removeRow(modelRow);
+    });
+
+    btnAddMedicine.addActionListener(e -> {
+      ArrayList<ThuocDTO> allMeds = thuocBUS.list();
+      if (allMeds == null || allMeds.isEmpty()) {
+        DialogHelper.warn(dialog, "Không có thuốc để thêm.");
+        return;
+      }
+
+      JComboBox<String> cbThuoc = new JComboBox<>();
+      for (ThuocDTO thuoc : allMeds) {
+        cbThuoc.addItem(thuoc.getMaThuoc() + " - " + safe(thuoc.getTenThuoc()));
+      }
+      javax.swing.JTextField txtQty = new javax.swing.JTextField("1", 10);
+
+      JPanel form = new JPanel(new GridBagLayout());
+      GridBagConstraints gbc = new GridBagConstraints();
+      gbc.insets = new Insets(4, 4, 4, 4);
+      gbc.anchor = GridBagConstraints.WEST;
+      gbc.fill = GridBagConstraints.HORIZONTAL;
+
+      gbc.gridx = 0;
+      gbc.gridy = 0;
+      form.add(new JLabel("Thuốc"), gbc);
+      gbc.gridx = 1;
+      form.add(cbThuoc, gbc);
+      gbc.gridx = 0;
+      gbc.gridy = 1;
+      form.add(new JLabel("Số lượng"), gbc);
+      gbc.gridx = 1;
+      form.add(txtQty, gbc);
+
+      int result = JOptionPane.showConfirmDialog(
+        dialog,
+        form,
+        "Thêm thuốc vào hóa đơn",
+        JOptionPane.OK_CANCEL_OPTION,
+        JOptionPane.PLAIN_MESSAGE
+      );
+      if (result != JOptionPane.OK_OPTION) {
+        return;
+      }
+
+      String selectedText = String.valueOf(cbThuoc.getSelectedItem());
+      String maThuoc = extractIdFromLabel(selectedText);
+      ThuocDTO thuoc = thuocBUS.getByMa(maThuoc);
+      if (thuoc == null) {
+        DialogHelper.warn(dialog, "Thuốc không tồn tại.");
+        return;
+      }
+
+      int qty;
+      try {
+        qty = Integer.parseInt(txtQty.getText().trim());
+      } catch (Exception ex) {
+        DialogHelper.warn(dialog, "Số lượng không hợp lệ.");
+        return;
+      }
+      if (qty <= 0) {
+        DialogHelper.warn(dialog, "Số lượng phải lớn hơn 0.");
+        return;
+      }
+
+      for (int i = 0; i < editModel.getRowCount(); i++) {
+        String existingMaThuoc = safe(
+          String.valueOf(editModel.getValueAt(i, 1))
+        );
+        if (maThuoc.equalsIgnoreCase(existingMaThuoc)) {
+          int oldQty = toInt(editModel.getValueAt(i, 4));
+          int newQty = oldQty + qty;
+          editModel.setValueAt(newQty, i, 4);
+          editModel.setValueAt(newQty * thuoc.getDonGiaBan(), i, 6);
+          return;
+        }
+      }
+
+      editModel.addRow(
+        new Object[] {
+          "",
+          maThuoc,
+          safe(thuoc.getTenThuoc()),
+          thuoc.getDonGiaBan(),
+          qty,
+          Math.max(0, thuoc.getSoLuongTon()),
+          qty * thuoc.getDonGiaBan(),
+        }
+      );
+    });
+
+    btnSave.addActionListener(e -> {
+      ArrayList<CTHDThuocDTO> replacementDetails = new ArrayList<>();
+      for (int i = 0; i < editModel.getRowCount(); i++) {
+        String maCt = safe(String.valueOf(editModel.getValueAt(i, 0)));
+        String maThuoc = safe(String.valueOf(editModel.getValueAt(i, 1)));
+        int qty;
+        try {
+          qty = Integer.parseInt(
+            String.valueOf(editModel.getValueAt(i, 4)).trim()
+          );
+        } catch (Exception ex) {
+          DialogHelper.warn(
+            dialog,
+            "Số lượng tại dòng " + (i + 1) + " không hợp lệ."
+          );
+          return;
+        }
+
+        if (qty <= 0) {
+          continue;
+        }
+
+        double donGia = toDouble(editModel.getValueAt(i, 3));
+        if (maThuoc.isEmpty() || donGia <= 0) {
+          DialogHelper.warn(
+            dialog,
+            "Thông tin thuốc tại dòng " + (i + 1) + " không hợp lệ."
+          );
+          return;
+        }
+
+        CTHDThuocDTO dto = new CTHDThuocDTO();
+        dto.setMaCTHDThuoc(maCt.isEmpty() ? null : maCt);
+        dto.setMaHoaDon(selected.getMaHoaDon());
+        dto.setMaThuoc(maThuoc);
+        dto.setSoLuong(qty);
+        dto.setDonGia(donGia);
+        dto.setThanhTien(qty * donGia);
+        dto.setActive(true);
+        replacementDetails.add(dto);
+      }
+
+      if (replacementDetails.isEmpty()) {
+        DialogHelper.warn(dialog, "Hóa đơn phải còn ít nhất 1 dòng thuốc.");
+        return;
+      }
+
+      if (
+        !DialogHelper.confirm(
+          dialog,
+          "Lưu thay đổi chi tiết hóa đơn " + selected.getMaHoaDon() + "?"
+        )
+      ) {
+        return;
+      }
+
+      boolean updated = hoaDonThuocBUS.thayTheChiTietHoaDonTruocThanhToan(
+        selected.getMaHoaDon(),
+        replacementDetails,
+        txtNote.getText().trim()
+      );
+      if (!updated) {
+        DialogHelper.error(
+          dialog,
+          "Cập nhật chi tiết thất bại. Vui lòng kiểm tra số lượng/tồn kho."
+        );
+        return;
+      }
+
+      DialogHelper.info(dialog, "Đã cập nhật chi tiết hóa đơn.");
+      dialog.dispose();
+      reloadData();
+    });
+
+    dialog.add(top, BorderLayout.NORTH);
+    JPanel center = new JPanel(new BorderLayout(0, 8));
+    center.setOpaque(false);
+    center.add(midActions, BorderLayout.NORTH);
+    center.add(new JScrollPane(editTable), BorderLayout.CENTER);
+    dialog.add(center, BorderLayout.CENTER);
+    dialog.add(bottom, BorderLayout.SOUTH);
+    dialog.setSize(900, 520);
+    dialog.setLocationRelativeTo(this);
+    dialog.setVisible(true);
   }
 
   private void openCreateInvoiceDialog() {
@@ -596,9 +928,7 @@ public class HoaDonThuocPanel extends BasePanel {
       hoaDon.setSdtBenhNhan(preview.sdtBenhNhan);
       hoaDon.setGhiChu(txtNote.getText().trim());
 
-      if (
-        !hoaDonThuocBUS.createInvoiceFromPrescription(hoaDon, preview.details)
-      ) {
+      if (!hoaDonThuocBUS.taoHoaDonTuDonThuoc(hoaDon, preview.details)) {
         DialogHelper.error(dialog, "Tạo hóa đơn từ đơn thuốc thất bại.");
         return;
       }
@@ -786,7 +1116,7 @@ public class HoaDonThuocPanel extends BasePanel {
       return;
     }
 
-    if (!hoaDonThuocBUS.completePickup(selected.getMaHoaDon())) {
+    if (!hoaDonThuocBUS.xacNhanGiaoThuoc(selected.getMaHoaDon())) {
       DialogHelper.error(
         this,
         "Xác nhận giao thuốc thất bại. Kiểm tra tồn kho và chi tiết hóa đơn."
@@ -823,18 +1153,33 @@ public class HoaDonThuocPanel extends BasePanel {
       return;
     }
 
-    if (!hoaDonThuocBUS.cancelInvoice(selected.getMaHoaDon())) {
+    String paymentStatus = StatusNormalizer.normalizePaymentStatus(
+      selected.getTrangThaiThanhToan()
+    );
+
+    if (!hoaDonThuocBUS.huyHoaDonThuoc(selected.getMaHoaDon())) {
       DialogHelper.error(this, "Hủy hóa đơn thất bại.");
       return;
     }
 
-    DialogHelper.info(this, "Hủy hóa đơn thành công.");
+    if (StatusNormalizer.DA_THANH_TOAN.equals(paymentStatus)) {
+      DialogHelper.info(
+        this,
+        "Hủy hóa đơn thành công. Trạng thái: HOAN_HOA_DON + DA_HUY."
+      );
+    } else {
+      DialogHelper.info(
+        this,
+        "Hủy hóa đơn thành công. Trạng thái: CHUA_THANH_TOAN + DA_HUY."
+      );
+    }
     reloadData();
   }
 
   private void updateActionButtons() {
     if (
       btnConfirmPayment == null ||
+      btnEditInvoice == null ||
       btnConfirmPickup == null ||
       btnCancelInvoice == null ||
       btnViewLotIssueTrace == null
@@ -845,6 +1190,7 @@ public class HoaDonThuocPanel extends BasePanel {
     HoaDonThuocDTO selected = getSelectedInvoice();
     if (selected == null) {
       btnConfirmPayment.setEnabled(false);
+      btnEditInvoice.setEnabled(false);
       btnConfirmPickup.setEnabled(false);
       btnCancelInvoice.setEnabled(false);
       btnViewLotIssueTrace.setEnabled(false);
@@ -861,6 +1207,9 @@ public class HoaDonThuocPanel extends BasePanel {
     boolean canConfirmPayment =
       StatusNormalizer.CHUA_THANH_TOAN.equals(paymentStatus) &&
       !StatusNormalizer.DA_HUY.equals(pickupStatus);
+    boolean canEdit =
+      StatusNormalizer.CHUA_THANH_TOAN.equals(paymentStatus) &&
+      StatusNormalizer.CHO_LAY.equals(pickupStatus);
     boolean canConfirmPickup =
       StatusNormalizer.DA_THANH_TOAN.equals(paymentStatus) &&
       StatusNormalizer.CHO_LAY.equals(pickupStatus);
@@ -869,9 +1218,67 @@ public class HoaDonThuocPanel extends BasePanel {
       !StatusNormalizer.DA_HOAN_THANH.equals(pickupStatus);
 
     btnConfirmPayment.setEnabled(canConfirmPayment);
+    btnEditInvoice.setEnabled(canEdit);
     btnConfirmPickup.setEnabled(canConfirmPickup);
     btnCancelInvoice.setEnabled(canCancel);
     btnViewLotIssueTrace.setEnabled(true);
+
+    if (!coQuyenSua) {
+      btnEditInvoice.setEnabled(false);
+    }
+    if (!coQuyenXacNhanThanhToan) {
+      btnConfirmPayment.setEnabled(false);
+    }
+    if (!coQuyenXacNhanGiaoThuoc) {
+      btnConfirmPickup.setEnabled(false);
+    }
+    if (!coQuyenXoa) {
+      btnCancelInvoice.setEnabled(false);
+    }
+    if (!coQuyenXem || !coQuyenXemXuatTheoLo) {
+      btnViewLotIssueTrace.setEnabled(false);
+    }
+  }
+
+  private void apDungPhanQuyenHanhDong() {
+    coQuyenXem = Session.coMotTrongCacQuyen("HOADONTHUOC_XEM");
+    coQuyenThem = Session.coMotTrongCacQuyen("HOADONTHUOC_THEM");
+    coQuyenSua = Session.coMotTrongCacQuyen("HOADONTHUOC_SUA");
+    coQuyenXoa = Session.coMotTrongCacQuyen("HOADONTHUOC_XOA");
+    coQuyenXacNhanThanhToan = Session.coMotTrongCacQuyen(
+      "HOADONTHUOC_XAC_NHAN_THANH_TOAN"
+    );
+    coQuyenXacNhanGiaoThuoc = Session.coMotTrongCacQuyen(
+      "HOADONTHUOC_XAC_NHAN_GIAO_THUOC"
+    );
+    coQuyenXemXuatTheoLo = Session.coMotTrongCacQuyen(
+      "HOADONTHUOC_XEM_XUAT_THEO_LO"
+    );
+
+    if (btnCreateFromPrescription != null) {
+      btnCreateFromPrescription.setVisible(coQuyenThem);
+    }
+    if (btnConfirmPayment != null) {
+      btnConfirmPayment.setVisible(coQuyenXacNhanThanhToan);
+    }
+    if (btnEditInvoice != null) {
+      btnEditInvoice.setVisible(coQuyenSua);
+    }
+    if (btnConfirmPickup != null) {
+      btnConfirmPickup.setVisible(coQuyenXacNhanGiaoThuoc);
+    }
+    if (btnCancelInvoice != null) {
+      btnCancelInvoice.setVisible(coQuyenXoa);
+    }
+    if (btnViewLotIssueTrace != null) {
+      btnViewLotIssueTrace.setVisible(coQuyenXem && coQuyenXemXuatTheoLo);
+    }
+    if (btnReload != null) {
+      btnReload.setVisible(coQuyenXem);
+    }
+    if (table != null) {
+      table.setEnabled(coQuyenXem);
+    }
   }
 
   private void openLotIssueTraceDialog() {
@@ -885,7 +1292,7 @@ public class HoaDonThuocPanel extends BasePanel {
     }
 
     java.util.List<XuatThuocTheoLoDTO> traceRows =
-      hoaDonThuocBUS.getXuatTheoLoByMaHoaDon(selected.getMaHoaDon());
+      hoaDonThuocBUS.layLichSuXuatTheoLoTheoHoaDon(selected.getMaHoaDon());
     if (traceRows == null || traceRows.isEmpty()) {
       DialogHelper.info(
         this,
@@ -1235,19 +1642,140 @@ public class HoaDonThuocPanel extends BasePanel {
       return true;
     }
 
-    if (
-      StatusNormalizer.CHUA_THANH_TOAN.equals(statusFilter) ||
-      StatusNormalizer.DA_THANH_TOAN.equals(statusFilter) ||
-      StatusNormalizer.HOAN_HOA_DON.equals(statusFilter)
-    ) {
-      return statusFilter.equals(
-        StatusNormalizer.normalizePaymentStatus(invoice.getTrangThaiThanhToan())
+    String paymentStatus = StatusNormalizer.normalizePaymentStatus(
+      invoice.getTrangThaiThanhToan()
+    );
+    String pickupStatus = StatusNormalizer.normalizePickupStatus(
+      invoice.getTrangThaiLayThuoc()
+    );
+
+    if ("CHO_XAC_NHAN_THANH_TOAN".equals(statusFilter)) {
+      return (
+        StatusNormalizer.CHUA_THANH_TOAN.equals(paymentStatus) &&
+        StatusNormalizer.CHO_LAY.equals(pickupStatus)
+      );
+    }
+    if ("DA_THANH_TOAN_CHO_LAY".equals(statusFilter)) {
+      return (
+        StatusNormalizer.DA_THANH_TOAN.equals(paymentStatus) &&
+        StatusNormalizer.CHO_LAY.equals(pickupStatus)
+      );
+    }
+    if ("DA_GIAO_THUOC".equals(statusFilter)) {
+      return StatusNormalizer.DA_HOAN_THANH.equals(pickupStatus);
+    }
+    if ("DA_HUY_CHUA_THANH_TOAN".equals(statusFilter)) {
+      return (
+        StatusNormalizer.DA_HUY.equals(pickupStatus) &&
+        StatusNormalizer.CHUA_THANH_TOAN.equals(paymentStatus)
+      );
+    }
+    if ("DA_HOAN_TIEN".equals(statusFilter)) {
+      return (
+        StatusNormalizer.DA_HUY.equals(pickupStatus) &&
+        StatusNormalizer.HOAN_HOA_DON.equals(paymentStatus)
       );
     }
 
-    return statusFilter.equals(
-      StatusNormalizer.normalizePickupStatus(invoice.getTrangThaiLayThuoc())
+    return true;
+  }
+
+  private double toDouble(Object value) {
+    if (value == null) {
+      return 0;
+    }
+    try {
+      return Double.parseDouble(String.valueOf(value).trim());
+    } catch (Exception ex) {
+      return 0;
+    }
+  }
+
+  private int toInt(Object value) {
+    if (value == null) {
+      return 0;
+    }
+    try {
+      return Integer.parseInt(String.valueOf(value).trim());
+    } catch (Exception ex) {
+      return 0;
+    }
+  }
+
+  private String extractIdFromLabel(String text) {
+    if (text == null) {
+      return "";
+    }
+    int idx = text.indexOf(" - ");
+    return idx > 0 ? text.substring(0, idx).trim() : text.trim();
+  }
+
+  private void exportInvoicePdfAfterPayment(String maHoaDon) {
+    HoaDonThuocDTO invoice = hoaDonThuocBUS.getHoaDonThuocDetail(maHoaDon);
+    if (invoice == null) {
+      return;
+    }
+    java.util.List<CTHDThuocDTO> details = cthdThuocBUS.getDetailsByInvoice(
+      maHoaDon
     );
+    if (details == null || details.isEmpty()) {
+      return;
+    }
+
+    File outputDir = new File("hoa_don_ban_thuoc");
+    if (!outputDir.exists()) {
+      outputDir.mkdirs();
+    }
+    String timestamp = java.time.format.DateTimeFormatter.ofPattern(
+      "yyyyMMdd_HHmmss"
+    ).format(LocalDateTime.now());
+    File file = new File(
+      outputDir,
+      "HoaDonThuoc_" + maHoaDon + "_" + timestamp + ".pdf"
+    );
+
+    try {
+      Document document = new Document();
+      PdfWriter.getInstance(document, new FileOutputStream(file));
+      document.open();
+      document.add(new Paragraph("HOA DON BAN THUOC"));
+      document.add(new Paragraph("Ma hoa don: " + safe(invoice.getMaHoaDon())));
+      document.add(
+        new Paragraph("Ten benh nhan: " + safe(invoice.getTenBenhNhan()))
+      );
+      document.add(
+        new Paragraph("So dien thoai: " + safe(invoice.getSdtBenhNhan()))
+      );
+      document.add(
+        new Paragraph("Ngay lap: " + formatDateTime(invoice.getNgayLap()))
+      );
+      document.add(
+        new Paragraph(
+          "Trang thai thanh toan: " +
+            normalizePaymentStatusLabel(invoice.getTrangThaiThanhToan())
+        )
+      );
+      document.add(new Paragraph("----------------------------------------"));
+      for (CTHDThuocDTO detail : details) {
+        String line =
+          safe(detail.getMaThuoc()) +
+          " - " +
+          safe(detail.getTenThuoc()) +
+          " | Don gia: " +
+          detail.getDonGia() +
+          " | SL: " +
+          detail.getSoLuong() +
+          " | Thanh tien: " +
+          detail.getThanhTien();
+        document.add(new Paragraph(line));
+      }
+      document.add(new Paragraph("----------------------------------------"));
+      document.add(new Paragraph("Tong tien: " + invoice.getTongTien()));
+      document.close();
+      DialogHelper.info(this, "Đã in lại hóa đơn: " + file.getAbsolutePath());
+    } catch (Exception ex) {
+      DialogHelper.error(this, "In lại hóa đơn thất bại: " + ex.getMessage());
+    }
   }
 
   private String normalizePaymentStatusLabel(String raw) {

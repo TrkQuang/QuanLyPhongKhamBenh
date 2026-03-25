@@ -71,6 +71,9 @@ public class BenhAnPanel extends BasePanel {
   );
   private JTable table;
   private JButton btnKeHoSo;
+  private JButton btnTaiLai;
+  private boolean coQuyenXem = true;
+  private boolean coQuyenKeHoSo = true;
 
   @Override
   protected void init() {
@@ -84,11 +87,12 @@ public class BenhAnPanel extends BasePanel {
       UIUtils.ghostButton("Tải lại")
     );
     btnKeHoSo = (JButton) actions.getComponent(0);
+    btnTaiLai = (JButton) actions.getComponent(1);
     btnKeHoSo.addActionListener(e -> openExaminationDialog());
-    ((javax.swing.JButton) actions.getComponent(1)).addActionListener(e ->
-      loadData()
-    );
+    btnTaiLai.addActionListener(e -> loadData());
     add(actions, BorderLayout.SOUTH);
+
+    apDungPhanQuyenHanhDong();
 
     table
       .getSelectionModel()
@@ -108,6 +112,11 @@ public class BenhAnPanel extends BasePanel {
   }
 
   private void openExaminationDialog() {
+    if (!coQuyenKeHoSo) {
+      DialogHelper.warn(this, "Bạn không có quyền kê/cập nhật hồ sơ bệnh án.");
+      return;
+    }
+
     HoSoBenhAnDTO selected = getSelectedRecord();
     if (selected == null) {
       DialogHelper.warn(this, "Vui lòng chọn hồ sơ cần khám.");
@@ -752,6 +761,11 @@ public class BenhAnPanel extends BasePanel {
     if (btnKeHoSo == null) {
       return;
     }
+    if (!coQuyenKeHoSo) {
+      btnKeHoSo.setEnabled(false);
+      btnKeHoSo.setToolTipText("Bạn không có quyền kê/cập nhật hồ sơ bệnh án");
+      return;
+    }
     int row = table == null ? -1 : table.getSelectedRow();
     if (row < 0) {
       btnKeHoSo.setEnabled(true);
@@ -844,6 +858,15 @@ public class BenhAnPanel extends BasePanel {
       return "Ngày sinh không hợp lệ. Ngày sinh không được lớn hơn ngày hiện tại.";
     }
     return null;
+  }
+
+  private void apDungPhanQuyenHanhDong() {
+    coQuyenXem = Session.coMotTrongCacQuyen("HOSO_XEM");
+    coQuyenKeHoSo = Session.coMotTrongCacQuyen("HOSO_THEM", "HOSO_SUA");
+
+    if (btnKeHoSo != null) btnKeHoSo.setVisible(coQuyenKeHoSo);
+    if (btnTaiLai != null) btnTaiLai.setVisible(coQuyenXem);
+    if (table != null) table.setEnabled(coQuyenXem);
   }
 
   private static class CTHDDonThuocSaved {

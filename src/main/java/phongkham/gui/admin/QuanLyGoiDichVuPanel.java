@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
@@ -14,6 +15,7 @@ import phongkham.BUS.GoiDichVuBUS;
 import phongkham.BUS.KhoaBUS;
 import phongkham.DTO.GoiDichVuDTO;
 import phongkham.DTO.KhoaDTO;
+import phongkham.Utils.Session;
 import phongkham.gui.admin.components.AdminDialogs;
 import phongkham.gui.common.BasePanel;
 import phongkham.gui.common.DialogHelper;
@@ -24,6 +26,10 @@ public class QuanLyGoiDichVuPanel extends BasePanel {
   private final GoiDichVuBUS goiDichVuBUS = new GoiDichVuBUS();
   private final KhoaBUS khoaBUS = new KhoaBUS();
   private JTable table;
+  private JButton btnThem;
+  private JButton btnSua;
+  private JButton btnXoa;
+  private JButton btnTaiLai;
   private final DefaultTableModel model = new DefaultTableModel(
     new Object[] { "Mã gói", "Tên gói", "Giá", "Thời gian khám", "Mã khoa" },
     0
@@ -49,19 +55,19 @@ public class QuanLyGoiDichVuPanel extends BasePanel {
       UIUtils.ghostButton("Xóa gói"),
       UIUtils.ghostButton("Tải lại")
     );
-    ((javax.swing.JButton) actions.getComponent(0)).addActionListener(e ->
-      openPackageDialog(null)
-    );
-    ((javax.swing.JButton) actions.getComponent(1)).addActionListener(e ->
-      editPackage()
-    );
-    ((javax.swing.JButton) actions.getComponent(2)).addActionListener(e ->
-      deletePackage()
-    );
-    ((javax.swing.JButton) actions.getComponent(3)).addActionListener(e ->
-      loadData()
-    );
+
+    btnThem = (JButton) actions.getComponent(0);
+    btnSua = (JButton) actions.getComponent(1);
+    btnXoa = (JButton) actions.getComponent(2);
+    btnTaiLai = (JButton) actions.getComponent(3);
+
+    btnThem.addActionListener(e -> openPackageDialog(null));
+    btnSua.addActionListener(e -> editPackage());
+    btnXoa.addActionListener(e -> deletePackage());
+    btnTaiLai.addActionListener(e -> loadData());
     add(actions, BorderLayout.SOUTH);
+
+    apDungPhanQuyenHanhDong();
 
     loadData();
   }
@@ -241,5 +247,18 @@ public class QuanLyGoiDichVuPanel extends BasePanel {
         return;
       }
     }
+  }
+
+  private void apDungPhanQuyenHanhDong() {
+    boolean coQuyenXem = Session.coMotTrongCacQuyen("GOIDICHVU_XEM");
+    boolean coQuyenThem = Session.coMotTrongCacQuyen("GOIDICHVU_THEM");
+    boolean coQuyenSua = Session.coMotTrongCacQuyen("GOIDICHVU_SUA");
+    boolean coQuyenXoa = Session.coMotTrongCacQuyen("GOIDICHVU_XOA");
+
+    if (btnThem != null) btnThem.setVisible(coQuyenThem);
+    if (btnSua != null) btnSua.setVisible(coQuyenSua);
+    if (btnXoa != null) btnXoa.setVisible(coQuyenXoa);
+    if (btnTaiLai != null) btnTaiLai.setVisible(coQuyenXem);
+    if (table != null) table.setEnabled(coQuyenXem);
   }
 }

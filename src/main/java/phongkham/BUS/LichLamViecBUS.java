@@ -1,6 +1,7 @@
 package phongkham.BUS;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,10 +14,16 @@ import phongkham.dao.LichLamViecDAO;
 public class LichLamViecBUS {
 
   private LichLamViecDAO dao = new LichLamViecDAO();
-  private static final List<String> VALID_CA = Arrays.asList(
+  private KhungGioLamViecBUS khungGioLamViecBUS = new KhungGioLamViecBUS();
+  private static final List<String> LEGACY_CA = Arrays.asList(
     "Sang",
     "Chieu",
     "Toi"
+  );
+  private static final List<String> DEFAULT_SHIFT_RANGES = Arrays.asList(
+    "08:00-12:00",
+    "13:00-17:00",
+    "17:00-21:00"
   );
   private static final List<String> VALID_TRANG_THAI = Arrays.asList(
     "CHO_DUYET",
@@ -25,6 +32,8 @@ public class LichLamViecBUS {
   );
   private static final DateTimeFormatter DATE_FORMAT =
     DateTimeFormatter.ofPattern("yyyy-MM-dd");
+  private static final DateTimeFormatter TIME_FORMAT =
+    DateTimeFormatter.ofPattern("HH:mm");
 
   public ArrayList<LichLamViecDTO> getAll() {
     return dao.getAll();
@@ -134,10 +143,23 @@ public class LichLamViecBUS {
     if (isEmpty(maBacSi) || isEmpty(ngay) || isEmpty(ca)) {
       return false;
     }
+    LocalTime[] candidateRange = parseShiftRange(ca);
+    if (candidateRange == null) {
+      return false;
+    }
     ArrayList<LichLamViecDTO> list = getByBacSiAndNgay(maBacSi, ngay);
     for (LichLamViecDTO llv : list) {
+      LocalTime[] existingRange = parseShiftRange(llv.getCaLam());
+      if (existingRange == null) {
+        continue;
+      }
       if (
-        llv.getCaLam().equals(ca) &&
+        isOverlap(
+          candidateRange[0],
+          candidateRange[1],
+          existingRange[0],
+          existingRange[1]
+        ) &&
         !"TU_CHOI".equals(
           StatusNormalizer.normalizeLichLamViecStatus(llv.getTrangThai())
         )
@@ -208,19 +230,35 @@ public class LichLamViecBUS {
   }
 
   public List<String> getValidCa() {
-    return VALID_CA;
+    List<String> ranges = khungGioLamViecBUS.getAllActiveRanges();
+    if (ranges.isEmpty()) {
+      return DEFAULT_SHIFT_RANGES;
+    }
+    return ranges;
   }
 
   public String thongKe() {
-    int sang = getByCa("Sang").size();
-    int chieu = getByCa("Chieu").size();
-    int toi = getByCa("Toi").size();
+    int choDuyet = 0;
+    int daDuyet = 0;
+    int tuChoi = 0;
+    for (LichLamViecDTO llv : dao.getAll()) {
+      String status = StatusNormalizer.normalizeLichLamViecStatus(
+        llv.getTrangThai()
+      );
+      if ("CHO_DUYET".equals(status)) {
+        choDuyet++;
+      } else if ("DA_DUYET".equals(status)) {
+        daDuyet++;
+      } else if ("TU_CHOI".equals(status)) {
+        tuChoi++;
+      }
+    }
     return String.format(
-      "Tong: %d (Sang: %d, Chieu: %d, Toi: %d)",
-      sang + chieu + toi,
-      sang,
-      chieu,
-      toi
+      "Tong: %d (Cho duyet: %d, Da duyet: %d, Tu choi: %d)",
+      choDuyet + daDuyet + tuChoi,
+      choDuyet,
+      daDuyet,
+      tuChoi
     );
   }
 
@@ -235,10 +273,22 @@ public class LichLamViecBUS {
       System.out.println("Ngay khong hop le (yyyy-MM-dd)");
       return false;
     }
-    if (isEmpty(llv.getCaLam()) || !VALID_CA.contains(llv.getCaLam())) {
-      System.out.println("Ca khong hop le (Sang/Chieu/Toi)");
+    if (isEmpty(llv.getCaLam())) {
+      System.out.println("Khung gio khong hop le (VD: 08:00-10:00)");
       return false;
     }
+
+    String caNormalized = normalizeShiftInput(llv.getCaLam());
+    if (parseShiftRange(caNormalized) == null) {
+      System.out.println("Khung gio khong hop le (VD: 08:00-10:00)");
+      return false;
+    }
+    if (!isConfiguredShift(caNormalized)) {
+      System.out.println("Khung gio chua duoc admin cau hinh hoat dong");
+      return false;
+    }
+    llv.setCaLam(caNormalized);
+
     if (
       !isEmpty(llv.getTrangThai()) &&
       !VALID_TRANG_THAI.contains(
@@ -290,5 +340,72 @@ public class LichLamViecBUS {
 
   private boolean isEmpty(String str) {
     return str == null || str.trim().isEmpty();
+  }
+
+  private String normalizeShiftInput(String value) {
+    if (value == null) {
+      return "";
+    }
+    String input = value.trim().replace(" ", "");
+    if ("Sang".equalsIgnoreCase(input)) {
+      return "08:00-12:00";
+    }
+    if ("Chieu".equalsIgnoreCase(input)) {
+      return "13:00-17:00";
+    }
+    if ("Toi".equalsIgnoreCase(input) || "Tối".equalsIgnoreCase(input)) {
+      return "17:00-21:00";
+    }
+    return input;
+  }
+
+  private boolean isConfiguredShift(String range) {
+    for (String configured : getValidCa()) {
+      if (configured.equalsIgnoreCase(range)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private LocalTime[] parseShiftRange(String rawRange) {
+    if (rawRange == null) {
+      return null;
+    }
+
+    String value = rawRange.trim().replace(" ", "");
+    final String normalizedInput = value;
+    if (
+      LEGACY_CA
+        .stream()
+        .anyMatch(ca -> ca.equalsIgnoreCase(normalizedInput))
+    ) {
+      value = normalizeShiftInput(value);
+    }
+
+    String[] parts = value.split("-");
+    if (parts.length != 2) {
+      return null;
+    }
+
+    try {
+      LocalTime start = LocalTime.parse(parts[0], TIME_FORMAT);
+      LocalTime end = LocalTime.parse(parts[1], TIME_FORMAT);
+      if (!start.isBefore(end)) {
+        return null;
+      }
+      return new LocalTime[] { start, end };
+    } catch (Exception ex) {
+      return null;
+    }
+  }
+
+  private boolean isOverlap(
+    LocalTime startA,
+    LocalTime endA,
+    LocalTime startB,
+    LocalTime endB
+  ) {
+    return startA.isBefore(endB) && endA.isAfter(startB);
   }
 }

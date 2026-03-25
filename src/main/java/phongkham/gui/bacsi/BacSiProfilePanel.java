@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import phongkham.BUS.BacSiBUS;
@@ -18,6 +19,7 @@ public class BacSiProfilePanel extends BasePanel {
 
   private final UsersBUS usersBUS = new UsersBUS();
   private final BacSiBUS bacSiBUS = new BacSiBUS();
+  private JButton btnDoiMatKhau;
 
   @Override
   protected void init() {
@@ -29,10 +31,11 @@ public class BacSiProfilePanel extends BasePanel {
     javax.swing.JPanel actions = UIUtils.row(
       UIUtils.primaryButton("Đổi mật khẩu")
     );
-    ((javax.swing.JButton) actions.getComponent(0)).addActionListener(e ->
-      changePassword()
-    );
+    btnDoiMatKhau = (JButton) actions.getComponent(0);
+    btnDoiMatKhau.addActionListener(e -> changePassword());
     add(actions, BorderLayout.SOUTH);
+
+    apDungPhanQuyenHanhDong();
   }
 
   private javax.swing.JPanel buildProfileRows() {
@@ -157,5 +160,16 @@ public class BacSiProfilePanel extends BasePanel {
 
   private String value(String text) {
     return text == null || text.trim().isEmpty() ? "-" : text;
+  }
+
+  private void apDungPhanQuyenHanhDong() {
+    boolean coQuyenXem = Session.coMotTrongCacQuyen("BACSI_PROFILE_XEM");
+    boolean coQuyenDoiMatKhau = Session.coMotTrongCacQuyen(
+      "BACSI_PROFILE_DOI_MAT_KHAU"
+    );
+
+    if (btnDoiMatKhau != null) {
+      btnDoiMatKhau.setVisible(coQuyenDoiMatKhau && coQuyenXem);
+    }
   }
 }

@@ -1,5 +1,7 @@
 package phongkham.DTO;
 
+import java.time.LocalDateTime;
+
 public class UsersDTO {
 
   private String UserID;
@@ -8,6 +10,9 @@ public class UsersDTO {
   private String Email;
   private Integer RoleID;
   private boolean Active;
+  private boolean Archived;
+  private LocalDateTime DeletedAt;
+  private String DeletedReason;
 
   public UsersDTO() {
     UserID = "";
@@ -16,6 +21,9 @@ public class UsersDTO {
     Email = "";
     RoleID = null;
     Active = true;
+    Archived = false;
+    DeletedAt = null;
+    DeletedReason = "";
   }
 
   public UsersDTO(
@@ -30,6 +38,9 @@ public class UsersDTO {
     this.Email = Email;
     this.RoleID = null;
     this.Active = true;
+    this.Archived = false;
+    this.DeletedAt = null;
+    this.DeletedReason = "";
   }
 
   public UsersDTO(
@@ -46,6 +57,9 @@ public class UsersDTO {
     this.Email = Email;
     this.RoleID = RoleID;
     this.Active = Active;
+    this.Archived = false;
+    this.DeletedAt = null;
+    this.DeletedReason = "";
   }
 
   public UsersDTO(
@@ -65,6 +79,9 @@ public class UsersDTO {
     this.Email = u.Email;
     this.RoleID = u.RoleID;
     this.Active = u.Active;
+    this.Archived = u.Archived;
+    this.DeletedAt = u.DeletedAt;
+    this.DeletedReason = u.DeletedReason;
   }
 
   public String getUserID() {
@@ -91,6 +108,18 @@ public class UsersDTO {
     return Active;
   }
 
+  public boolean isArchived() {
+    return Archived;
+  }
+
+  public LocalDateTime getDeletedAt() {
+    return DeletedAt;
+  }
+
+  public String getDeletedReason() {
+    return DeletedReason;
+  }
+
   public void setUserID(String UserID) {
     this.UserID = UserID;
   }
@@ -113,5 +142,17 @@ public class UsersDTO {
 
   public void setActive(boolean Active) {
     this.Active = Active;
+  }
+
+  public void setArchived(boolean Archived) {
+    this.Archived = Archived;
+  }
+
+  public void setDeletedAt(LocalDateTime DeletedAt) {
+    this.DeletedAt = DeletedAt;
+  }
+
+  public void setDeletedReason(String DeletedReason) {
+    this.DeletedReason = DeletedReason;
   }
 }

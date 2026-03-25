@@ -3,6 +3,7 @@ package phongkham.gui.admin;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.util.ArrayList;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -14,6 +15,7 @@ import phongkham.BUS.BacSiBUS;
 import phongkham.BUS.KhoaBUS;
 import phongkham.DTO.BacSiDTO;
 import phongkham.DTO.KhoaDTO;
+import phongkham.Utils.Session;
 import phongkham.gui.admin.components.AdminDialogs;
 import phongkham.gui.common.BasePanel;
 import phongkham.gui.common.DialogHelper;
@@ -24,6 +26,12 @@ public class QuanLyKhoaPanel extends BasePanel {
   private final KhoaBUS khoaBUS = new KhoaBUS();
   private final BacSiBUS bacSiBUS = new BacSiBUS();
   private JTable table;
+  private JButton btnThem;
+  private JButton btnSua;
+  private JButton btnXoa;
+  private JButton btnXemBacSi;
+  private JButton btnChuyenKhoa;
+  private JButton btnTaiLai;
   private final DefaultTableModel model = new DefaultTableModel(
     new Object[] { "Mã khoa", "Tên khoa" },
     0
@@ -51,25 +59,23 @@ public class QuanLyKhoaPanel extends BasePanel {
       UIUtils.ghostButton("Chuyển khoa bác sĩ"),
       UIUtils.ghostButton("Tải lại")
     );
-    ((javax.swing.JButton) actions.getComponent(0)).addActionListener(e ->
-      openKhoaDialog(null)
-    );
-    ((javax.swing.JButton) actions.getComponent(1)).addActionListener(e ->
-      editKhoa()
-    );
-    ((javax.swing.JButton) actions.getComponent(2)).addActionListener(e ->
-      deleteKhoa()
-    );
-    ((javax.swing.JButton) actions.getComponent(3)).addActionListener(e ->
-      showDoctorsBySelectedKhoa()
-    );
-    ((javax.swing.JButton) actions.getComponent(4)).addActionListener(e ->
-      openTransferDoctorDialog()
-    );
-    ((javax.swing.JButton) actions.getComponent(5)).addActionListener(e ->
-      loadData()
-    );
+
+    btnThem = (JButton) actions.getComponent(0);
+    btnSua = (JButton) actions.getComponent(1);
+    btnXoa = (JButton) actions.getComponent(2);
+    btnXemBacSi = (JButton) actions.getComponent(3);
+    btnChuyenKhoa = (JButton) actions.getComponent(4);
+    btnTaiLai = (JButton) actions.getComponent(5);
+
+    btnThem.addActionListener(e -> openKhoaDialog(null));
+    btnSua.addActionListener(e -> editKhoa());
+    btnXoa.addActionListener(e -> deleteKhoa());
+    btnXemBacSi.addActionListener(e -> showDoctorsBySelectedKhoa());
+    btnChuyenKhoa.addActionListener(e -> openTransferDoctorDialog());
+    btnTaiLai.addActionListener(e -> loadData());
     add(actions, BorderLayout.SOUTH);
+
+    apDungPhanQuyenHanhDong();
 
     loadData();
   }
@@ -303,5 +309,20 @@ public class QuanLyKhoaPanel extends BasePanel {
       }
     }
     return null;
+  }
+
+  private void apDungPhanQuyenHanhDong() {
+    boolean coQuyenXem = Session.coMotTrongCacQuyen("KHOA_XEM");
+    boolean coQuyenThem = Session.coMotTrongCacQuyen("KHOA_THEM");
+    boolean coQuyenSua = Session.coMotTrongCacQuyen("KHOA_SUA");
+    boolean coQuyenXoa = Session.coMotTrongCacQuyen("KHOA_XOA");
+
+    if (btnThem != null) btnThem.setVisible(coQuyenThem);
+    if (btnSua != null) btnSua.setVisible(coQuyenSua);
+    if (btnXoa != null) btnXoa.setVisible(coQuyenXoa);
+    if (btnXemBacSi != null) btnXemBacSi.setVisible(coQuyenXem);
+    if (btnChuyenKhoa != null) btnChuyenKhoa.setVisible(coQuyenSua);
+    if (btnTaiLai != null) btnTaiLai.setVisible(coQuyenXem);
+    if (table != null) table.setEnabled(coQuyenXem);
   }
 }

@@ -7,6 +7,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.ArrayList;
 import java.util.Locale;
+import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -16,6 +17,7 @@ import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import phongkham.BUS.NhaCungCapBUS;
 import phongkham.DTO.NhaCungCapDTO;
+import phongkham.Utils.Session;
 import phongkham.gui.common.BasePanel;
 import phongkham.gui.common.DialogHelper;
 import phongkham.gui.common.UIUtils;
@@ -45,6 +47,10 @@ public class NhaCungCapPanel extends BasePanel {
 
   private JTable table;
   private CustomTextField txtSearch;
+  private JButton btnThem;
+  private JButton btnSua;
+  private JButton btnNgungHopTac;
+  private JButton btnTaiLai;
 
   @Override
   protected void init() {
@@ -93,18 +99,17 @@ public class NhaCungCapPanel extends BasePanel {
       UIUtils.ghostButton("Tải lại")
     );
 
-    ((javax.swing.JButton) actions.getComponent(0)).addActionListener(e ->
-      addSupplier()
-    );
-    ((javax.swing.JButton) actions.getComponent(1)).addActionListener(e ->
-      editSupplier()
-    );
-    ((javax.swing.JButton) actions.getComponent(2)).addActionListener(e ->
-      toggleCooperation()
-    );
-    ((javax.swing.JButton) actions.getComponent(3)).addActionListener(e ->
-      reloadData()
-    );
+    btnThem = (JButton) actions.getComponent(0);
+    btnSua = (JButton) actions.getComponent(1);
+    btnNgungHopTac = (JButton) actions.getComponent(2);
+    btnTaiLai = (JButton) actions.getComponent(3);
+
+    btnThem.addActionListener(e -> addSupplier());
+    btnSua.addActionListener(e -> editSupplier());
+    btnNgungHopTac.addActionListener(e -> toggleCooperation());
+    btnTaiLai.addActionListener(e -> reloadData());
+
+    apDungPhanQuyenHanhDong();
     return actions;
   }
 
@@ -355,5 +360,28 @@ public class NhaCungCapPanel extends BasePanel {
 
   private String safe(String text) {
     return text == null ? "" : text;
+  }
+
+  private void apDungPhanQuyenHanhDong() {
+    boolean coQuyenXem = Session.coMotTrongCacQuyen("NCC_XEM");
+    boolean coQuyenThem = Session.coMotTrongCacQuyen("NCC_THEM");
+    boolean coQuyenSua = Session.coMotTrongCacQuyen("NCC_SUA");
+    boolean coQuyenXoa = Session.coMotTrongCacQuyen("NCC_XOA");
+
+    if (btnThem != null) {
+      btnThem.setVisible(coQuyenThem);
+    }
+    if (btnSua != null) {
+      btnSua.setVisible(coQuyenSua);
+    }
+    if (btnNgungHopTac != null) {
+      btnNgungHopTac.setVisible(coQuyenXoa || coQuyenSua);
+    }
+    if (btnTaiLai != null) {
+      btnTaiLai.setVisible(coQuyenXem);
+    }
+    if (table != null) {
+      table.setEnabled(coQuyenXem);
+    }
   }
 }

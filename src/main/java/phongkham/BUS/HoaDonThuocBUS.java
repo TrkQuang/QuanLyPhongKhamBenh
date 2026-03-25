@@ -7,8 +7,10 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import phongkham.DTO.CTHDThuocDTO;
 import phongkham.DTO.HoaDonThuocDTO;
@@ -30,6 +32,57 @@ public class HoaDonThuocBUS {
     }
 
     return hoaDonThuocDAO.insert(hoaDon);
+  }
+
+  // ================= API tiếng Việt không dấu =================
+  // Các hàm này giúp đọc code dễ hơn cho team nghiệp vụ.
+  public boolean themHoaDonThuoc(HoaDonThuocDTO hoaDon) {
+    return addHoaDonThuoc(hoaDon);
+  }
+
+  public boolean taoHoaDonTuDonThuoc(
+    HoaDonThuocDTO hoaDon,
+    List<CTHDThuocDTO> chiTietThuoc
+  ) {
+    return createInvoiceFromPrescription(hoaDon, chiTietThuoc);
+  }
+
+  public boolean coTheSuaHoaDon(String maHoaDon) {
+    return canEditInvoice(maHoaDon);
+  }
+
+  public String layThongBaoKiemTraTonKhoHoaDon(String maHoaDon) {
+    return getInvoiceStockValidationMessage(maHoaDon);
+  }
+
+  public boolean thayTheChiTietHoaDonTruocThanhToan(
+    String maHoaDon,
+    List<CTHDThuocDTO> chiTietCapNhat,
+    String ghiChuHoaDon
+  ) {
+    return replaceInvoiceDetailsBeforePayment(
+      maHoaDon,
+      chiTietCapNhat,
+      ghiChuHoaDon
+    );
+  }
+
+  public boolean xacNhanThanhToanHoaDon(String maHoaDon) {
+    return payInvoice(maHoaDon);
+  }
+
+  public boolean xacNhanGiaoThuoc(String maHoaDon) {
+    return completePickup(maHoaDon);
+  }
+
+  public boolean huyHoaDonThuoc(String maHoaDon) {
+    return cancelInvoice(maHoaDon);
+  }
+
+  public List<XuatThuocTheoLoDTO> layLichSuXuatTheoLoTheoHoaDon(
+    String maHoaDon
+  ) {
+    return getXuatTheoLoByMaHoaDon(maHoaDon);
   }
 
   // Cập nhật HoaDonThuoc
@@ -209,6 +262,18 @@ public class HoaDonThuocBUS {
       return false;
     }
 
+    if (!canEditInvoice(maHoaDon)) {
+      System.err.println("Hóa đơn không hợp lệ để xác nhận thanh toán");
+      return false;
+    }
+
+    if (!validateInvoiceStockBeforePayment(maHoaDon)) {
+      System.err.println(
+        "Tồn kho không đủ hoặc chi tiết hóa đơn không hợp lệ, cần chỉnh sửa trước khi thanh toán"
+      );
+      return false;
+    }
+
     return hoaDonThuocDAO.updatePaymentStatus(
       maHoaDon,
       StatusNormalizer.DA_THANH_TOAN,
@@ -256,10 +321,24 @@ public class HoaDonThuocBUS {
       return false;
     }
 
+    String paymentStatus = StatusNormalizer.normalizePaymentStatus(
+      hoaDon.getTrangThaiThanhToan()
+    );
+    String paymentStatusAfterCancel = StatusNormalizer.DA_THANH_TOAN.equals(
+      paymentStatus
+    )
+      ? StatusNormalizer.HOAN_HOA_DON
+      : StatusNormalizer.CHUA_THANH_TOAN;
+    LocalDateTime paidAtAfterCancel = StatusNormalizer.DA_THANH_TOAN.equals(
+      paymentStatus
+    )
+      ? LocalDateTime.now()
+      : null;
+
     return hoaDonThuocDAO.updatePaymentAndPickupStatus(
       maHoaDon,
-      StatusNormalizer.HOAN_HOA_DON,
-      null,
+      paymentStatusAfterCancel,
+      paidAtAfterCancel,
       StatusNormalizer.DA_HUY
     );
   }
@@ -283,8 +362,296 @@ public class HoaDonThuocBUS {
     HoaDonThuocDTO hoaDon = getHoaDonOrNull(maHoaDon);
     if (hoaDon == null) return false;
 
-    // Không cho chỉnh sửa hóa đơn đã thanh toán
-    return !isTrangThaiDaThanhToan(hoaDon.getTrangThaiThanhToan());
+    String paymentStatus = StatusNormalizer.normalizePaymentStatus(
+      hoaDon.getTrangThaiThanhToan()
+    );
+    String pickupStatus = StatusNormalizer.normalizePickupStatus(
+      hoaDon.getTrangThaiLayThuoc()
+    );
+
+    return (
+      StatusNormalizer.CHUA_THANH_TOAN.equals(paymentStatus) &&
+      StatusNormalizer.CHO_LAY.equals(pickupStatus)
+    );
+  }
+
+  public boolean updateInvoiceDetailsBeforePayment(
+    String maHoaDon,
+    Map<String, Integer> quantityByDetailId,
+    String ghiChuHoaDon
+  ) {
+    if (isBlank(maHoaDon)) {
+      return false;
+    }
+    if (!canEditInvoice(maHoaDon)) {
+      System.err.println("Chỉ được sửa chi tiết khi hóa đơn chưa thanh toán");
+      return false;
+    }
+    if (quantityByDetailId == null || quantityByDetailId.isEmpty()) {
+      System.err.println("Danh sách chi tiết cập nhật không hợp lệ");
+      return false;
+    }
+
+    try (Connection conn = DBConnection.getConnection()) {
+      conn.setAutoCommit(false);
+      try {
+        List<CTHDThuocDTO> currentDetails = loadChiTietHoaDon(conn, maHoaDon);
+        if (currentDetails.isEmpty()) {
+          conn.rollback();
+          return false;
+        }
+
+        int soDongConLai = 0;
+        for (CTHDThuocDTO detail : currentDetails) {
+          Integer qty = quantityByDetailId.get(detail.getMaCTHDThuoc());
+          if (qty == null || qty <= 0) {
+            if (!deactivateDetail(conn, detail.getMaCTHDThuoc())) {
+              conn.rollback();
+              return false;
+            }
+            continue;
+          }
+
+          if (qty > getThuocTonKho(conn, detail.getMaThuoc())) {
+            conn.rollback();
+            return false;
+          }
+
+          if (
+            !updateDetailQuantity(
+              conn,
+              detail.getMaCTHDThuoc(),
+              qty,
+              detail.getDonGia()
+            )
+          ) {
+            conn.rollback();
+            return false;
+          }
+          soDongConLai++;
+        }
+
+        if (soDongConLai <= 0) {
+          conn.rollback();
+          return false;
+        }
+
+        double tongTienMoi = calculateInvoiceTotalInTransaction(conn, maHoaDon);
+        if (
+          !updateInvoiceSummary(
+            conn,
+            maHoaDon,
+            tongTienMoi,
+            StatusNormalizer.CHUA_THANH_TOAN,
+            null,
+            StatusNormalizer.CHO_LAY,
+            ghiChuHoaDon
+          )
+        ) {
+          conn.rollback();
+          return false;
+        }
+
+        conn.commit();
+        return true;
+      } catch (Exception ex) {
+        conn.rollback();
+        System.err.println("Lỗi cập nhật chi tiết hóa đơn: " + ex.getMessage());
+        return false;
+      } finally {
+        conn.setAutoCommit(true);
+      }
+    } catch (Exception ex) {
+      System.err.println(
+        "Không thể mở transaction cập nhật chi tiết hóa đơn: " + ex.getMessage()
+      );
+      return false;
+    }
+  }
+
+  public boolean replaceInvoiceDetailsBeforePayment(
+    String maHoaDon,
+    List<CTHDThuocDTO> updatedDetails,
+    String ghiChuHoaDon
+  ) {
+    if (isBlank(maHoaDon)) {
+      return false;
+    }
+    if (!canEditInvoice(maHoaDon)) {
+      System.err.println("Chỉ được sửa chi tiết khi hóa đơn chưa thanh toán");
+      return false;
+    }
+    if (updatedDetails == null || updatedDetails.isEmpty()) {
+      System.err.println("Danh sách chi tiết cập nhật không hợp lệ");
+      return false;
+    }
+
+    try (Connection conn = DBConnection.getConnection()) {
+      conn.setAutoCommit(false);
+      try {
+        List<CTHDThuocDTO> currentDetails = loadChiTietHoaDon(conn, maHoaDon);
+        Map<String, CTHDThuocDTO> currentById = new HashMap<>();
+        for (CTHDThuocDTO detail : currentDetails) {
+          currentById.put(detail.getMaCTHDThuoc(), detail);
+        }
+
+        int nextCtNumber = getCurrentNumericPart(
+          conn,
+          "CTHDThuoc",
+          "MaCTHDThuoc",
+          "CTHD"
+        );
+        Set<String> keptDetailIds = new HashSet<>();
+
+        for (CTHDThuocDTO detail : updatedDetails) {
+          if (detail == null || isBlank(detail.getMaThuoc())) {
+            conn.rollback();
+            return false;
+          }
+          if (detail.getSoLuong() <= 0 || detail.getDonGia() <= 0) {
+            conn.rollback();
+            return false;
+          }
+
+          int tonKho = getThuocTonKho(conn, detail.getMaThuoc());
+          if (tonKho < detail.getSoLuong()) {
+            conn.rollback();
+            return false;
+          }
+
+          if (!isBlank(detail.getMaCTHDThuoc())) {
+            if (!currentById.containsKey(detail.getMaCTHDThuoc())) {
+              conn.rollback();
+              return false;
+            }
+            if (!updateDetailFull(conn, detail)) {
+              conn.rollback();
+              return false;
+            }
+            keptDetailIds.add(detail.getMaCTHDThuoc());
+          } else {
+            nextCtNumber++;
+            String maCt = String.format("CTHD%03d", nextCtNumber);
+            detail.setMaCTHDThuoc(maCt);
+            detail.setMaHoaDon(maHoaDon);
+            if (!insertDetail(conn, detail)) {
+              conn.rollback();
+              return false;
+            }
+            keptDetailIds.add(maCt);
+          }
+        }
+
+        for (CTHDThuocDTO oldDetail : currentDetails) {
+          if (!keptDetailIds.contains(oldDetail.getMaCTHDThuoc())) {
+            if (!deactivateDetail(conn, oldDetail.getMaCTHDThuoc())) {
+              conn.rollback();
+              return false;
+            }
+          }
+        }
+
+        double tongTienMoi = calculateInvoiceTotalInTransaction(conn, maHoaDon);
+        if (tongTienMoi <= 0) {
+          conn.rollback();
+          return false;
+        }
+
+        if (
+          !updateInvoiceSummary(
+            conn,
+            maHoaDon,
+            tongTienMoi,
+            StatusNormalizer.CHUA_THANH_TOAN,
+            null,
+            StatusNormalizer.CHO_LAY,
+            ghiChuHoaDon
+          )
+        ) {
+          conn.rollback();
+          return false;
+        }
+
+        conn.commit();
+        return true;
+      } catch (Exception ex) {
+        conn.rollback();
+        System.err.println(
+          "Lỗi thay thế chi tiết hóa đơn trước thanh toán: " + ex.getMessage()
+        );
+        return false;
+      } finally {
+        conn.setAutoCommit(true);
+      }
+    } catch (Exception ex) {
+      System.err.println(
+        "Không thể mở transaction thay thế chi tiết hóa đơn: " + ex.getMessage()
+      );
+      return false;
+    }
+  }
+
+  public boolean validateInvoiceStockBeforePayment(String maHoaDon) {
+    if (isBlank(maHoaDon)) {
+      return false;
+    }
+    try (Connection conn = DBConnection.getConnection()) {
+      List<CTHDThuocDTO> details = loadChiTietHoaDon(conn, maHoaDon);
+      if (details == null || details.isEmpty()) {
+        return false;
+      }
+      for (CTHDThuocDTO detail : details) {
+        if (detail.getSoLuong() <= 0 || detail.getDonGia() <= 0) {
+          return false;
+        }
+        int tonKho = getThuocTonKho(conn, detail.getMaThuoc());
+        if (tonKho < detail.getSoLuong()) {
+          return false;
+        }
+      }
+      return true;
+    } catch (Exception ex) {
+      System.err.println("Lỗi kiểm tra tồn kho hóa đơn: " + ex.getMessage());
+      return false;
+    }
+  }
+
+  public String getInvoiceStockValidationMessage(String maHoaDon) {
+    if (isBlank(maHoaDon)) {
+      return "Mã hóa đơn không hợp lệ.";
+    }
+    try (Connection conn = DBConnection.getConnection()) {
+      List<CTHDThuocDTO> details = loadChiTietHoaDon(conn, maHoaDon);
+      if (details == null || details.isEmpty()) {
+        return "Hóa đơn chưa có chi tiết thuốc hợp lệ.";
+      }
+
+      Map<String, String> tenThuocByMa = loadTenThuocMap(conn);
+      for (CTHDThuocDTO detail : details) {
+        if (detail.getSoLuong() <= 0 || detail.getDonGia() <= 0) {
+          return "Chi tiết hóa đơn có số lượng hoặc đơn giá không hợp lệ.";
+        }
+        int tonKho = getThuocTonKho(conn, detail.getMaThuoc());
+        if (tonKho < detail.getSoLuong()) {
+          String tenThuoc = tenThuocByMa.getOrDefault(
+            detail.getMaThuoc(),
+            detail.getMaThuoc()
+          );
+          return (
+            "Không đủ tồn kho cho thuốc " +
+            tenThuoc +
+            ": cần " +
+            detail.getSoLuong() +
+            ", còn " +
+            tonKho +
+            "."
+          );
+        }
+      }
+      return "";
+    } catch (Exception ex) {
+      return "Không kiểm tra được tồn kho hóa đơn. Vui lòng thử lại.";
+    }
   }
 
   // Hoàn thành lấy thuốc - Trừ kho và cập nhật trạng thái
@@ -313,8 +680,7 @@ public class HoaDonThuocBUS {
   ) {
     if (
       !skipPermissionCheck &&
-      !Session.hasPermission("HOADONTHUOC_MANAGE") &&
-      !Session.hasPermission("HOADONTHUOC_CREATE")
+      !Session.hasPermission("HOADONTHUOC_XAC_NHAN_GIAO_THUOC")
     ) {
       System.err.println("Không có quyền hoàn tất xuất thuốc");
       return false;
@@ -348,22 +714,7 @@ public class HoaDonThuocBUS {
           return false;
         }
 
-        // Đồng bộ tồn kho theo hạn sử dụng trước khi trừ kho thực tế.
-        Set<String> medicines = new HashSet<>();
-        for (CTHDThuocDTO ct : chiTiet) {
-          if (ct != null && ct.getMaThuoc() != null) {
-            medicines.add(ct.getMaThuoc());
-          }
-        }
-        for (String maThuoc : medicines) {
-          if (!thuocBUS.dongBoTonKhoTheoHanSuDung(maThuoc)) {
-            conn.rollback();
-            System.err.println(
-              "Không thể đồng bộ tồn kho theo hạn sử dụng cho thuốc: " + maThuoc
-            );
-            return false;
-          }
-        }
+        // Dùng trực tiếp bảng LoThuoc để xuất FEFO, tránh lệ thuộc bảng chi tiết nhập cũ.
 
         int soDongDaXuLy = 0;
         for (CTHDThuocDTO ct : chiTiet) {
@@ -422,7 +773,7 @@ public class HoaDonThuocBUS {
   private List<CTHDThuocDTO> loadChiTietHoaDon(Connection conn, String maHoaDon)
     throws SQLException {
     String sql =
-      "SELECT MaCTHDThuoc, MaHoaDon, MaThuoc, SoLuong, DonGia FROM CTHDThuoc WHERE MaHoaDon = ?";
+      "SELECT MaCTHDThuoc, MaHoaDon, MaThuoc, SoLuong, DonGia FROM CTHDThuoc WHERE MaHoaDon = ? AND Active = 1";
     java.util.ArrayList<CTHDThuocDTO> result = new java.util.ArrayList<>();
     try (PreparedStatement ps = conn.prepareStatement(sql)) {
       ps.setString(1, maHoaDon);
@@ -482,7 +833,7 @@ public class HoaDonThuocBUS {
       }
 
       int soLuongXuatTuLo = Math.min(soLuongConLaiCanXuat, lot.soLuongConLai);
-      if (!giamSoLuongConLaiLo(conn, lot.maCTPN, soLuongXuatTuLo)) {
+      if (!giamSoLuongConLaiLo(conn, lot.maLo, soLuongXuatTuLo)) {
         return false;
       }
       if (
@@ -490,6 +841,7 @@ public class HoaDonThuocBUS {
           conn,
           maHoaDon,
           maCTHDThuoc,
+          lot.maLo,
           lot.maCTPN,
           maThuoc,
           lot.soLo,
@@ -513,14 +865,13 @@ public class HoaDonThuocBUS {
   private ArrayList<LotFefoRow> loadLotsForFefo(Connection conn, String maThuoc)
     throws SQLException {
     String sql =
-      "SELECT ctpn.MaCTPN, ctpn.SoLo, ctpn.HanSuDung, ctpn.SoLuongConLai " +
-      "FROM ChiTietPhieuNhap ctpn " +
-      "JOIN PhieuNhap pn ON pn.MaPhieuNhap = ctpn.MaPhieuNhap " +
-      "WHERE ctpn.MaThuoc = ? " +
-      "  AND ctpn.SoLuongConLai > 0 " +
-      "  AND (ctpn.HanSuDung IS NULL OR DATE(ctpn.HanSuDung) > CURDATE()) " +
-      "  AND UPPER(TRIM(COALESCE(pn.TrangThai, ''))) IN ('DA_NHAP', 'DA_NHAP_KHO') " +
-      "ORDER BY (ctpn.HanSuDung IS NULL) ASC, ctpn.HanSuDung ASC, pn.NgayNhap ASC " +
+      "SELECT lt.MaLo, lt.MaCTPN, lt.SoLo, lt.HanSuDung, lt.SoLuongConLai " +
+      "FROM LoThuoc lt " +
+      "WHERE lt.MaThuoc = ? " +
+      "  AND lt.Active = 1 " +
+      "  AND lt.SoLuongConLai > 0 " +
+      "  AND (lt.HanSuDung IS NULL OR DATE(lt.HanSuDung) > CURDATE()) " +
+      "ORDER BY (lt.HanSuDung IS NULL) ASC, lt.HanSuDung ASC, lt.NgayNhap ASC " +
       "FOR UPDATE";
 
     ArrayList<LotFefoRow> lots = new ArrayList<>();
@@ -529,6 +880,7 @@ public class HoaDonThuocBUS {
       try (ResultSet rs = ps.executeQuery()) {
         while (rs.next()) {
           LotFefoRow row = new LotFefoRow();
+          row.maLo = rs.getLong("MaLo");
           row.maCTPN = rs.getString("MaCTPN");
           row.soLo = rs.getString("SoLo");
           row.hanSuDung = rs.getObject("HanSuDung", LocalDate.class);
@@ -542,15 +894,19 @@ public class HoaDonThuocBUS {
 
   private boolean giamSoLuongConLaiLo(
     Connection conn,
-    String maCTPN,
+    long maLo,
     int soLuongXuat
   ) throws SQLException {
     String sql =
-      "UPDATE ChiTietPhieuNhap SET SoLuongConLai = SoLuongConLai - ? WHERE MaCTPN = ? AND SoLuongConLai >= ?";
+      "UPDATE LoThuoc " +
+      "SET SoLuongConLai = SoLuongConLai - ?, " +
+      "    TrangThai = CASE WHEN (SoLuongConLai - ?) <= 0 THEN 'DEPLETED' ELSE TrangThai END " +
+      "WHERE MaLo = ? AND Active = 1 AND SoLuongConLai >= ?";
     try (PreparedStatement ps = conn.prepareStatement(sql)) {
       ps.setInt(1, soLuongXuat);
-      ps.setString(2, maCTPN);
-      ps.setInt(3, soLuongXuat);
+      ps.setInt(2, soLuongXuat);
+      ps.setLong(3, maLo);
+      ps.setInt(4, soLuongXuat);
       return ps.executeUpdate() > 0;
     }
   }
@@ -559,6 +915,7 @@ public class HoaDonThuocBUS {
     Connection conn,
     String maHoaDon,
     String maCTHDThuoc,
+    long maLo,
     String maCTPN,
     String maThuoc,
     String soLo,
@@ -566,16 +923,20 @@ public class HoaDonThuocBUS {
     int soLuongXuat
   ) throws SQLException {
     String sql =
-      "INSERT INTO XuatThuocTheoLo (MaHoaDon, MaCTHDThuoc, MaCTPN, MaThuoc, SoLo, HanSuDung, SoLuongXuat, NgayXuat) " +
-      "VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+      "INSERT INTO LoThuocBienDong (MaLo, LoaiBienDong, SoLuong, ThoiDiem, NguonChungTuLoai, NguonChungTuMa, MaHoaDon, MaCTHDThuoc, MaCTPN, GhiChu, NguoiThucHien) " +
+      "VALUES (?, 'ISSUE', ?, NOW(), 'HOA_DON_THUOC', ?, ?, ?, ?, ?, ?)";
     try (PreparedStatement ps = conn.prepareStatement(sql)) {
-      ps.setString(1, maHoaDon);
-      ps.setString(2, maCTHDThuoc);
-      ps.setString(3, maCTPN);
-      ps.setString(4, maThuoc);
-      ps.setString(5, soLo);
-      ps.setObject(6, hanSuDung);
-      ps.setInt(7, soLuongXuat);
+      ps.setLong(1, maLo);
+      ps.setInt(2, soLuongXuat);
+      ps.setString(3, maHoaDon);
+      ps.setString(4, maHoaDon);
+      ps.setString(5, maCTHDThuoc);
+      ps.setString(6, maCTPN);
+      ps.setString(
+        7,
+        "Xuat FEFO maThuoc=" + maThuoc + ", soLo=" + soLo + ", hsd=" + hanSuDung
+      );
+      ps.setString(8, safeUserName());
       return ps.executeUpdate() > 0;
     }
   }
@@ -615,6 +976,134 @@ public class HoaDonThuocBUS {
     return soDaChuanHoa.matches("^(0|\\+84)[0-9]{9,10}$");
   }
 
+  private boolean deactivateDetail(Connection conn, String maCTHDThuoc)
+    throws SQLException {
+    String sql = "UPDATE CTHDThuoc SET Active = 0 WHERE MaCTHDThuoc = ?";
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+      ps.setString(1, maCTHDThuoc);
+      return ps.executeUpdate() > 0;
+    }
+  }
+
+  private boolean updateDetailQuantity(
+    Connection conn,
+    String maCTHDThuoc,
+    int soLuong,
+    double donGia
+  ) throws SQLException {
+    String sql =
+      "UPDATE CTHDThuoc SET SoLuong = ?, ThanhTien = ?, Active = 1 WHERE MaCTHDThuoc = ?";
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+      ps.setInt(1, soLuong);
+      ps.setDouble(2, soLuong * donGia);
+      ps.setString(3, maCTHDThuoc);
+      return ps.executeUpdate() > 0;
+    }
+  }
+
+  private boolean updateDetailFull(Connection conn, CTHDThuocDTO detail)
+    throws SQLException {
+    String sql =
+      "UPDATE CTHDThuoc SET MaThuoc = ?, SoLuong = ?, DonGia = ?, ThanhTien = ?, GhiChu = ?, Active = 1 WHERE MaCTHDThuoc = ?";
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+      ps.setString(1, detail.getMaThuoc());
+      ps.setInt(2, detail.getSoLuong());
+      ps.setDouble(3, detail.getDonGia());
+      ps.setDouble(4, detail.getSoLuong() * detail.getDonGia());
+      ps.setString(5, detail.getGhiChu());
+      ps.setString(6, detail.getMaCTHDThuoc());
+      return ps.executeUpdate() > 0;
+    }
+  }
+
+  private boolean insertDetail(Connection conn, CTHDThuocDTO detail)
+    throws SQLException {
+    String sql =
+      "INSERT INTO CTHDThuoc (MaCTHDThuoc, MaHoaDon, MaThuoc, SoLuong, DonGia, ThanhTien, GhiChu, Active) VALUES (?, ?, ?, ?, ?, ?, ?, 1)";
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+      ps.setString(1, detail.getMaCTHDThuoc());
+      ps.setString(2, detail.getMaHoaDon());
+      ps.setString(3, detail.getMaThuoc());
+      ps.setInt(4, detail.getSoLuong());
+      ps.setDouble(5, detail.getDonGia());
+      ps.setDouble(6, detail.getSoLuong() * detail.getDonGia());
+      ps.setString(7, detail.getGhiChu());
+      return ps.executeUpdate() > 0;
+    }
+  }
+
+  private int getThuocTonKho(Connection conn, String maThuoc)
+    throws SQLException {
+    String sql =
+      "SELECT SoLuongTon FROM Thuoc WHERE MaThuoc = ? AND Active = 1 LIMIT 1";
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+      ps.setString(1, maThuoc);
+      try (ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) {
+          return rs.getInt(1);
+        }
+      }
+    }
+    return 0;
+  }
+
+  private double calculateInvoiceTotalInTransaction(
+    Connection conn,
+    String maHoaDon
+  ) throws SQLException {
+    String sql =
+      "SELECT COALESCE(SUM(ThanhTien), 0) FROM CTHDThuoc WHERE MaHoaDon = ? AND Active = 1";
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+      ps.setString(1, maHoaDon);
+      try (ResultSet rs = ps.executeQuery()) {
+        return rs.next() ? rs.getDouble(1) : 0;
+      }
+    }
+  }
+
+  private boolean updateInvoiceSummary(
+    Connection conn,
+    String maHoaDon,
+    double tongTien,
+    String trangThaiThanhToan,
+    LocalDateTime ngayThanhToan,
+    String trangThaiLayThuoc,
+    String ghiChu
+  ) throws SQLException {
+    String sql =
+      "UPDATE HoaDonThuoc SET TongTien = ?, TrangThaiThanhToan = ?, NgayThanhToan = ?, TrangThaiLayThuoc = ?, GhiChu = ? WHERE MaHoaDon = ?";
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+      ps.setDouble(1, tongTien);
+      ps.setString(
+        2,
+        StatusNormalizer.normalizePaymentStatus(trangThaiThanhToan)
+      );
+      ps.setObject(3, ngayThanhToan);
+      ps.setString(
+        4,
+        StatusNormalizer.normalizePickupStatus(trangThaiLayThuoc)
+      );
+      ps.setString(5, ghiChu);
+      ps.setString(6, maHoaDon);
+      return ps.executeUpdate() > 0;
+    }
+  }
+
+  private Map<String, String> loadTenThuocMap(Connection conn)
+    throws SQLException {
+    Map<String, String> map = new HashMap<>();
+    String sql = "SELECT MaThuoc, TenThuoc FROM Thuoc";
+    try (
+      PreparedStatement ps = conn.prepareStatement(sql);
+      ResultSet rs = ps.executeQuery()
+    ) {
+      while (rs.next()) {
+        map.put(rs.getString("MaThuoc"), rs.getString("TenThuoc"));
+      }
+    }
+    return map;
+  }
+
   // Lấy hóa đơn theo trạng thái lấy thuốc
   public java.util.List<HoaDonThuocDTO> getByPickupStatus(
     String trangThaiLayThuoc
@@ -639,7 +1128,50 @@ public class HoaDonThuocBUS {
     if (isBlank(maHoaDon)) {
       return new java.util.ArrayList<>();
     }
-    return hoaDonThuocDAO.getXuatTheoLoByMaHoaDon(maHoaDon.trim());
+
+    List<XuatThuocTheoLoDTO> result = new ArrayList<>();
+    String sql =
+      "SELECT bd.MaBienDong, bd.MaHoaDon, bd.MaCTHDThuoc, bd.MaCTPN, lt.MaThuoc, lt.SoLo, lt.HanSuDung, bd.SoLuong, bd.ThoiDiem " +
+      "FROM LoThuocBienDong bd " +
+      "JOIN LoThuoc lt ON lt.MaLo = bd.MaLo " +
+      "WHERE bd.LoaiBienDong = 'ISSUE' AND bd.MaHoaDon = ? " +
+      "ORDER BY bd.ThoiDiem ASC, bd.MaBienDong ASC";
+    try (
+      Connection conn = DBConnection.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql)
+    ) {
+      ps.setString(1, maHoaDon.trim());
+      try (ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) {
+          XuatThuocTheoLoDTO dto = new XuatThuocTheoLoDTO();
+          dto.setMaXuatLo(rs.getLong("MaBienDong"));
+          dto.setMaHoaDon(rs.getString("MaHoaDon"));
+          dto.setMaCTHDThuoc(rs.getString("MaCTHDThuoc"));
+          dto.setMaCTPN(rs.getString("MaCTPN"));
+          dto.setMaThuoc(rs.getString("MaThuoc"));
+          dto.setSoLo(rs.getString("SoLo"));
+          dto.setHanSuDung(rs.getObject("HanSuDung", LocalDate.class));
+          dto.setSoLuongXuat(rs.getInt("SoLuong"));
+          dto.setNgayXuat(rs.getObject("ThoiDiem", LocalDateTime.class));
+          result.add(dto);
+        }
+      }
+    } catch (SQLException ex) {
+      System.err.println(
+        "Lỗi truy vấn lịch sử xuất theo lô mới: " + ex.getMessage()
+      );
+    }
+
+    // Fallback cho dữ liệu cũ trước thời điểm cutover.
+    if (result.isEmpty()) {
+      return hoaDonThuocDAO.getXuatTheoLoByMaHoaDon(maHoaDon.trim());
+    }
+    return result;
+  }
+
+  private String safeUserName() {
+    String username = Session.getCurrentUsername();
+    return isBlank(username) ? "SYSTEM" : username.trim();
   }
 
   private boolean validateHoaDonInput(
@@ -736,6 +1268,7 @@ public class HoaDonThuocBUS {
 
   private static class LotFefoRow {
 
+    private long maLo;
     private String maCTPN;
     private String soLo;
     private LocalDate hanSuDung;

@@ -28,14 +28,15 @@ public class LichLamViecPanel extends BasePanel {
   private final LichLamViecBUS lichLamViecBUS = new LichLamViecBUS();
   private final BacSiBUS bacSiBUS = new BacSiBUS();
   private final DefaultTableModel model = new DefaultTableModel(
-    new Object[] { "Mã lịch", "Ngày làm", "Ca", "Trạng thái" },
+    new Object[] { "Mã lịch", "Ngày làm", "Khung giờ", "Trạng thái" },
     0
   );
 
   private JSpinner spNgayLam;
-  private JComboBox<String> cbCa;
+  private JComboBox<String> cbKhungGio;
   private JButton btnDangKy;
   private JButton btnTaiLai;
+  private JTable table;
 
   @Override
   protected void init() {
@@ -67,13 +68,18 @@ public class LichLamViecPanel extends BasePanel {
     );
     spNgayLam.setEditor(new JSpinner.DateEditor(spNgayLam, "yyyy-MM-dd"));
     UIUtils.fixedSize(spNgayLam, 130, 32);
-    cbCa = new JComboBox<>(new String[] { "Sang", "Chieu", "Toi" });
-    UIUtils.fixedSize(cbCa, 90, 32);
+
+    cbKhungGio = new JComboBox<>();
+    UIUtils.fixedSize(cbKhungGio, 140, 32);
+    reloadKhungGioOptions();
 
     btnDangKy = UIUtils.primaryButton("Đăng ký ca");
     btnTaiLai = UIUtils.ghostButton("Tải lại");
     btnDangKy.addActionListener(e -> registerShift());
-    btnTaiLai.addActionListener(e -> loadData());
+    btnTaiLai.addActionListener(e -> {
+      reloadKhungGioOptions();
+      loadData();
+    });
 
     JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
     actions.setOpaque(false);
@@ -82,17 +88,19 @@ public class LichLamViecPanel extends BasePanel {
 
     form.add(new javax.swing.JLabel("Ngày làm"));
     form.add(spNgayLam);
-    form.add(new javax.swing.JLabel("Ca"));
-    form.add(cbCa);
+    form.add(new javax.swing.JLabel("Khung giờ"));
+    form.add(cbKhungGio);
 
     topBar.add(form, BorderLayout.WEST);
     topBar.add(actions, BorderLayout.EAST);
 
-    JTable table = new JTable(model);
+    table = new JTable(model);
     UIUtils.styleTable(table);
 
     panel.add(topBar, BorderLayout.NORTH);
     panel.add(new JScrollPane(table), BorderLayout.CENTER);
+
+    apDungPhanQuyenHanhDong();
     return panel;
   }
 
@@ -106,7 +114,14 @@ public class LichLamViecPanel extends BasePanel {
     String ngay = new SimpleDateFormat("yyyy-MM-dd").format(
       (Date) spNgayLam.getValue()
     );
-    String ca = normalizeCa(String.valueOf(cbCa.getSelectedItem()));
+    String ca = String.valueOf(cbKhungGio.getSelectedItem());
+    if (ca == null || ca.trim().isEmpty()) {
+      DialogHelper.warn(
+        this,
+        "Hiện chưa có khung giờ hoạt động. Nhờ admin cấu hình trước."
+      );
+      return;
+    }
 
     LichLamViecDTO lich = new LichLamViecDTO();
     lich.setMaLichLam(lichLamViecBUS.generateMaLichLam());
@@ -118,7 +133,7 @@ public class LichLamViecPanel extends BasePanel {
     if (!lichLamViecBUS.add(lich)) {
       DialogHelper.error(
         this,
-        "Đăng ký lịch làm việc thất bại (có thể bị trùng ca)."
+        "Đăng ký lịch làm việc thất bại (khung giờ bị trùng hoặc không hợp lệ)."
       );
       return;
     }
@@ -140,28 +155,25 @@ public class LichLamViecPanel extends BasePanel {
         new Object[] {
           lich.getMaLichLam(),
           lich.getNgayLam(),
-          toDisplayCa(lich.getCaLam()),
+          toDisplayRange(lich.getCaLam()),
           lich.getTrangThai(),
         }
       );
     }
   }
 
-  private String normalizeCa(String caDisplay) {
-    if (caDisplay == null) {
+  private String toDisplayRange(String rangeDb) {
+    if (rangeDb == null) {
       return "";
     }
-    if ("Tối".equalsIgnoreCase(caDisplay)) {
-      return "Toi";
-    }
-    return caDisplay;
+    return rangeDb.replace("-", " - ");
   }
 
-  private String toDisplayCa(String caDb) {
-    if ("Toi".equalsIgnoreCase(caDb)) {
-      return "Tối";
+  private void reloadKhungGioOptions() {
+    cbKhungGio.removeAllItems();
+    for (String range : lichLamViecBUS.getValidCa()) {
+      cbKhungGio.addItem(range);
     }
-    return caDb;
   }
 
   private String resolveCurrentDoctorId() {
@@ -195,5 +207,16 @@ public class LichLamViecPanel extends BasePanel {
     }
 
     return null;
+  }
+
+  private void apDungPhanQuyenHanhDong() {
+    boolean coQuyenXem = Session.coMotTrongCacQuyen("LICHLAMVIEC_XEM");
+    boolean coQuyenDangKy = Session.coMotTrongCacQuyen("LICHLAMVIEC_THEM");
+
+    if (btnDangKy != null) btnDangKy.setVisible(coQuyenDangKy);
+    if (btnTaiLai != null) btnTaiLai.setVisible(coQuyenXem);
+    if (spNgayLam != null) spNgayLam.setEnabled(coQuyenXem);
+    if (cbKhungGio != null) cbKhungGio.setEnabled(coQuyenXem);
+    if (table != null) table.setEnabled(coQuyenXem);
   }
 }

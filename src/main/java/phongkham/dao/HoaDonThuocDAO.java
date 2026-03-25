@@ -289,8 +289,12 @@ public class HoaDonThuocDAO {
   public List<XuatThuocTheoLoDTO> getXuatTheoLoByMaHoaDon(String maHoaDon) {
     List<XuatThuocTheoLoDTO> list = new ArrayList<>();
     String sql =
-      "SELECT MaXuatLo, MaHoaDon, MaCTHDThuoc, MaCTPN, MaThuoc, SoLo, HanSuDung, SoLuongXuat, NgayXuat " +
-      "FROM XuatThuocTheoLo WHERE MaHoaDon = ? ORDER BY HanSuDung ASC, MaXuatLo ASC";
+      "SELECT bd.MaBienDong AS MaXuatLo, bd.MaHoaDon, bd.MaCTHDThuoc, bd.MaCTPN, " +
+      "       lt.MaThuoc, lt.SoLo, lt.HanSuDung, bd.SoLuong AS SoLuongXuat, bd.ThoiDiem AS NgayXuat " +
+      "FROM LoThuocBienDong bd " +
+      "JOIN LoThuoc lt ON lt.MaLo = bd.MaLo " +
+      "WHERE bd.LoaiBienDong = 'ISSUE' AND bd.MaHoaDon = ? " +
+      "ORDER BY bd.ThoiDiem ASC, bd.MaBienDong ASC";
     try (
       Connection conn = DBConnection.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql)
@@ -314,7 +318,45 @@ public class HoaDonThuocDAO {
         }
       }
     } catch (SQLException e) {
-      System.err.println("✗ Error query XuatThuocTheoLo: " + e.getMessage());
+      System.err.println(
+        "✗ Error query LoThuocBienDong ISSUE: " + e.getMessage()
+      );
+    }
+
+    if (!list.isEmpty()) {
+      return list;
+    }
+
+    // Fallback cho dữ liệu cũ trước khi cutover.
+    String sqlLegacy =
+      "SELECT MaXuatLo, MaHoaDon, MaCTHDThuoc, MaCTPN, MaThuoc, SoLo, HanSuDung, SoLuongXuat, NgayXuat " +
+      "FROM XuatThuocTheoLo WHERE MaHoaDon = ? ORDER BY HanSuDung ASC, MaXuatLo ASC";
+    try (
+      Connection conn = DBConnection.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sqlLegacy)
+    ) {
+      ps.setString(1, maHoaDon);
+      try (ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) {
+          XuatThuocTheoLoDTO dto = new XuatThuocTheoLoDTO();
+          dto.setMaXuatLo(rs.getLong("MaXuatLo"));
+          dto.setMaHoaDon(rs.getString("MaHoaDon"));
+          dto.setMaCTHDThuoc(rs.getString("MaCTHDThuoc"));
+          dto.setMaCTPN(rs.getString("MaCTPN"));
+          dto.setMaThuoc(rs.getString("MaThuoc"));
+          dto.setSoLo(rs.getString("SoLo"));
+          dto.setHanSuDung(
+            rs.getObject("HanSuDung", java.time.LocalDate.class)
+          );
+          dto.setSoLuongXuat(rs.getInt("SoLuongXuat"));
+          dto.setNgayXuat(rs.getObject("NgayXuat", LocalDateTime.class));
+          list.add(dto);
+        }
+      }
+    } catch (SQLException e) {
+      System.err.println(
+        "✗ Error query XuatThuocTheoLo legacy: " + e.getMessage()
+      );
     }
     return list;
   }
