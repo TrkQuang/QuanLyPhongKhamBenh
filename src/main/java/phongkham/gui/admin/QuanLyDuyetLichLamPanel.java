@@ -761,7 +761,7 @@ public class QuanLyDuyetLichLamPanel extends BasePanel {
   }
 
   private void apDungPhanQuyenHanhDong() {
-    boolean coQuyenXem = Session.coMotTrongCacQuyen("LICHLAMVIEC_XEM");
+    boolean coQuyenXem = Session.coMotTrongCacQuyen("DUYETLICHLAM_XEM");
     boolean coQuyenDuyet = Session.coMotTrongCacQuyen("LICHLAMVIEC_DUYET");
     boolean coQuyenTuChoi = Session.coMotTrongCacQuyen("LICHLAMVIEC_TU_CHOI");
     boolean coQuyenQuanLyKhung = Session.coMotTrongCacQuyen("LICHLAMVIEC_THEM");

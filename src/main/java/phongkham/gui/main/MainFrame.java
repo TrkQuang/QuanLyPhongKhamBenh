@@ -153,7 +153,7 @@ public class MainFrame extends JFrame {
       );
     }
     if (AppRoute.QL_DUYET_LICH_LAM.equals(route)) {
-      return mode == UserMode.ADMIN;
+      return hasAnyPermission("DUYETLICHLAM_XEM");
     }
     if (AppRoute.QL_KHOA.equals(route)) {
       return hasAnyPermission("KHOA_XEM", "KHOA_THEM", "KHOA_SUA", "KHOA_XOA");
@@ -190,17 +190,30 @@ public class MainFrame extends JFrame {
 
   public void reloadLayoutAfterLogin() {
     sidebar.buildMenu();
-    if (Session.isLoggedIn()) {
-      if (RoleResolver.resolve() == UserMode.ADMIN) {
-        onNavigate(AppRoute.DASHBOARD);
-      } else if (RoleResolver.resolve() == UserMode.NHATHUOC) {
-        onNavigate(AppRoute.THUOC);
-      } else {
-        onNavigate(AppRoute.BACSI_LICH_KHAM);
-      }
-    } else {
+    if (!Session.isLoggedIn()) {
       onNavigate(AppRoute.DAT_LICH);
+      return;
     }
+
+    // Dieu huong sau login theo route thuc su truy cap duoc, tranh nhay lung tung.
+    if (canAccess(AppRoute.DASHBOARD)) {
+      onNavigate(AppRoute.DASHBOARD);
+      return;
+    }
+    if (canAccess(AppRoute.THUOC)) {
+      onNavigate(AppRoute.THUOC);
+      return;
+    }
+    if (canAccess(AppRoute.BACSI_LICH_LAM_VIEC)) {
+      onNavigate(AppRoute.BACSI_LICH_LAM_VIEC);
+      return;
+    }
+    if (canAccess(AppRoute.BACSI_LICH_KHAM)) {
+      onNavigate(AppRoute.BACSI_LICH_KHAM);
+      return;
+    }
+
+    onNavigate(AppRoute.HOME);
   }
 
   public void refreshAllPanelsAfterPermissionSave() {

@@ -163,12 +163,22 @@ public class QuanLyPhanQuyenPanel extends BasePanel {
       return LoadResult.schemaKhongHopLe();
     }
 
+    damBaoQuyenNenBatBuoc();
     khoiTaoDanhMucQuyenCoBan();
     boSungQuyenConThieuTuDatabase();
 
     ArrayList<RolesDTO> roles = phanQuyenBUS.layTatCaVaiTro();
     Map<Integer, Set<String>> roleQuyen = phanQuyenBUS.layMapQuyenTheoRole();
     return LoadResult.hopLe(roles, roleQuyen);
+  }
+
+  private void damBaoQuyenNenBatBuoc() {
+    phanQuyenBUS.damBaoQuyenChiTiet(
+      "DUYETLICHLAM",
+      "XEM",
+      "DUYETLICHLAM_XEM",
+      "Admin - Duyệt lịch làm bác sĩ"
+    );
   }
 
   private void capNhatTrangThaiDangTai(boolean dangTai) {
@@ -610,6 +620,7 @@ public class QuanLyPhanQuyenPanel extends BasePanel {
     if ("NCC".equals(moduleCode)) return "Nhà thuốc - Nhà cung cấp";
     if ("PHIEUNHAP".equals(moduleCode)) return "Nhà thuốc - Phiếu nhập";
     if ("HOADONTHUOC".equals(moduleCode)) return "Nhà thuốc - Hóa đơn thuốc";
+    if ("DUYETLICHLAM".equals(moduleCode)) return "Admin - Duyệt lịch làm bác sĩ";
     if ("LICHLAMVIEC".equals(moduleCode)) {
       return "Bác sĩ - Lịch làm việc (đăng ký ca)";
     }
@@ -639,6 +650,7 @@ public class QuanLyPhanQuyenPanel extends BasePanel {
       case "NCC":
       case "PHIEUNHAP":
       case "HOADONTHUOC":
+      case "DUYETLICHLAM":
       case "LICHLAMVIEC":
       case "LICHKHAM":
       case "HOADONKHAM":
@@ -916,6 +928,13 @@ public class QuanLyPhanQuyenPanel extends BasePanel {
       "LICHLAMVIEC_THEM",
       "Bác sĩ - Lịch làm việc (đăng ký ca)",
       "Đăng ký lịch làm"
+    );
+    addPerm(
+      "DUYETLICHLAM",
+      "XEM",
+      "DUYETLICHLAM_XEM",
+      "Admin - Duyệt lịch làm bác sĩ",
+      "Xem danh sách chờ duyệt"
     );
     addPerm(
       "LICHLAMVIEC",

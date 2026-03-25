@@ -235,6 +235,7 @@ public class Sidebar extends JPanel {
           "BACSI_XOA",
           "BACSI_XEM_CHI_TIET"
         ) ||
+        hasAnyPermission("DUYETLICHLAM_XEM") ||
         hasAnyPermission("KHOA_XEM", "KHOA_THEM", "KHOA_SUA", "KHOA_XOA") ||
         hasAnyPermission(
           "GOIDICHVU_XEM",
@@ -273,7 +274,7 @@ public class Sidebar extends JPanel {
         ) {
           addMenu("Quản lý bác sĩ", AppRoute.QL_BAC_SI);
         }
-        if (mode == UserMode.ADMIN) {
+        if (hasAnyPermission("DUYETLICHLAM_XEM")) {
           addMenu("Duyệt lịch làm", AppRoute.QL_DUYET_LICH_LAM);
         }
         if (hasAnyPermission("KHOA_XEM", "KHOA_THEM", "KHOA_SUA", "KHOA_XOA")) {
