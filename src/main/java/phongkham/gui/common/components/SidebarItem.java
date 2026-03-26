@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JComponent;
+import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
@@ -32,13 +34,19 @@ public class SidebarItem extends JPanel {
   private static final int ARC = 10;
 
   private final JLabel iconLabel;
+  private final JComponent iconGap;
   private final JLabel textLabel;
+  private final String fallbackIconText;
   private final List<ActionListener> actionListeners = new ArrayList<>();
 
   private boolean active;
   private boolean hovered;
 
   public SidebarItem(String text) {
+    this(text, null);
+  }
+
+  public SidebarItem(String text, Icon icon) {
     setOpaque(false);
     setLayout(new BorderLayout());
     setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -53,16 +61,26 @@ public class SidebarItem extends JPanel {
       javax.swing.BorderFactory.createEmptyBorder(10, 14, 10, 14)
     );
 
-    iconLabel = new JLabel("•", SwingConstants.CENTER);
+    fallbackIconText = "•";
+    iconLabel = new JLabel(fallbackIconText, SwingConstants.CENTER);
     iconLabel.setFont(new Font("Segoe UI Symbol", Font.PLAIN, 15));
     iconLabel.setForeground(ICON_NORMAL);
+    iconLabel.setPreferredSize(new Dimension(18, 18));
+    iconLabel.setMinimumSize(new Dimension(18, 18));
+    iconLabel.setMaximumSize(new Dimension(18, 18));
+
+    if (icon != null) {
+      iconLabel.setIcon(icon);
+      iconLabel.setText("");
+    }
 
     textLabel = new JLabel(text);
     textLabel.setFont(new Font("Segoe UI", Font.PLAIN, 15));
     textLabel.setForeground(FG_NORMAL);
 
+    iconGap = (JComponent) Box.createHorizontalStrut(10);
     content.add(iconLabel);
-    content.add(Box.createHorizontalStrut(10));
+    content.add(iconGap);
     content.add(textLabel);
 
     add(content, BorderLayout.CENTER);
@@ -121,6 +139,9 @@ public class SidebarItem extends JPanel {
   private void updateForegrounds() {
     textLabel.setForeground(active ? FG_ACTIVE : FG_NORMAL);
     iconLabel.setForeground(active ? ICON_ACTIVE : ICON_NORMAL);
+    if (iconLabel.getIcon() == null) {
+      iconLabel.setText(fallbackIconText);
+    }
   }
 
   public void addActionListener(ActionListener listener) {
@@ -151,5 +172,10 @@ public class SidebarItem extends JPanel {
     );
     updateForegrounds();
     repaint();
+  }
+
+  public void setLeadingIconVisible(boolean visible) {
+    iconLabel.setVisible(visible);
+    iconGap.setVisible(visible);
   }
 }

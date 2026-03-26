@@ -18,6 +18,7 @@ public final class AppRoute {
   public static final String HOA_DON_THUOC = "HOA_DON_THUOC";
 
   public static final String DASHBOARD = "DASHBOARD";
+  public static final String QL_QUAN_LY = "QL_QUAN_LY";
   public static final String QL_TAI_KHOAN = "QL_TAI_KHOAN";
   public static final String QL_BAC_SI = "QL_BAC_SI";
   public static final String QL_DUYET_LICH_LAM = "QL_DUYET_LICH_LAM";

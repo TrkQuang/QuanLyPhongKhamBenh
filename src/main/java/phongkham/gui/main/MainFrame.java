@@ -133,6 +133,22 @@ public class MainFrame extends JFrame {
     if (AppRoute.DASHBOARD.equals(route)) {
       return hasAnyPermission("DASHBOARD_XEM");
     }
+    if (AppRoute.QL_QUAN_LY.equals(route)) {
+      return hasAnyPermission(
+        "USER_XEM",
+        "USER_THEM",
+        "USER_SUA",
+        "USER_XOA",
+        "USER_RESET_MAT_KHAU",
+        "USER_KICH_HOAT_VO_HIEU_HOA",
+        "ROLE_XEM",
+        "ROLE_THEM",
+        "ROLE_SUA",
+        "ROLE_XOA",
+        "PHANQUYEN_XEM",
+        "PHANQUYEN_CAP_NHAT"
+      );
+    }
     if (AppRoute.QL_TAI_KHOAN.equals(route)) {
       return hasAnyPermission(
         "USER_XEM",
@@ -209,7 +225,7 @@ public class MainFrame extends JFrame {
       AppRoute.PHIEU_NHAP,
       AppRoute.HOA_DON_THUOC,
       AppRoute.DASHBOARD,
-      AppRoute.QL_TAI_KHOAN,
+      AppRoute.QL_QUAN_LY,
       AppRoute.QL_BAC_SI,
       AppRoute.QL_DUYET_LICH_LAM,
       AppRoute.QL_KHOA,

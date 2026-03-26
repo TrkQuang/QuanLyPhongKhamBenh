@@ -24,6 +24,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import phongkham.Utils.Session;
 import phongkham.gui.common.UIConstants;
+import phongkham.gui.common.components.SidebarIcons;
 import phongkham.gui.common.components.SidebarItem;
 
 public class Sidebar extends JPanel {
@@ -226,7 +227,13 @@ public class Sidebar extends JPanel {
           "USER_SUA",
           "USER_XOA",
           "USER_RESET_MAT_KHAU",
-          "USER_KICH_HOAT_VO_HIEU_HOA"
+          "USER_KICH_HOAT_VO_HIEU_HOA",
+          "ROLE_XEM",
+          "ROLE_THEM",
+          "ROLE_SUA",
+          "ROLE_XOA",
+          "PHANQUYEN_XEM",
+          "PHANQUYEN_CAP_NHAT"
         ) ||
         hasAnyPermission(
           "BACSI_XEM",
@@ -242,9 +249,7 @@ public class Sidebar extends JPanel {
           "GOIDICHVU_THEM",
           "GOIDICHVU_SUA",
           "GOIDICHVU_XOA"
-        ) ||
-        hasAnyPermission("ROLE_XEM", "ROLE_THEM", "ROLE_SUA", "ROLE_XOA") ||
-        hasAnyPermission("PHANQUYEN_XEM", "PHANQUYEN_CAP_NHAT");
+        );
       if (hasQuanTriSection) {
         menuContainer.add(Box.createVerticalStrut(20));
         sectionTitle("QUẢN TRỊ");
@@ -258,10 +263,16 @@ public class Sidebar extends JPanel {
             "USER_SUA",
             "USER_XOA",
             "USER_RESET_MAT_KHAU",
-            "USER_KICH_HOAT_VO_HIEU_HOA"
+            "USER_KICH_HOAT_VO_HIEU_HOA",
+            "ROLE_XEM",
+            "ROLE_THEM",
+            "ROLE_SUA",
+            "ROLE_XOA",
+            "PHANQUYEN_XEM",
+            "PHANQUYEN_CAP_NHAT"
           )
         ) {
-          addMenu("Quản lý tài khoản", AppRoute.QL_TAI_KHOAN);
+          addMenu("Quản lý", AppRoute.QL_QUAN_LY);
         }
         if (
           hasAnyPermission(
@@ -289,12 +300,6 @@ public class Sidebar extends JPanel {
           )
         ) {
           addMenu("Quản lý gói dịch vụ", AppRoute.QL_GOI_DICH_VU);
-        }
-        if (hasAnyPermission("ROLE_XEM", "ROLE_THEM", "ROLE_SUA", "ROLE_XOA")) {
-          addMenu("Quản lý role", AppRoute.QL_ROLE);
-        }
-        if (hasAnyPermission("PHANQUYEN_XEM", "PHANQUYEN_CAP_NHAT")) {
-          addMenu("Phân quyền chi tiết", AppRoute.PHAN_QUYEN);
         }
       }
     }

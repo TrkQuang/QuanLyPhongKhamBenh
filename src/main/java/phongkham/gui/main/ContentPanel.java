@@ -12,6 +12,7 @@ import phongkham.gui.admin.QuanLyKhoaPanel;
 import phongkham.gui.admin.QuanLyPhanQuyenPanel;
 import phongkham.gui.admin.QuanLyRolePanel;
 import phongkham.gui.admin.QuanLyTaiKhoanPanel;
+import phongkham.gui.admin.QuanLyTongHopPanel;
 import phongkham.gui.bacsi.BacSiProfilePanel;
 import phongkham.gui.bacsi.BenhAnPanel;
 import phongkham.gui.bacsi.HoaDonKhamPanel;
@@ -51,6 +52,7 @@ public class ContentPanel extends JPanel {
     register(AppRoute.HOA_DON_THUOC, new HoaDonThuocPanel());
 
     register(AppRoute.DASHBOARD, new DashboardPanel());
+    register(AppRoute.QL_QUAN_LY, new QuanLyTongHopPanel());
     register(AppRoute.QL_TAI_KHOAN, new QuanLyTaiKhoanPanel());
     register(AppRoute.QL_BAC_SI, new QuanLyBacSiPanel());
     register(AppRoute.QL_DUYET_LICH_LAM, new QuanLyDuyetLichLamPanel());

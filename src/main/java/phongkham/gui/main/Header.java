@@ -98,6 +98,8 @@ public class Header extends JPanel {
         return "HÓA ĐƠN BÁN THUỐC";
       case AppRoute.DASHBOARD:
         return "BẢNG ĐIỀU KHIỂN";
+      case AppRoute.QL_QUAN_LY:
+        return "QUẢN LÝ";
       case AppRoute.QL_TAI_KHOAN:
         return "QUẢN LÝ TÀI KHOẢN";
       case AppRoute.QL_BAC_SI:
