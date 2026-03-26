@@ -272,7 +272,7 @@ public class Sidebar extends JPanel {
             "PHANQUYEN_CAP_NHAT"
           )
         ) {
-          addMenu("Quản lý", AppRoute.QL_QUAN_LY);
+          addMenu("Quản Lý Tài Khoản", AppRoute.QL_QUAN_LY);
         }
         if (
           hasAnyPermission(
@@ -371,6 +371,7 @@ public class Sidebar extends JPanel {
 
   private void addMenu(String text, String route) {
     SidebarItem item = new SidebarItem(text);
+    item.setLeadingIcon(SidebarIcons.forRoute(route));
     item.setAlignmentX(Component.LEFT_ALIGNMENT);
     item.addActionListener(e -> {
       setActiveRoute(route);

@@ -1,13 +1,15 @@
 package phongkham.gui.admin;
 
 import java.awt.BorderLayout;
+import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingConstants;
 import phongkham.Utils.Session;
 import phongkham.gui.common.BasePanel;
-import phongkham.gui.common.UIUtils;
+import phongkham.gui.common.UIConstants;
+import phongkham.gui.common.components.RoundedPanel;
 
 public class QuanLyTongHopPanel extends BasePanel {
 
@@ -56,6 +58,12 @@ public class QuanLyTongHopPanel extends BasePanel {
       return;
     }
 
-    add(UIUtils.createSection("Quản Lý", tabs), BorderLayout.CENTER);
+    RoundedPanel wrapper = new RoundedPanel(18);
+    wrapper.setLayout(new BorderLayout());
+    wrapper.setBackground(UIConstants.BG_SURFACE);
+    wrapper.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+    wrapper.add(tabs, BorderLayout.CENTER);
+
+    add(wrapper, BorderLayout.CENTER);
   }
 }

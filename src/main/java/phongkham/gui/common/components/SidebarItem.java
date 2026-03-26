@@ -16,8 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.JComponent;
 import javax.swing.Icon;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
@@ -37,6 +37,7 @@ public class SidebarItem extends JPanel {
   private final JComponent iconGap;
   private final JLabel textLabel;
   private final String fallbackIconText;
+  private String currentIconText;
   private final List<ActionListener> actionListeners = new ArrayList<>();
 
   private boolean active;
@@ -62,8 +63,9 @@ public class SidebarItem extends JPanel {
     );
 
     fallbackIconText = "•";
+    currentIconText = fallbackIconText;
     iconLabel = new JLabel(fallbackIconText, SwingConstants.CENTER);
-    iconLabel.setFont(new Font("Segoe UI Symbol", Font.PLAIN, 15));
+    iconLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 15));
     iconLabel.setForeground(ICON_NORMAL);
     iconLabel.setPreferredSize(new Dimension(18, 18));
     iconLabel.setMinimumSize(new Dimension(18, 18));
@@ -140,7 +142,7 @@ public class SidebarItem extends JPanel {
     textLabel.setForeground(active ? FG_ACTIVE : FG_NORMAL);
     iconLabel.setForeground(active ? ICON_ACTIVE : ICON_NORMAL);
     if (iconLabel.getIcon() == null) {
-      iconLabel.setText(fallbackIconText);
+      iconLabel.setText(currentIconText);
     }
   }
 
@@ -177,5 +179,27 @@ public class SidebarItem extends JPanel {
   public void setLeadingIconVisible(boolean visible) {
     iconLabel.setVisible(visible);
     iconGap.setVisible(visible);
+  }
+
+  public void setLeadingEmoji(String emoji) {
+    if (emoji == null || emoji.trim().isEmpty()) {
+      iconLabel.setIcon(null);
+      currentIconText = fallbackIconText;
+      iconLabel.setText(currentIconText);
+      return;
+    }
+    iconLabel.setIcon(null);
+    currentIconText = emoji;
+    iconLabel.setText(currentIconText);
+    iconLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 15));
+  }
+
+  public void setLeadingIcon(Icon icon) {
+    iconLabel.setIcon(icon);
+    if (icon == null) {
+      iconLabel.setText(currentIconText);
+    } else {
+      iconLabel.setText("");
+    }
   }
 }

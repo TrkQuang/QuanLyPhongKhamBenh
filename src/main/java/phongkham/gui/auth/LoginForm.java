@@ -11,10 +11,17 @@ import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -117,14 +124,12 @@ public class LoginForm extends JFrame {
     card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
     card.setBorder(new EmptyBorder(26, 26, 22, 26));
 
-    JLabel icon = new JLabel("X", SwingConstants.CENTER);
-    icon.setOpaque(true);
-    icon.setBackground(new Color(219, 234, 254));
-    icon.setForeground(new Color(30, 64, 175));
-    icon.setFont(new Font("Segoe UI", Font.BOLD, 22));
+    JLabel icon = new JLabel("", SwingConstants.CENTER);
+    icon.setOpaque(false);
+    icon.setIcon(loadLoginIcon(42, 42));
     icon.setPreferredSize(new Dimension(42, 42));
     icon.setMaximumSize(new Dimension(42, 42));
-    icon.setBorder(BorderFactory.createEmptyBorder(6, 14, 6, 14));
+    icon.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
     icon.setAlignmentX(CENTER_ALIGNMENT);
 
     JLabel title = new JLabel("Đăng Nhập Nhân Viên");
@@ -239,6 +244,37 @@ public class LoginForm extends JFrame {
     component.setPreferredSize(new Dimension(width, height));
     row.add(component);
     return row;
+  }
+
+  private ImageIcon loadLoginIcon(int width, int height) {
+    URL iconUrl = getClass().getResource(
+      "/phongkham/gui/img/iconLoginForm.png"
+    );
+    try {
+      if (iconUrl != null) {
+        ImageIcon original = new ImageIcon(iconUrl);
+        Image scaled = original
+          .getImage()
+          .getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        return new ImageIcon(scaled);
+      }
+
+      File iconFile = new File(
+        "src/main/java/phongkham/gui/img/iconLoginForm.png"
+      );
+      if (iconFile.exists()) {
+        BufferedImage image = ImageIO.read(iconFile);
+        Image scaled = image.getScaledInstance(
+          width,
+          height,
+          Image.SCALE_SMOOTH
+        );
+        return new ImageIcon(scaled);
+      }
+    } catch (IOException ignored) {
+      return null;
+    }
+    return null;
   }
 
   private JPanel buildDivider() {
