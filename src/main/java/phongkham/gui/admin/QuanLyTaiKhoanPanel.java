@@ -12,7 +12,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
+import phongkham.BUS.KhoaBUS;
 import phongkham.BUS.UsersBUS;
+import phongkham.DTO.KhoaDTO;
 import phongkham.DTO.UsersDTO;
 import phongkham.Utils.Session;
 import phongkham.gui.admin.components.AdminDialogs;
@@ -23,6 +25,7 @@ import phongkham.gui.common.UIUtils;
 public class QuanLyTaiKhoanPanel extends BasePanel {
 
   private final UsersBUS usersBUS = new UsersBUS();
+  private final KhoaBUS khoaBUS = new KhoaBUS();
   private JTable table;
   private JButton btnThem;
   private JButton btnSua;
@@ -132,7 +135,10 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
     }
 
     JLabel lblMaBacSi = new JLabel("Mã bác sĩ");
-    JTextField txtMaBacSi = new JTextField();
+    JTextField txtMaBacSi = new JTextField(
+      isCreate ? usersBUS.generateNextDoctorId() : ""
+    );
+    txtMaBacSi.setEditable(false);
     JLabel lblHoTen = new JLabel("Họ tên bác sĩ");
     JTextField txtHoTen = new JTextField();
     JLabel lblChuyenKhoa = new JLabel("Chuyên khoa");
@@ -140,7 +146,10 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
     JLabel lblSdt = new JLabel("SĐT bác sĩ");
     JTextField txtSdt = new JTextField();
     JLabel lblMaKhoa = new JLabel("Mã khoa");
-    JTextField txtMaKhoa = new JTextField();
+    JComboBox<String> cbMaKhoa = new JComboBox<>();
+    for (KhoaDTO khoa : khoaBUS.getAll()) {
+      cbMaKhoa.addItem(khoa.getMaKhoa() + " - " + khoa.getTenKhoa());
+    }
 
     form.add(new JLabel("UserID"));
     form.add(txtUserId);
@@ -163,7 +172,7 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
       form.add(lblSdt);
       form.add(txtSdt);
       form.add(lblMaKhoa);
-      form.add(txtMaKhoa);
+      form.add(cbMaKhoa);
 
       Runnable syncDoctorFields = () -> {
         boolean isDoctor =
@@ -177,7 +186,7 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
         setComponentVisibility(lblSdt, isDoctor);
         setComponentVisibility(txtSdt, isDoctor);
         setComponentVisibility(lblMaKhoa, isDoctor);
-        setComponentVisibility(txtMaKhoa, isDoctor);
+        setComponentVisibility(cbMaKhoa, isDoctor);
         form.revalidate();
         form.repaint();
       };
@@ -203,7 +212,7 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
             txtHoTen.getText().trim(),
             txtSdt.getText().trim(),
             txtChuyenKhoa.getText().trim(),
-            txtMaKhoa.getText().trim()
+            extractMaKhoa(String.valueOf(cbMaKhoa.getSelectedItem()))
           );
         } else {
           UsersDTO user = new UsersDTO();
@@ -359,6 +368,14 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
     } catch (Exception ex) {
       return 3;
     }
+  }
+
+  private String extractMaKhoa(String comboText) {
+    if (comboText == null) {
+      return "";
+    }
+    int idx = comboText.indexOf(" - ");
+    return (idx > 0 ? comboText.substring(0, idx) : comboText).trim();
   }
 
   /**

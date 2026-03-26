@@ -255,6 +255,10 @@ public class UsersBUS {
     );
   }
 
+  public String generateNextDoctorId() {
+    return userDAO.generateNextBacSiID();
+  }
+
   public String createPharmacyAccount(
     String username,
     String password,

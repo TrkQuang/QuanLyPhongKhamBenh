@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.util.ArrayList;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
@@ -117,15 +118,23 @@ public class QuanLyBacSiPanel extends BasePanel {
     JPanel form = new JPanel(new GridLayout(rows, 2, 10, 10));
     form.setOpaque(false);
 
-    JTextField txtMa = new JTextField(isCreate ? "" : source.getMaBacSi());
-    txtMa.setEditable(isCreate);
+    JTextField txtMa = new JTextField(
+      isCreate ? usersBUS.generateNextDoctorId() : source.getMaBacSi()
+    );
+    txtMa.setEditable(false);
     JTextField txtHoTen = new JTextField(isCreate ? "" : source.getHoTen());
     JTextField txtChuyenKhoa = new JTextField(
       isCreate ? "" : source.getChuyenKhoa()
     );
     JTextField txtSdt = new JTextField(isCreate ? "" : source.getSoDienThoai());
     JTextField txtEmail = new JTextField(isCreate ? "" : source.getEmail());
-    JTextField txtMaKhoa = new JTextField(isCreate ? "" : source.getMaKhoa());
+    JComboBox<String> cbMaKhoa = new JComboBox<>();
+    for (KhoaDTO khoa : khoaBUS.getAll()) {
+      cbMaKhoa.addItem(khoa.getMaKhoa() + " - " + khoa.getTenKhoa());
+    }
+    if (!isCreate && source.getMaKhoa() != null) {
+      selectKhoaInCombo(cbMaKhoa, source.getMaKhoa());
+    }
     JTextField txtUsername = new JTextField();
     JPasswordField txtPassword = new JPasswordField();
 
@@ -140,7 +149,7 @@ public class QuanLyBacSiPanel extends BasePanel {
     form.add(new JLabel("Email"));
     form.add(txtEmail);
     form.add(new JLabel("Mã khoa"));
-    form.add(txtMaKhoa);
+    form.add(cbMaKhoa);
     if (isCreate) {
       form.add(new JLabel("Tên tài khoản"));
       form.add(txtUsername);
@@ -159,7 +168,9 @@ public class QuanLyBacSiPanel extends BasePanel {
         bs.setChuyenKhoa(txtChuyenKhoa.getText().trim());
         bs.setSoDienThoai(txtSdt.getText().trim());
         bs.setEmail(txtEmail.getText().trim());
-        bs.setMaKhoa(txtMaKhoa.getText().trim());
+        bs.setMaKhoa(
+          extractMaKhoa(String.valueOf(cbMaKhoa.getSelectedItem()))
+        );
 
         if (isCreate) {
           String result = usersBUS.createDoctorAccountWithProfile(
@@ -192,6 +203,24 @@ public class QuanLyBacSiPanel extends BasePanel {
       620,
       380
     );
+  }
+
+  private String extractMaKhoa(String comboText) {
+    if (comboText == null) {
+      return "";
+    }
+    int idx = comboText.indexOf(" - ");
+    return (idx > 0 ? comboText.substring(0, idx) : comboText).trim();
+  }
+
+  private void selectKhoaInCombo(JComboBox<String> combo, String maKhoa) {
+    for (int i = 0; i < combo.getItemCount(); i++) {
+      String item = combo.getItemAt(i);
+      if (maKhoa.equalsIgnoreCase(extractMaKhoa(item))) {
+        combo.setSelectedIndex(i);
+        return;
+      }
+    }
   }
 
   private void showDoctorDetail() {
