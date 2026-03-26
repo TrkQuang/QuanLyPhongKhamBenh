@@ -1179,7 +1179,12 @@ public class DatLichPanel extends BasePanel {
     lich.setThoiGianBatDau(batDau);
     lich.setThoiGianKetThuc(ketThuc);
     lich.setTrangThai(StatusNormalizer.CHO_XAC_NHAN);
-    lich.setMaDinhDanhTam(generateGuestCode());
+    lich.setMaDinhDanhTam(
+      buildBookingIdentityWithPayment(
+        generateGuestCode(),
+        String.valueOf(cbThanhToan.getSelectedItem())
+      )
+    );
 
     String result = lichKhamBUS.insert(lich);
     if (!normalize(result).contains("thanh cong")) {
@@ -1536,6 +1541,36 @@ public class DatLichPanel extends BasePanel {
     String suffix =
       phone.length() >= 4 ? phone.substring(phone.length() - 4) : phone;
     return "GUEST-" + suffix + "-" + System.currentTimeMillis();
+  }
+
+  private String buildBookingIdentityWithPayment(
+    String guestCode,
+    String hinhThucThanhToan
+  ) {
+    String base = guestCode == null ? "" : guestCode.trim();
+    if (base.isEmpty()) {
+      base = "GUEST-UNKNOWN-" + System.currentTimeMillis();
+    }
+
+    String paymentCode = mapPaymentCode(hinhThucThanhToan);
+    String enriched = base + "|PM=" + paymentCode;
+
+    // MaDinhDanhTam hien tai gioi han 40 ky tu trong DB.
+    if (enriched.length() <= 40) {
+      return enriched;
+    }
+    if (base.length() > 33) {
+      base = base.substring(0, 33);
+    }
+    return base + "|PM=" + paymentCode;
+  }
+
+  private String mapPaymentCode(String hinhThucThanhToan) {
+    String normalized = normalize(hinhThucThanhToan);
+    if (normalized.contains("chuyen khoan")) {
+      return "CK";
+    }
+    return "TM";
   }
 
   private String normalize(String text) {

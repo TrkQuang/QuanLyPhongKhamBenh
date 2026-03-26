@@ -621,7 +621,9 @@ public class BenhAnPanel extends BasePanel {
     hd.setMaHoSo(hs.getMaHoSo());
     hd.setMaGoi(lich.getMaGoi());
     hd.setTongTien(tongTien);
-    hd.setHinhThucThanhToan("CHUA_XAC_DINH");
+    hd.setHinhThucThanhToan(
+      extractPaymentMethodFromBookingIdentity(lich.getMaDinhDanhTam())
+    );
     hd.setTrangThai("CHO_THANH_TOAN");
     hd.setNgayThanhToan(null);
 
@@ -636,6 +638,27 @@ public class BenhAnPanel extends BasePanel {
       ma = String.format("HDK%09d%03d", ts, rand);
     } while (hoaDonKhamBUS.search(ma) != null);
     return ma;
+  }
+
+  private String extractPaymentMethodFromBookingIdentity(String maDinhDanhTam) {
+    if (maDinhDanhTam == null || maDinhDanhTam.trim().isEmpty()) {
+      return "CHUA_XAC_DINH";
+    }
+
+    String raw = maDinhDanhTam.trim();
+    int idx = raw.indexOf("|PM=");
+    if (idx < 0) {
+      return "CHUA_XAC_DINH";
+    }
+
+    String code = raw.substring(idx + 4).trim().toUpperCase();
+    if (code.startsWith("CK")) {
+      return "Chuyển khoản";
+    }
+    if (code.startsWith("TM")) {
+      return "Tiền mặt";
+    }
+    return "CHUA_XAC_DINH";
   }
 
   private void addFormRow(
