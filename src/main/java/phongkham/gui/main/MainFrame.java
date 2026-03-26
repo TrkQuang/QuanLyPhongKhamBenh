@@ -190,30 +190,40 @@ public class MainFrame extends JFrame {
 
   public void reloadLayoutAfterLogin() {
     sidebar.buildMenu();
+    onNavigate(resolveFirstAccessibleRoute());
+  }
+
+  private String resolveFirstAccessibleRoute() {
     if (!Session.isLoggedIn()) {
-      onNavigate(AppRoute.DAT_LICH);
-      return;
+      return AppRoute.DAT_LICH;
     }
 
-    // Dieu huong sau login theo route thuc su truy cap duoc, tranh nhay lung tung.
-    if (canAccess(AppRoute.DASHBOARD)) {
-      onNavigate(AppRoute.DASHBOARD);
-      return;
-    }
-    if (canAccess(AppRoute.THUOC)) {
-      onNavigate(AppRoute.THUOC);
-      return;
-    }
-    if (canAccess(AppRoute.BACSI_LICH_LAM_VIEC)) {
-      onNavigate(AppRoute.BACSI_LICH_LAM_VIEC);
-      return;
-    }
-    if (canAccess(AppRoute.BACSI_LICH_KHAM)) {
-      onNavigate(AppRoute.BACSI_LICH_KHAM);
-      return;
-    }
+    String[] routeOrder = new String[] {
+      AppRoute.BACSI_LICH_LAM_VIEC,
+      AppRoute.BACSI_LICH_KHAM,
+      AppRoute.BACSI_HOA_DON_KHAM,
+      AppRoute.BACSI_BENH_AN,
+      AppRoute.BACSI_PROFILE,
+      AppRoute.THUOC,
+      AppRoute.NHA_CUNG_CAP,
+      AppRoute.PHIEU_NHAP,
+      AppRoute.HOA_DON_THUOC,
+      AppRoute.DASHBOARD,
+      AppRoute.QL_TAI_KHOAN,
+      AppRoute.QL_BAC_SI,
+      AppRoute.QL_DUYET_LICH_LAM,
+      AppRoute.QL_KHOA,
+      AppRoute.QL_GOI_DICH_VU,
+      AppRoute.QL_ROLE,
+      AppRoute.PHAN_QUYEN,
+    };
 
-    onNavigate(AppRoute.HOME);
+    for (String route : routeOrder) {
+      if (contentPanel.containsRoute(route) && canAccess(route)) {
+        return route;
+      }
+    }
+    return AppRoute.HOME;
   }
 
   public void refreshAllPanelsAfterPermissionSave() {

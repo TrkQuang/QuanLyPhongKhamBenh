@@ -30,16 +30,16 @@ import phongkham.BUS.BacSiBUS;
 import phongkham.BUS.CTDonThuocBUS;
 import phongkham.BUS.DonThuocBUS;
 import phongkham.BUS.GoiDichVuBUS;
-import phongkham.BUS.HoaDonKhamBUS;
 import phongkham.BUS.HoSoBenhAnBUS;
+import phongkham.BUS.HoaDonKhamBUS;
 import phongkham.BUS.LichKhamBUS;
 import phongkham.BUS.ThuocBUS;
 import phongkham.DTO.BacSiDTO;
 import phongkham.DTO.CTDonThuocDTO;
 import phongkham.DTO.DonThuocDTO;
 import phongkham.DTO.GoiDichVuDTO;
-import phongkham.DTO.HoaDonKhamDTO;
 import phongkham.DTO.HoSoBenhAnDTO;
+import phongkham.DTO.HoaDonKhamDTO;
 import phongkham.DTO.LichKhamDTO;
 import phongkham.DTO.ThuocDTO;
 import phongkham.Utils.Session;
@@ -588,7 +588,9 @@ public class BenhAnPanel extends BasePanel {
   }
 
   private boolean ensureHoaDonKhamForHoSo(HoSoBenhAnDTO hs) {
-    if (hs == null || hs.getMaHoSo() == null || hs.getMaHoSo().trim().isEmpty()) {
+    if (
+      hs == null || hs.getMaHoSo() == null || hs.getMaHoSo().trim().isEmpty()
+    ) {
       return false;
     }
 
@@ -602,7 +604,11 @@ public class BenhAnPanel extends BasePanel {
     }
 
     LichKhamDTO lich = lichKhamBUS.getById(hs.getMaLichKham());
-    if (lich == null || lich.getMaGoi() == null || lich.getMaGoi().trim().isEmpty()) {
+    if (
+      lich == null ||
+      lich.getMaGoi() == null ||
+      lich.getMaGoi().trim().isEmpty()
+    ) {
       return false;
     }
 

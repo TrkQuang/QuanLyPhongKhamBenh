@@ -101,7 +101,9 @@ public class HoaDonKhamBUS {
 
       if (fromTime != null && toTime != null) {
         LocalDateTime ngay = hd.getNgayThanhToan();
-        if (ngay != null && (ngay.isBefore(fromTime) || !ngay.isBefore(toTime))) {
+        if (
+          ngay != null && (ngay.isBefore(fromTime) || !ngay.isBefore(toTime))
+        ) {
           continue;
         }
       }

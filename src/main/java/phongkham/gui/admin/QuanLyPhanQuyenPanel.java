@@ -620,7 +620,9 @@ public class QuanLyPhanQuyenPanel extends BasePanel {
     if ("NCC".equals(moduleCode)) return "Nhà thuốc - Nhà cung cấp";
     if ("PHIEUNHAP".equals(moduleCode)) return "Nhà thuốc - Phiếu nhập";
     if ("HOADONTHUOC".equals(moduleCode)) return "Nhà thuốc - Hóa đơn thuốc";
-    if ("DUYETLICHLAM".equals(moduleCode)) return "Admin - Duyệt lịch làm bác sĩ";
+    if (
+      "DUYETLICHLAM".equals(moduleCode)
+    ) return "Admin - Duyệt lịch làm bác sĩ";
     if ("LICHLAMVIEC".equals(moduleCode)) {
       return "Bác sĩ - Lịch làm việc (đăng ký ca)";
     }

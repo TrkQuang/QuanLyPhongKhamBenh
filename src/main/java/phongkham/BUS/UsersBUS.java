@@ -177,6 +177,30 @@ public class UsersBUS {
     String chuyenKhoa,
     String maKhoa
   ) {
+    return createDoctorAccountWithProfile(
+      maBacSi,
+      username,
+      password,
+      email,
+      hoTen,
+      soDienThoai,
+      chuyenKhoa,
+      maKhoa,
+      ROLE_BACSI
+    );
+  }
+
+  public String createDoctorAccountWithProfile(
+    String maBacSi,
+    String username,
+    String password,
+    String email,
+    String hoTen,
+    String soDienThoai,
+    String chuyenKhoa,
+    String maKhoa,
+    Integer roleId
+  ) {
     if (maBacSi == null || maBacSi.trim().isEmpty()) {
       return "Mã bác sĩ không được để trống";
     }
@@ -213,7 +237,9 @@ public class UsersBUS {
     user.setUsername(username.trim());
     user.setPassword(password.trim());
     user.setEmail(email.trim());
-    user.setRoleID(ROLE_BACSI);
+    int resolvedRoleId =
+      roleId == null || roleId <= 0 ? ROLE_BACSI : roleId.intValue();
+    user.setRoleID(resolvedRoleId);
     user.setActive(true);
 
     BacSiDTO bacSi = new BacSiDTO();

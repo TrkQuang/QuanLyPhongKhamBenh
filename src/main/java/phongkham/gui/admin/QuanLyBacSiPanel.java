@@ -14,9 +14,11 @@ import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import phongkham.BUS.BacSiBUS;
 import phongkham.BUS.KhoaBUS;
+import phongkham.BUS.RolesBUS;
 import phongkham.BUS.UsersBUS;
 import phongkham.DTO.BacSiDTO;
 import phongkham.DTO.KhoaDTO;
+import phongkham.DTO.RolesDTO;
 import phongkham.Utils.Session;
 import phongkham.gui.admin.components.AdminDialogs;
 import phongkham.gui.common.BasePanel;
@@ -27,6 +29,7 @@ public class QuanLyBacSiPanel extends BasePanel {
 
   private final BacSiBUS bacSiBUS = new BacSiBUS();
   private final KhoaBUS khoaBUS = new KhoaBUS();
+  private final RolesBUS rolesBUS = new RolesBUS();
   private final UsersBUS usersBUS = new UsersBUS();
   private JTable table;
   private JButton btnThem;
@@ -114,7 +117,7 @@ public class QuanLyBacSiPanel extends BasePanel {
   private void openDoctorDialog(BacSiDTO source) {
     boolean isCreate = source == null;
 
-    int rows = isCreate ? 8 : 6;
+    int rows = isCreate ? 9 : 6;
     JPanel form = new JPanel(new GridLayout(rows, 2, 10, 10));
     form.setOpaque(false);
 
@@ -137,6 +140,11 @@ public class QuanLyBacSiPanel extends BasePanel {
     }
     JTextField txtUsername = new JTextField();
     JPasswordField txtPassword = new JPasswordField();
+    JComboBox<String> cbRole = new JComboBox<>();
+    if (isCreate) {
+      loadRolesToCombo(cbRole);
+      selectDoctorRoleInCombo(cbRole);
+    }
 
     form.add(new JLabel("Mã bác sĩ"));
     form.add(txtMa);
@@ -151,6 +159,8 @@ public class QuanLyBacSiPanel extends BasePanel {
     form.add(new JLabel("Mã khoa"));
     form.add(cbMaKhoa);
     if (isCreate) {
+      form.add(new JLabel("Role"));
+      form.add(cbRole);
       form.add(new JLabel("Tên tài khoản"));
       form.add(txtUsername);
       form.add(new JLabel("Mật khẩu"));
@@ -168,9 +178,7 @@ public class QuanLyBacSiPanel extends BasePanel {
         bs.setChuyenKhoa(txtChuyenKhoa.getText().trim());
         bs.setSoDienThoai(txtSdt.getText().trim());
         bs.setEmail(txtEmail.getText().trim());
-        bs.setMaKhoa(
-          extractMaKhoa(String.valueOf(cbMaKhoa.getSelectedItem()))
-        );
+        bs.setMaKhoa(extractMaKhoa(String.valueOf(cbMaKhoa.getSelectedItem())));
 
         if (isCreate) {
           String result = usersBUS.createDoctorAccountWithProfile(
@@ -181,7 +189,8 @@ public class QuanLyBacSiPanel extends BasePanel {
             bs.getHoTen(),
             bs.getSoDienThoai(),
             bs.getChuyenKhoa(),
-            bs.getMaKhoa()
+            bs.getMaKhoa(),
+            parseRoleId(String.valueOf(cbRole.getSelectedItem()))
           );
           if (!result.startsWith("Tạo tài khoản bác sĩ thành công")) {
             DialogHelper.error(this, result);
@@ -220,6 +229,34 @@ public class QuanLyBacSiPanel extends BasePanel {
         combo.setSelectedIndex(i);
         return;
       }
+    }
+  }
+
+  private void loadRolesToCombo(JComboBox<String> cbRole) {
+    cbRole.removeAllItems();
+    for (RolesDTO role : rolesBUS.getAllRoles()) {
+      cbRole.addItem(role.getSTT() + " - " + role.getTenVaiTro());
+    }
+  }
+
+  private int parseRoleId(String roleText) {
+    try {
+      return Integer.parseInt(roleText.split(" - ")[0].trim());
+    } catch (Exception ex) {
+      return 0;
+    }
+  }
+
+  private void selectDoctorRoleInCombo(JComboBox<String> combo) {
+    for (int i = 0; i < combo.getItemCount(); i++) {
+      String item = String.valueOf(combo.getItemAt(i)).toLowerCase();
+      if (item.contains("bác sĩ") || item.contains("bac si")) {
+        combo.setSelectedIndex(i);
+        return;
+      }
+    }
+    if (combo.getItemCount() > 0) {
+      combo.setSelectedIndex(0);
     }
   }
 

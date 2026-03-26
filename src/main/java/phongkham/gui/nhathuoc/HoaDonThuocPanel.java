@@ -654,9 +654,8 @@ public class HoaDonThuocPanel extends BasePanel {
         String current = String.valueOf(cbThuoc.getSelectedItem());
         String currentMaThuoc = extractIdFromLabel(current);
         ThuocDTO currentThuoc = thuocBUS.getByMa(currentMaThuoc);
-        int ton = currentThuoc == null
-          ? 0
-          : Math.max(0, currentThuoc.getSoLuongTon());
+        int ton =
+          currentThuoc == null ? 0 : Math.max(0, currentThuoc.getSoLuongTon());
         lblTonHienTai.setText(String.valueOf(ton));
       };
       cbThuoc.addActionListener(evt -> refreshTon.run());

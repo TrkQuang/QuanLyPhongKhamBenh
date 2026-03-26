@@ -90,8 +90,10 @@ public class QuanLyRolePanel extends BasePanel {
     JPanel form = new JPanel(new GridLayout(3, 2, 10, 10));
     form.setOpaque(false);
 
-    JTextField txtRoleId = new JTextField(laThemMoi ? "" : source.getSTT());
-    txtRoleId.setEditable(laThemMoi);
+    JTextField txtRoleId = new JTextField(
+      laThemMoi ? rolesBUS.generateNextRoleId() : source.getSTT()
+    );
+    txtRoleId.setEditable(false);
     JTextField txtTenVaiTro = new JTextField(
       laThemMoi ? "" : source.getTenVaiTro()
     );

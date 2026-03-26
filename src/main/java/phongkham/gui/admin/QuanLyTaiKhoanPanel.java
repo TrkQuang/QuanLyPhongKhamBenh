@@ -13,8 +13,10 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import phongkham.BUS.KhoaBUS;
+import phongkham.BUS.RolesBUS;
 import phongkham.BUS.UsersBUS;
 import phongkham.DTO.KhoaDTO;
+import phongkham.DTO.RolesDTO;
 import phongkham.DTO.UsersDTO;
 import phongkham.Utils.Session;
 import phongkham.gui.admin.components.AdminDialogs;
@@ -26,6 +28,7 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
 
   private final UsersBUS usersBUS = new UsersBUS();
   private final KhoaBUS khoaBUS = new KhoaBUS();
+  private final RolesBUS rolesBUS = new RolesBUS();
   private JTable table;
   private JButton btnThem;
   private JButton btnSua;
@@ -124,14 +127,10 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
     );
     JTextField txtEmail = new JTextField(isCreate ? "" : source.getEmail());
 
-    JComboBox<String> cbRole = new JComboBox<>(
-      new String[] { "1 - Admin", "2 - Bác sĩ", "3 - Nhà thuốc" }
-    );
+    JComboBox<String> cbRole = new JComboBox<>();
+    loadRolesToCombo(cbRole);
     if (!isCreate && source.getRoleID() != null) {
-      int roleId = source.getRoleID();
-      if (roleId >= 1 && roleId <= 3) {
-        cbRole.setSelectedIndex(roleId - 1);
-      }
+      selectRoleInCombo(cbRole, source.getRoleID());
     }
 
     JLabel lblMaBacSi = new JLabel("Mã bác sĩ");
@@ -175,8 +174,9 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
       form.add(cbMaKhoa);
 
       Runnable syncDoctorFields = () -> {
-        boolean isDoctor =
-          parseRoleId(String.valueOf(cbRole.getSelectedItem())) == 2;
+        boolean isDoctor = isDoctorRoleSelection(
+          String.valueOf(cbRole.getSelectedItem())
+        );
         setComponentVisibility(lblMaBacSi, isDoctor);
         setComponentVisibility(txtMaBacSi, isDoctor);
         setComponentVisibility(lblHoTen, isDoctor);
@@ -203,7 +203,10 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
         int roleId = parseRoleId(String.valueOf(cbRole.getSelectedItem()));
         String message;
 
-        if (isCreate && roleId == 2) {
+        if (
+          isCreate &&
+          isDoctorRoleSelection(String.valueOf(cbRole.getSelectedItem()))
+        ) {
           message = usersBUS.createDoctorAccountWithProfile(
             txtMaBacSi.getText().trim(),
             txtUsername.getText().trim(),
@@ -212,7 +215,8 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
             txtHoTen.getText().trim(),
             txtSdt.getText().trim(),
             txtChuyenKhoa.getText().trim(),
-            extractMaKhoa(String.valueOf(cbMaKhoa.getSelectedItem()))
+            extractMaKhoa(String.valueOf(cbMaKhoa.getSelectedItem())),
+            roleId
           );
         } else {
           UsersDTO user = new UsersDTO();
@@ -366,7 +370,32 @@ public class QuanLyTaiKhoanPanel extends BasePanel {
     try {
       return Integer.parseInt(roleText.split(" - ")[0].trim());
     } catch (Exception ex) {
-      return 3;
+      return 0;
+    }
+  }
+
+  private boolean isDoctorRoleSelection(String roleText) {
+    if (roleText == null) {
+      return false;
+    }
+    String lower = roleText.toLowerCase();
+    return lower.contains("bác sĩ") || lower.contains("bac si");
+  }
+
+  private void loadRolesToCombo(JComboBox<String> cbRole) {
+    cbRole.removeAllItems();
+    for (RolesDTO role : rolesBUS.getAllRoles()) {
+      cbRole.addItem(role.getSTT() + " - " + role.getTenVaiTro());
+    }
+  }
+
+  private void selectRoleInCombo(JComboBox<String> combo, int roleId) {
+    for (int i = 0; i < combo.getItemCount(); i++) {
+      String item = String.valueOf(combo.getItemAt(i));
+      if (parseRoleId(item) == roleId) {
+        combo.setSelectedIndex(i);
+        return;
+      }
     }
   }
 

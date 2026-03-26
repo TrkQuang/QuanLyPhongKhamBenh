@@ -81,6 +81,22 @@ public class RolesDAO {
     return false;
   }
 
+  public String generateNextRoleId() {
+    String sql = "SELECT COALESCE(MAX(STT), 0) + 1 AS nextId FROM Roles";
+    try (
+      Connection c = DBConnection.getConnection();
+      Statement stmt = c.createStatement();
+      ResultSet rs = stmt.executeQuery(sql)
+    ) {
+      if (rs.next()) {
+        return String.valueOf(rs.getInt("nextId"));
+      }
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    return "1";
+  }
+
   public RolesDTO getById(String STT) {
     String sql = "SELECT * FROM Roles WHERE STT=?";
     RolesDTO rltemp = null;

@@ -57,6 +57,10 @@ public class RolesBUS {
     return rolesDAO.getById(STT);
   }
 
+  public String generateNextRoleId() {
+    return rolesDAO.generateNextRoleId();
+  }
+
   // ========== WRAPPER METHODS CHO QuanLyPhanQuyenPanel ==========
 
   /**
