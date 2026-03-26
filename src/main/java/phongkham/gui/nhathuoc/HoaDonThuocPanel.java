@@ -551,10 +551,6 @@ public class HoaDonThuocPanel extends BasePanel {
     JLabel lblHint = new JLabel(
       "Có thể thêm thuốc mới, sửa SL dòng cũ, hoặc xóa dòng bất kỳ trước khi xác nhận thanh toán."
     );
-    javax.swing.JTextArea txtNote = new javax.swing.JTextArea(3, 28);
-    txtNote.setLineWrap(true);
-    txtNote.setWrapStyleWord(true);
-    txtNote.setText(safe(selected.getGhiChu()));
 
     DefaultTableModel editModel = new DefaultTableModel(
       new Object[] {
@@ -613,8 +609,7 @@ public class HoaDonThuocPanel extends BasePanel {
 
     JPanel top = new JPanel(new BorderLayout(0, 6));
     top.setOpaque(false);
-    top.add(lblHint, BorderLayout.NORTH);
-    top.add(new JScrollPane(txtNote), BorderLayout.SOUTH);
+    top.add(lblHint, BorderLayout.CENTER);
 
     JPanel midActions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
     midActions.setOpaque(false);
@@ -653,6 +648,19 @@ public class HoaDonThuocPanel extends BasePanel {
         cbThuoc.addItem(thuoc.getMaThuoc() + " - " + safe(thuoc.getTenThuoc()));
       }
       javax.swing.JTextField txtQty = new javax.swing.JTextField("1", 10);
+      JLabel lblTonHienTai = new JLabel();
+
+      Runnable refreshTon = () -> {
+        String current = String.valueOf(cbThuoc.getSelectedItem());
+        String currentMaThuoc = extractIdFromLabel(current);
+        ThuocDTO currentThuoc = thuocBUS.getByMa(currentMaThuoc);
+        int ton = currentThuoc == null
+          ? 0
+          : Math.max(0, currentThuoc.getSoLuongTon());
+        lblTonHienTai.setText(String.valueOf(ton));
+      };
+      cbThuoc.addActionListener(evt -> refreshTon.run());
+      refreshTon.run();
 
       JPanel form = new JPanel(new GridBagLayout());
       GridBagConstraints gbc = new GridBagConstraints();
@@ -670,6 +678,11 @@ public class HoaDonThuocPanel extends BasePanel {
       form.add(new JLabel("Số lượng"), gbc);
       gbc.gridx = 1;
       form.add(txtQty, gbc);
+      gbc.gridx = 0;
+      gbc.gridy = 2;
+      form.add(new JLabel("Tồn hiện tại"), gbc);
+      gbc.gridx = 1;
+      form.add(lblTonHienTai, gbc);
 
       int result = JOptionPane.showConfirmDialog(
         dialog,
@@ -787,7 +800,7 @@ public class HoaDonThuocPanel extends BasePanel {
       boolean updated = hoaDonThuocBUS.thayTheChiTietHoaDonTruocThanhToan(
         selected.getMaHoaDon(),
         replacementDetails,
-        txtNote.getText().trim()
+        ""
       );
       if (!updated) {
         DialogHelper.error(

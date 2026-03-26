@@ -7,6 +7,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -28,12 +29,16 @@ import javax.swing.table.DefaultTableModel;
 import phongkham.BUS.BacSiBUS;
 import phongkham.BUS.CTDonThuocBUS;
 import phongkham.BUS.DonThuocBUS;
+import phongkham.BUS.GoiDichVuBUS;
+import phongkham.BUS.HoaDonKhamBUS;
 import phongkham.BUS.HoSoBenhAnBUS;
 import phongkham.BUS.LichKhamBUS;
 import phongkham.BUS.ThuocBUS;
 import phongkham.DTO.BacSiDTO;
 import phongkham.DTO.CTDonThuocDTO;
 import phongkham.DTO.DonThuocDTO;
+import phongkham.DTO.GoiDichVuDTO;
+import phongkham.DTO.HoaDonKhamDTO;
 import phongkham.DTO.HoSoBenhAnDTO;
 import phongkham.DTO.LichKhamDTO;
 import phongkham.DTO.ThuocDTO;
@@ -53,6 +58,8 @@ public class BenhAnPanel extends BasePanel {
   private final LichKhamBUS lichKhamBUS = new LichKhamBUS();
   private final DonThuocBUS donThuocBUS = new DonThuocBUS();
   private final CTDonThuocBUS ctDonThuocBUS = new CTDonThuocBUS();
+  private final HoaDonKhamBUS hoaDonKhamBUS = new HoaDonKhamBUS();
+  private final GoiDichVuBUS goiDichVuBUS = new GoiDichVuBUS();
   private final ThuocBUS thuocBUS = new ThuocBUS();
   private final BacSiBUS bacSiBUS = new BacSiBUS();
 
@@ -519,6 +526,15 @@ public class BenhAnPanel extends BasePanel {
         );
       }
 
+      if (!ensureHoaDonKhamForHoSo(hs)) {
+        DialogHelper.error(
+          dialog,
+          "Đã lưu hồ sơ nhưng không thể cập nhật hóa đơn khám. Vui lòng kiểm tra gói dịch vụ/lịch khám."
+        );
+        loadData();
+        return;
+      }
+
       DialogHelper.info(
         dialog,
         "Hoàn thành khám và cập nhật hồ sơ thành công."
@@ -569,6 +585,57 @@ public class BenhAnPanel extends BasePanel {
       result.message = "Dữ liệu thuốc không hợp lệ ở dòng " + (row + 1);
       return result;
     }
+  }
+
+  private boolean ensureHoaDonKhamForHoSo(HoSoBenhAnDTO hs) {
+    if (hs == null || hs.getMaHoSo() == null || hs.getMaHoSo().trim().isEmpty()) {
+      return false;
+    }
+
+    for (HoaDonKhamDTO hd : hoaDonKhamBUS.getAll()) {
+      if (hd == null) {
+        continue;
+      }
+      if (hs.getMaHoSo().equalsIgnoreCase(String.valueOf(hd.getMaHoSo()))) {
+        return true;
+      }
+    }
+
+    LichKhamDTO lich = lichKhamBUS.getById(hs.getMaLichKham());
+    if (lich == null || lich.getMaGoi() == null || lich.getMaGoi().trim().isEmpty()) {
+      return false;
+    }
+
+    GoiDichVuDTO goi = goiDichVuBUS.getByMaGoi(lich.getMaGoi());
+    if (goi == null || goi.getGiaDichVu() == null) {
+      return false;
+    }
+
+    BigDecimal tongTien = goi.getGiaDichVu();
+    if (tongTien.compareTo(BigDecimal.ZERO) <= 0) {
+      return false;
+    }
+
+    HoaDonKhamDTO hd = new HoaDonKhamDTO();
+    hd.setMaHoaDonKham(generateMaHoaDonKham());
+    hd.setMaHoSo(hs.getMaHoSo());
+    hd.setMaGoi(lich.getMaGoi());
+    hd.setTongTien(tongTien);
+    hd.setHinhThucThanhToan("CHUA_XAC_DINH");
+    hd.setTrangThai("CHO_THANH_TOAN");
+    hd.setNgayThanhToan(null);
+
+    return hoaDonKhamBUS.add(hd);
+  }
+
+  private String generateMaHoaDonKham() {
+    String ma;
+    do {
+      long ts = System.currentTimeMillis() % 1000000000L;
+      int rand = (int) (Math.random() * 1000);
+      ma = String.format("HDK%09d%03d", ts, rand);
+    } while (hoaDonKhamBUS.search(ma) != null);
+    return ma;
   }
 
   private void addFormRow(

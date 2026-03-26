@@ -56,6 +56,7 @@ public class PhieuNhapPanel extends BasePanel {
   private final ThuocBUS thuocBUS = new ThuocBUS();
 
   private JTable table;
+  private JComboBox<String> cbStatusFilter;
   private JButton btnAdd;
   private JButton btnEdit;
   private JButton btnCancel;
@@ -97,8 +98,28 @@ public class PhieuNhapPanel extends BasePanel {
           updateActionButtons();
         }
       });
+    cbStatusFilter = new JComboBox<>(
+      new String[] {
+        "Tất cả trạng thái",
+        "CHUA_XAC_NHAN",
+        "DA_DUYET",
+        "DA_NHAP",
+        "DA_HUY",
+      }
+    );
+    cbStatusFilter.addActionListener(e -> loadData());
+
+    JPanel headerAction = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+    headerAction.setOpaque(false);
+    headerAction.add(new JLabel("Trạng thái"));
+    headerAction.add(cbStatusFilter);
+
     add(
-      UIUtils.createSection("Danh sách phiếu nhập", new JScrollPane(table)),
+      UIUtils.createSection(
+        "Danh sách phiếu nhập",
+        new JScrollPane(table),
+        headerAction
+      ),
       BorderLayout.CENTER
     );
 
@@ -147,6 +168,9 @@ public class PhieuNhapPanel extends BasePanel {
       )
     );
     for (PhieuNhapDTO phieuNhap : dsPhieuNhap) {
+      if (!matchesStatusFilter(phieuNhap)) {
+        continue;
+      }
       model.addRow(
         new Object[] {
           phieuNhap.getMaPhieuNhap(),
@@ -159,6 +183,27 @@ public class PhieuNhapPanel extends BasePanel {
       );
     }
     updateActionButtons();
+  }
+
+  private boolean matchesStatusFilter(PhieuNhapDTO phieuNhap) {
+    if (cbStatusFilter == null) {
+      return true;
+    }
+
+    String selected = String.valueOf(cbStatusFilter.getSelectedItem());
+    if (selected == null || selected.trim().isEmpty()) {
+      return true;
+    }
+
+    if ("Tất cả trạng thái".equalsIgnoreCase(selected.trim())) {
+      return true;
+    }
+
+    String selectedStatus = StatusNormalizer.normalizePhieuNhapStatus(selected);
+    String rowStatus = StatusNormalizer.normalizePhieuNhapStatus(
+      phieuNhap.getTrangThai()
+    );
+    return selectedStatus.equals(rowStatus);
   }
 
   private void openReceiptEditor(PhieuNhapDTO source) {
@@ -1031,8 +1076,12 @@ public class PhieuNhapPanel extends BasePanel {
     );
     dialog.setLayout(new BorderLayout(10, 10));
 
-    JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
+    JPanel top = new JPanel(new BorderLayout(0, 6));
     top.setOpaque(false);
+    JPanel filterRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
+    filterRow.setOpaque(false);
+    JPanel actionRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+    actionRow.setOpaque(false);
     JTextField txtKeyword = new JTextField(22);
     JComboBox<String> cbNcc = new JComboBox<>();
     JCheckBox chkOnlyRemain = new JCheckBox("Chỉ lô còn tồn");
@@ -1058,20 +1107,26 @@ public class PhieuNhapPanel extends BasePanel {
 
     JButton btnFilter = UIUtils.primaryButton("Lọc");
     JButton btnQuickReports = UIUtils.ghostButton("Báo cáo nhanh");
-    JButton btnDisposeExpired = UIUtils.ghostButton("Tiêu hủy lô hết hạn");
+    JButton btnDisposeExpired = UIUtils.ghostButton(
+      "Tiêu hủy lô hết hạn (trừ tồn kho)"
+    );
     JButton btnClose = UIUtils.ghostButton("Đóng");
 
-    top.add(new JLabel("Từ khóa"));
-    top.add(txtKeyword);
-    top.add(new JLabel("NCC"));
-    top.add(cbNcc);
-    top.add(new JLabel("Trạng thái HSD"));
-    top.add(cbHsdFilter);
-    top.add(chkOnlyRemain);
-    top.add(btnFilter);
-    top.add(btnQuickReports);
-    top.add(btnDisposeExpired);
-    top.add(btnClose);
+    filterRow.add(new JLabel("Từ khóa"));
+    filterRow.add(txtKeyword);
+    filterRow.add(new JLabel("NCC"));
+    filterRow.add(cbNcc);
+    filterRow.add(new JLabel("Trạng thái HSD"));
+    filterRow.add(cbHsdFilter);
+    filterRow.add(chkOnlyRemain);
+    filterRow.add(btnFilter);
+
+    actionRow.add(btnDisposeExpired);
+    actionRow.add(btnQuickReports);
+    actionRow.add(btnClose);
+
+    top.add(filterRow, BorderLayout.NORTH);
+    top.add(actionRow, BorderLayout.SOUTH);
 
     DefaultTableModel lotModel = new DefaultTableModel(
       new Object[] {
@@ -1200,7 +1255,9 @@ public class PhieuNhapPanel extends BasePanel {
         dialog,
         disposed == 0
           ? "Không có lô hết hạn cần tiêu hủy."
-          : "Đã tạo nghiệp vụ tiêu hủy cho " + disposed + " lô hết hạn."
+          : "Đã tiêu hủy " +
+            disposed +
+            " lô hết hạn và trừ tồn kho thuốc tương ứng."
       );
       reloadLots.run();
       loadData();
